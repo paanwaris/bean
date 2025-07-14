@@ -1,11 +1,11 @@
 Package: bean
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Spatially-Aware Environmental Thinning of Species Occurrence Data
 Version: 0.1.0
 Authors@R: c(
     person(
-      "Jane", "Doe",
-      email = "jane@example.com",
+      "Paanwaris",
+      email = "paanwaris_04@hotmail.com",
       role = c("aut", "cre")
     )
   )
@@ -14,3 +14,11 @@ Description: More about what it does (maybe more than one line).
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+URL: https://github.com/paanwaris/bean
+BugReports: https://github.com/paanwaris/bean/issues
+RoxygenNote: 7.3.2
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Imports: 
+    dplyr
