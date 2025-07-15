@@ -24,4 +24,4 @@ Imports:
     devtools,
     dplyr,
     ggplot2,
-    test_that
+    testthat
