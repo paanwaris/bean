@@ -149,32 +149,40 @@ optimal_params <- find_optimal_cap(
 # We can also inspect the returned list object.
 # Print the recommendations
 print(optimal_params)
-#> $best_cap
-#> [1] 184
+#> --- Bean Optimization Results ---
 #> 
-#> $retained_points
-#> [1] 4992
+#> Recommendation for 'Closest to Target':
+#>   - Best Cap: 184
+#>   - Retained Points: 4992
 #> 
-#> $search_results
-#> # A tibble: 1,085 × 2
-#>      cap thinned_count
-#>    <int>         <int>
-#>  1     1           233
-#>  2     2           353
-#>  3     3           439
-#>  4     4           500
-#>  5     5           551
-#>  6     6           594
-#>  7     7           636
-#>  8     8           675
-#>  9     9           711
-#> 10    10           747
-#> # ℹ 1,075 more rows
+#> Recommendation for 'Closest Above Target':
+#>   - Best Cap: 185
+#>   - Retained Points: 5009
+#> 
+#> To see the diagnostic plot, run plot(your_results_object).
 
 # Visualize the search process to understand the trade-offs
 # The plot is also saved as a PNG in the output directory.
-print(optimal_params$plot)
-#> NULL
+ggplot(optimal_params$search_results, aes(x = cap, y = thinned_count)) +
+    geom_line(color = "gray50") +
+    geom_point(color = "black") +
+    geom_hline(yintercept = optimal_params$parameters$target_point_count, linetype = "dashed", color = "red") +
+    geom_vline(xintercept = optimal_params$best_cap_closest, linetype = "dashed", color = "blue") +
+    labs(
+      title = "Search for Optimal Density Cap",
+      x = "Maximum Points per Cell (Cap)",
+      y = "Number of Points Retained",
+      caption = paste0(
+        "Red line: Target count (", optimal_params$parameters$target_point_count, ")\n",
+        "Blue line: 'Closest' cap (", optimal_params$best_cap_closest, ")"
+      )
+    ) +
+    theme_bw()
+```
+
+<img src="man/figures/README-find-and-thin-part1-1.png" width="100%" />
+
+``` r
 #The plot and the output list show that to get closest to our target of 50%.
 ```
 
@@ -190,9 +198,9 @@ data requirement.
 # This logic ensures that even if one recommendation is NA, the code will not fail.
 
 # Default to a safe value
-chosen_cap <- print(optimal_params$best_cap_above_target)
-#> NULL
+chosen_cap <- optimal_params$best_cap_above_target
 cat(sprintf("Proceeding with cap = %d\n", chosen_cap))
+#> Proceeding with cap = 185
 
 # Set a seed again for the final, reproducible thinning
 set.seed(81) 
@@ -271,7 +279,7 @@ ggplot(occ_data, aes(x = BIO1, y = BIO12)) +
 
 #### Thinned Data with Grid
 
-This plot shows the result: a maximum of point(s) per cell.
+This plot shows the result: a maximum of 185 point(s) per cell.
 
 ``` r
 ggplot(thinned_data, aes(x = BIO1, y = BIO12)) +

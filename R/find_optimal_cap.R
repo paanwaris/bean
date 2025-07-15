@@ -13,12 +13,11 @@
 #'   points to retain.
 #'
 #' @return An object of class \code{bean_optimization} containing the optimal
-#'   cap recommendations, the full search results, and a diagnostic plot.
+#'   cap recommendations and the full search results, which can be plotted.
 #'
 #' @export
 #' @importFrom dplyr mutate count pull tibble add_row slice_min filter
 #' @importFrom rlang sym
-#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_vline geom_hline labs theme_bw
 find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent) {
   # --- Input Validation and Robust NA/Inf Handling ---
   if (!all(env_vars %in% names(data))) {
@@ -87,39 +86,16 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent) {
     dplyr::slice_min(order_by = thinned_count, n = 1, with_ties = TRUE) %>%
     dplyr::slice_min(order_by = cap, n = 1, with_ties = FALSE)
 
-  if (nrow(best_result_above_target) == 0) {
-    best_cap_above_target_val <- NA
-    retained_points_above_target <- NA
-  } else {
-    best_cap_above_target_val <- best_result_above_target$cap
-    retained_points_above_target <- best_result_above_target$thinned_count
-  }
-
-  # --- Create Plot ---
-  cap_plot <- ggplot2::ggplot(search_results, ggplot2::aes(x = cap, y = thinned_count)) +
-    ggplot2::geom_line(color = "gray50") +
-    ggplot2::geom_point(color = "black") +
-    ggplot2::geom_hline(yintercept = target_point_count, linetype = "dashed", color = "red") +
-    ggplot2::geom_vline(xintercept = best_result_closest$cap, linetype = "dashed", color = "blue") +
-    ggplot2::labs(
-      title = "Search for Optimal Density Cap",
-      x = "Maximum Points per Cell (Cap)",
-      y = "Number of Points Retained",
-      caption = paste0(
-        "Red line: Target count (", target_point_count, ")\n",
-        "Blue line: 'Closest' cap (", best_result_closest$cap, ")"
-      )
-    ) +
-    ggplot2::theme_bw()
-
   # --- Construct the S3 Object ---
   results <- list(
     best_cap_closest = best_result_closest$cap,
     retained_points_closest = best_result_closest$thinned_count,
-    best_cap_above_target = best_cap_above_target_val,
-    retained_points_above_target = retained_points_above_target,
+    best_cap_above_target = best_result_above_target$cap,
+    retained_points_above_target = best_result_above_target$thinned_count,
     search_results = search_results,
-    plot = cap_plot
+    parameters = list(
+      target_point_count = target_point_count
+    )
   )
 
   # Assign the custom class

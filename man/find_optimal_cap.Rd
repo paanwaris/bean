@@ -20,7 +20,7 @@ points to retain.}
 }
 \value{
 An object of class \code{bean_optimization} containing the optimal
-  cap recommendations, the full search results, and a diagnostic plot.
+  cap recommendations and the full search results, which can be plotted.
 }
 \description{
 This function searches for optimal density caps using two criteria:

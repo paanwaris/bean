@@ -102,7 +102,21 @@ print(optimal_params)
 
 # Visualize the search process to understand the trade-offs
 # The plot is also saved as a PNG in the output directory.
-print(optimal_params$plot)
+ggplot(optimal_params$search_results, aes(x = cap, y = thinned_count)) +
+    geom_line(color = "gray50") +
+    geom_point(color = "black") +
+    geom_hline(yintercept = optimal_params$parameters$target_point_count, linetype = "dashed", color = "red") +
+    geom_vline(xintercept = optimal_params$best_cap_closest, linetype = "dashed", color = "blue") +
+    labs(
+      title = "Search for Optimal Density Cap",
+      x = "Maximum Points per Cell (Cap)",
+      y = "Number of Points Retained",
+      caption = paste0(
+        "Red line: Target count (", optimal_params$parameters$target_point_count, ")\n",
+        "Blue line: 'Closest' cap (", optimal_params$best_cap_closest, ")"
+      )
+    ) +
+    theme_bw()
 #The plot and the output list show that to get closest to our target of 50%.
 ```
 
@@ -116,7 +130,7 @@ Based on the exploration in Step 2, you can now make an informed decision and ap
 # This logic ensures that even if one recommendation is NA, the code will not fail.
 
 # Default to a safe value
-chosen_cap <- print(optimal_params$best_cap_above_target)
+chosen_cap <- optimal_params$best_cap_above_target
 cat(sprintf("Proceeding with cap = %d\n", chosen_cap))
 
 # Set a seed again for the final, reproducible thinning
