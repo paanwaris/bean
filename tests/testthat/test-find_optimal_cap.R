@@ -30,3 +30,4 @@ test_that("find_optimal_cap returns correct caps and structure", {
   expect_equal(optimal_result_1$retained_points_conservative, 7)
   expect_s3_class(optimal_result_1$plot, "ggplot")
 })
+
