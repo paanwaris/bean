@@ -4,7 +4,7 @@
 \alias{find_optimal_cap}
 \title{Find optimal density caps based on a target thinning percentage}
 \usage{
-find_optimal_cap(data, env_vars, grid_resolution, target_percent, seed = NULL)
+find_optimal_cap(data, env_vars, grid_resolution, target_percent)
 }
 \arguments{
 \item{data}{A data frame containing species occurrences and environmental data.}
@@ -17,14 +17,13 @@ grid.}
 
 \item{target_percent}{A numeric value (0-1) for the target proportion of
 points to retain.}
-
-\item{seed}{An optional integer to set the random seed for reproducibility.}
 }
 \value{
-
+An object of class \code{bean_optimization} containing the optimal
+  cap recommendations, the full search results, and a diagnostic plot.
 }
 \description{
 This function searches for optimal density caps using two criteria:
 1) the cap that results in a point count closest to the target percentage, and
-2) the smallest cap that retains at least the target percentage.
+2) the cap that results in the closest point count AT OR ABOVE the target.
 }
