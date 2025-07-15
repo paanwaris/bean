@@ -2,7 +2,7 @@
 % Please edit documentation in R/find_optimal_cap.R
 \name{find_optimal_cap}
 \alias{find_optimal_cap}
-\title{Find the optimal density cap to achieve a target thinning percentage}
+\title{Find optimal density caps based on a target thinning percentage}
 \usage{
 find_optimal_cap(data, env_vars, grid_resolution, target_percent, seed = NULL)
 }
@@ -21,10 +21,10 @@ points to retain.}
 \item{seed}{An optional integer to set the random seed for reproducibility.}
 }
 \value{
-A list containing the best cap found, the resulting point count,
-  and a data frame of the full search results.
+
 }
 \description{
-This function searches for the density cap that results in a thinned dataset
-closest in size to a user-specified target percentage of the original data.
+This function searches for optimal density caps using two criteria:
+1) the cap that results in a point count closest to the target percentage, and
+2) the smallest cap that retains at least the target percentage.
 }
