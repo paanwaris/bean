@@ -6,8 +6,7 @@
 #'
 #' @param data A data frame containing species occurrences and environmental data.
 #' @param env_vars A character vector of length two specifying the names of the
-#'   columns to be used as the axes of the environmental space (e.g.,
-#'   c("temp_mean", "salinity_mean")).
+#'   columns to be used as the axes of the environmental space.
 #' @param grid_resolution A single numeric value specifying the resolution of the
 #'   grid to be applied to the environmental space.
 #' @param max_per_cell An integer specifying the maximum number of points to
@@ -18,7 +17,9 @@
 #' @return A data frame containing the thinned set of occurrence points.
 #'
 #' @export
-#' @importFrom dplyr mutate group_by group_modify ungroup slice_sample select
+#' @importFrom dplyr mutate group_by group_modify ungroup slice_sample select filter all_of
+#' @importFrom rlang sym
+#' @importFrom stats complete.cases
 #' @examples
 #' \dontrun{
 #'   # Assume 'my_occ_data' is a data frame with temp_mean and salinity_mean columns
@@ -29,27 +30,36 @@
 #'     max_per_cell = 1,
 #'     seed = 123
 #'   )
-#'
-#'   # Compare number of points
-#'   nrow(my_occ_data)
-#'   nrow(thinned_data)
 #' }
 thin_env_density <- function(data, env_vars, grid_resolution, max_per_cell, seed = NULL) {
   if (!is.null(seed)) {
     set.seed(seed)
   }
 
-  # Ensure env_vars are present in the data
+  # --- Input Validation and NA Handling ---
   if (!all(env_vars %in% names(data))) {
     stop("One or both specified env_vars not found in the data frame.")
+  }
+
+  # Filter out rows with NA in the specified environmental variables
+  clean_data <- data[stats::complete.cases(data[, env_vars]), ]
+
+  if (nrow(clean_data) < nrow(data)) {
+    warning(paste(nrow(data) - nrow(clean_data),
+                  "rows with NA in environmental variables were removed."),
+            call. = FALSE)
+  }
+
+  if (nrow(clean_data) == 0) {
+    message("No complete observations to thin.")
+    return(clean_data)
   }
 
   # Use non-standard evaluation to handle variable column names
   env_var1 <- rlang::sym(env_vars[1])
   env_var2 <- rlang::sym(env_vars[2])
 
-  thinned_df <- data %>%
-    # 1. Create a unique ID for each cell in the environmental grid
+  thinned_df <- clean_data %>%
     dplyr::mutate(
       env_cell_id = paste(
         floor(!!env_var1 / grid_resolution),
@@ -57,21 +67,17 @@ thin_env_density <- function(data, env_vars, grid_resolution, max_per_cell, seed
         sep = "_"
       )
     ) %>%
-    # 2. Group data by the grid cell ID
     dplyr::group_by(env_cell_id) %>%
-    # 3. For each group (cell), check if it exceeds the cap
     dplyr::group_modify(~ {
       if (nrow(.x) > max_per_cell) {
-        # If over capacity, randomly sample 'max_per_cell' points
         .x %>% dplyr::slice_sample(n = max_per_cell)
       } else {
-        # If at or under capacity, keep all points
         .x
       }
     }) %>%
-    # 4. Ungroup and remove the temporary cell ID column
     dplyr::ungroup() %>%
     dplyr::select(-env_cell_id)
+
 
   return(thinned_df)
 }

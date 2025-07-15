@@ -16,25 +16,176 @@ knitr::opts_chunk$set(
 # bean
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/your-github-username/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/your-github-username/bean/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of bean is to ...
+The goal of `bean` is to reduce sampling bias in species occurrence data by thinning points that are clustered in environmental space. This is a common and necessary pre-processing step for many ecological niche modeling (ENM) workflows.
+
+The package provides two main functions that work together:
+
+1.  `find_optimal_cap()`: Helps you choose a thinning intensity by searching for the density cap (`max_per_cell`) that best achieves a target percentage of data retention.
+2.  `thin_env_density()`: Applies the thinning using the parameters you've chosen.
 
 ## Installation
 
-You can install the development version of bean from [GitHub](https://github.com/) with:
+You can install the development version of `bean` from [GitHub](https://github.com/) with:
 
-```{r}
+``` r
 # install.packages("devtools")
-devtools::install_github("paanwaris/bean")
+devtools::install_github("your-github-username/bean")
 ```
 
-## Example
+## Example Workflow
 
-This is a basic example which shows you how to solve a common problem:
+This example demonstrates the core workflow of `bean` using a dataset for the deer mouse, *Peromyscus maniculatus*. The recommended process is to first use `find_optimal_cap()` to make a defensible choice for your thinning parameters, and then use `thin_env_density()` to apply them.
 
-```{r example}
+### 1. Load Libraries and Data
+
+First, we load `bean`, `dplyr` for data manipulation, and `ggplot2` for visualization. We will use the `P_maniculatus.csv` dataset, which contains occurrence records along with two key environmental variables: `BIO1` (Mean Annual Temperature) and `BIO12` (Annual Precipitation).
+
+```{r setup}
 library(bean)
-## basic example code
+library(dplyr)
+library(ggplot2)
+
+# Load the occurrence data
+# In a real package, you would load this via data(P_maniculatus)
+# For this example, we'll read it directly.
+occ_data <- read.csv("data/P_maniculatus_samples.csv")
+
+# Inspect the data
+occ_data <- occ_data %>%
+  filter(!is.na(BIO1) & !is.na(BIO12))
+head(occ_data)
+
+# Visualize the Original Data
+ggplot(occ_data, aes(x = BIO1, y = BIO12)) +
+  geom_point(alpha = 0.5, color = "darkred") +
+  labs(
+    title = "Original Occurrence Points in Environmental Space",
+    subtitle = paste(nrow(occ_data), "total points"),
+    x = "Mean Annual Temperature (BIO1)",
+    y = "Annual Precipitation (BIO12)",
+    caption = "Data for Peromyscus maniculatus"
+  ) +
+  theme_bw()
 ```
+
+### 2. Find an Optimal Thinning Level
+
+Instead of guessing a `max_per_cell` value, we can use `find_optimal_cap()` to find the cap that gets us closest to a desired retention rate. Let's say our goal is to retain about 80% of our original data. The `grid_resolution` parameter defines the size of the grid cells in the units of the environmental variables.
+
+```{r find-optimal}
+set.seed(81) # for reproducibility
+
+# Define the grid resolution
+grid_res <- 0.01 # A resolution grid of 0.01 unit
+
+# Let's target retaining 50% of the data
+optimal_params <- find_optimal_cap(
+  data = occ_data,
+  env_vars = c("BIO1", "BIO12"),
+  grid_resolution = grid_res,
+  target_percent = 0.50
+)
+
+# Print the recommendations
+optimal_params[1:4]
+
+# Visualize the search process
+optimal_params$plot
+```
+The plot and the output list show that to get closest to our target of 80%, we should use a cap of `r optimal_params$best_cap_closest`. For this demonstration, we'll use the `best_cap_conservative` recommendation to ensure we don't remove too much data.
+
+### 3. Apply Environmental Thinning
+
+Now we use the `thin_env_density()` function with the `max_per_cell` parameter we just determined.
+
+```{r thin-data}
+chosen_cap <- optimal_params$best_cap_conservative
+cat(sprintf("Proceeding with the 'conservative' cap: %d\n", chosen_cap))
+
+thinned_data <- thin_env_density(
+  data = occ_data,
+  env_vars = c("BIO1", "BIO12"),
+  grid_resolution = grid_res, 
+  max_per_cell = 104
+)
+
+cat(sprintf("Original number of points: %d\n", nrow(occ_data)))
+cat(sprintf("Thinned number of points:  %d\n", nrow(thinned_data)))
+cat(sprintf("Percentage of points removed: %.1f%%\n", 100 * (1 - nrow(thinned_data) / nrow(occ_data))))
+```
+
+### 4. Visualize the Thinning Process with Grids
+
+To see exactly what the function is doing, we can draw the environmental grid over our plots.
+
+```{r calculate-grid-lines}
+# --- Calculate Grid Line Positions ---
+# The grid lines correspond to the 'grid_resolution' parameter.
+
+# For the x-axis (BIO1)
+x_range <- range(occ_data$BIO1, na.rm = TRUE)
+x_breaks <- seq(
+  from = floor(x_range[1] / grid_res) * grid_res,
+  to = ceiling(x_range[2] / grid_res) * grid_res,
+  by = grid_res
+)
+
+# For the y-axis (BIO12)
+y_range <- range(occ_data$BIO12, na.rm = TRUE)
+y_breaks <- seq(
+  from = floor(y_range[1] / grid_res) * grid_res,
+  to = ceiling(y_range[2] / grid_res) * grid_res,
+  by = grid_res
+)
+
+# --- Create a Labeled Data Frame for Comparison ---
+# We create a unique ID to robustly identify which points were kept.
+occ_data_labeled <- occ_data %>%
+  mutate(unique_id = paste(x, y, sep = "_"))
+
+thinned_data_labeled <- thinned_data %>%
+  mutate(unique_id = paste(x, y, sep = "_"))
+```
+
+Now, let's create the plots with the grid overlay.
+
+#### Original Data with Grid
+
+This plot shows the initial clustering of points within the environmental grid cells.
+
+```{r plot-original-grid, fig.width=8, fig.height=6}
+ggplot(occ_data, aes(x = BIO1, y = BIO12)) +
+  geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
+  geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
+  geom_point(color = "#D55E00", alpha = 0.6, size = 1.5) +
+  labs(
+    title = "Original Points with Environmental Grid",
+    subtitle = paste(nrow(occ_data), "total points"),
+    x = "Mean Annual Temperature (BIO1)",
+    y = "Annual Precipitation (BIO12)"
+  ) +
+  theme_bw()
+```
+
+#### Thinned Data with Grid
+
+This plot shows the result: a maximum of `r chosen_cap` point(s) per cell.
+
+```{r plot-thinned-grid, fig.width=8, fig.height=6}
+ggplot(thinned_data, aes(x = BIO1, y = BIO12)) +
+  geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
+  geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
+  geom_point(color = "#0072B2", alpha = 0.6, size = 1.5) +
+  labs(
+    title = "Thinned Occurrence Points on Environmental Grid",
+    subtitle = paste(nrow(thinned_data), "points remaining (max", chosen_cap, "per cell)"),
+    x = "Mean Annual Temperature (BIO1)",
+    y = "Annual Precipitation (BIO12)"
+  ) +
+  theme_bw()
+```
+
+This workflow demonstrates how `bean` can be used to make a data-driven choice about thinning parameters and then apply that thinning as a pre-processing step before building species distribution models.
