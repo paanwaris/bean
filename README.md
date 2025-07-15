@@ -148,7 +148,7 @@ optimal_params <- find_optimal_cap(
 # The function automatically saves results to the output directory.
 # We can also inspect the returned list object.
 # Print the recommendations
-print(optimal_params)
+optimal_params
 #> --- Bean Optimization Results ---
 #> 
 #> Recommendation for 'Closest to Target':
@@ -163,21 +163,7 @@ print(optimal_params)
 
 # Visualize the search process to understand the trade-offs
 # The plot is also saved as a PNG in the output directory.
-ggplot(optimal_params$search_results, aes(x = cap, y = thinned_count)) +
-    geom_line(color = "gray50") +
-    geom_point(color = "black") +
-    geom_hline(yintercept = optimal_params$parameters$target_point_count, linetype = "dashed", color = "red") +
-    geom_vline(xintercept = optimal_params$best_cap_closest, linetype = "dashed", color = "blue") +
-    labs(
-      title = "Search for Optimal Density Cap",
-      x = "Maximum Points per Cell (Cap)",
-      y = "Number of Points Retained",
-      caption = paste0(
-        "Red line: Target count (", optimal_params$parameters$target_point_count, ")\n",
-        "Blue line: 'Closest' cap (", optimal_params$best_cap_closest, ")"
-      )
-    ) +
-    theme_bw()
+plot(optimal_params)
 ```
 
 <img src="man/figures/README-find-and-thin-part1-1.png" width="100%" />
@@ -209,7 +195,7 @@ thinned_data <- thin_env_density(
   data = occ_data,
   env_vars = c("BIO1", "BIO12"),
   grid_resolution = grid_res, 
-  max_per_cell = 185
+  max_per_cell = chosen_cap
 )
 
 cat(sprintf("Original number of points: %d\n", nrow(occ_data)))
