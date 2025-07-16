@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# bean
+# bean 🫛
 
 <!-- badges: start -->
 
@@ -107,7 +107,58 @@ ggplot(occ_data, aes(x = BIO1, y = BIO12)) +
 
 <img src="man/figures/README-setup-1.png" width="100%" />
 
-### Step 2: Parameter Exploration with `find_optimal_cap()`
+### Step 2: Objective Grid Resolution using Pairwise Distances
+
+The most critical parameter in environmental gridding is the
+`grid_resolution`. Instead of guessing this value, we can derive it
+objectively from the data by analyzing the **distribution of pairwise
+environmental distances**.
+
+The logic is to calculate the Euclidean distance between all pairs of
+points in the (scaled) environmental space. A small quantile of this
+distribution (e.g., the 10th percentile) represents a typical distance
+between “close” points. Using this value as the grid resolution is
+statistically justified because it adapts the cell size to the inherent
+scale of clustering within the dataset.
+
+The `find_env_resolution()` function automates this process.
+
+``` r
+# Set a seed for reproducibility of the resampling in the correlogram
+set.seed(81)  
+
+# Let's use the 10th percentile of distances as our resolution
+resolution_results <- find_env_resolution(
+  data = occ_data,
+  env_vars = c("BIO1", "BIO12"),
+  quantile = 0.1
+)
+#> Calculating pairwise environmental distances...
+#> Resolution at 0.10 quantile: 0.235417
+
+# The function returns a suggested resolution and the full distance distribution
+resolution_results
+#> --- Bean Environmental Resolution Analysis (Pairwise Distance) ---
+#> 
+#> Suggested Grid Resolution: 0.235417
+#> (This is the distance at the specified quantile of all pairwise distances)
+#> 
+#> To see the full distance distribution, run plot(your_results_object).
+
+# We can also plot the distribution to visualize the analysis
+# The blue line shows the distance at the chosen quantile.
+plot(resolution_results)
+```
+
+<img src="man/figures/README-find-resolution-1.png" width="100%" />
+
+``` r
+
+# Let's use this objective resolution in the next step
+grid_res <- resolution_results$suggested_resolution
+```
+
+### Step 3: Parameter Exploration with `find_optimal_cap()`
 
 This is the most important step for ensuring a defensible thinning
 strategy. Instead of guessing parameters, `find_optimal_cap()` allows
@@ -134,8 +185,8 @@ avoid losing too much data.
 # For reproducibility of the random sampling within the function
 set.seed(81) 
 
-# Define the grid resolution based on ecological knowledge
-grid_res <- 0.1 # A resolution of 0.1 unit for the environmental axies
+# You can manually define the grid resolution based on ecological knowledge
+# grid_res <- 0.1 # A resolution of 0.1 unit for the environmental axies
 
 # Let's target retaining 50% of the data
 optimal_params <- find_optimal_cap(
@@ -152,12 +203,12 @@ optimal_params
 #> --- Bean Optimization Results ---
 #> 
 #> Recommendation for 'Closest to Target':
-#>   - Best Cap: 184
-#>   - Retained Points: 4992
+#>   - Best Cap: 228
+#>   - Retained Points: 5006
 #> 
 #> Recommendation for 'Closest Above Target':
-#>   - Best Cap: 185
-#>   - Retained Points: 5009
+#>   - Best Cap: 228
+#>   - Retained Points: 5006
 #> 
 #> To see the diagnostic plot, run plot(your_results_object).
 
@@ -172,7 +223,7 @@ plot(optimal_params)
 #The plot and the output list show that to get closest to our target of 50%.
 ```
 
-### Step 3: Apply Thinning with `thin_env_density()`
+### Step 4: Apply Thinning with `thin_env_density()`
 
 Based on the exploration in Step 2, you can now make an informed
 decision and apply the final thinning. For this protocol, we will
@@ -186,7 +237,7 @@ data requirement.
 # Default to a safe value
 chosen_cap <- optimal_params$best_cap_above_target
 cat(sprintf("Proceeding with cap = %d\n", chosen_cap))
-#> Proceeding with cap = 185
+#> Proceeding with cap = 228
 
 # Set a seed again for the final, reproducible thinning
 set.seed(81) 
@@ -201,12 +252,12 @@ thinned_data <- thin_env_density(
 cat(sprintf("Original number of points: %d\n", nrow(occ_data)))
 #> Original number of points: 10000
 cat(sprintf("Thinned number of points:  %d\n", nrow(thinned_data)))
-#> Thinned number of points:  5009
+#> Thinned number of points:  5006
 cat(sprintf("Percentage of points remaining: %.1f%%\n", 100 * (nrow(thinned_data) / nrow(occ_data))))
 #> Percentage of points remaining: 50.1%
 ```
 
-### 4. Visualize the Thinning Process with Grids
+### 5. Visualize the Thinning Process with Grids
 
 To see exactly what the function is doing, we can draw the environmental
 grid over our plots.
@@ -258,14 +309,17 @@ ggplot(occ_data, aes(x = BIO1, y = BIO12)) +
     x = "Mean Annual Temperature (BIO1)",
     y = "Annual Precipitation (BIO12)"
   ) +
-  theme_bw()
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank())
 ```
 
 <img src="man/figures/README-plot-original-grid-1.png" width="100%" />
 
 #### Thinned Data with Grid
 
-This plot shows the result: a maximum of 185 point(s) per cell.
+This plot shows the result: a maximum of 228 point(s) per cell.
 
 ``` r
 ggplot(thinned_data, aes(x = BIO1, y = BIO12)) +
@@ -278,7 +332,10 @@ ggplot(thinned_data, aes(x = BIO1, y = BIO12)) +
     x = "Mean Annual Temperature (BIO1)",
     y = "Annual Precipitation (BIO12)"
   ) +
-  theme_bw()
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank())
 ```
 
 <img src="man/figures/README-plot-thinned-grid-1.png" width="100%" />
@@ -289,7 +346,7 @@ Combined Comparison with Grid
 ggplot() +
   # 1. Plot the original data as a background layer
   geom_point(data = occ_data, aes(x = BIO1, y = BIO12), 
-             color = "#D55E00", alpha = 0.5, size = 1.5) +
+             color = "#D55E00", alpha = 0.6, size = 2) +
   
   # 2. Add the grid lines
   geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
@@ -306,7 +363,10 @@ ggplot() +
     x = "Mean Annual Temperature (BIO1)",
     y = "Annual Precipitation (BIO12)"
   ) +
-  theme_bw()
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank())
 ```
 
 <img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />

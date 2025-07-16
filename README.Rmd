@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# bean
+# bean 🫛
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml)
@@ -68,7 +68,37 @@ ggplot(occ_data, aes(x = BIO1, y = BIO12)) +
   theme_bw()
 ```
 
-### Step 2: Parameter Exploration with `find_optimal_cap()`
+### Step 2: Objective Grid Resolution using Pairwise Distances
+
+The most critical parameter in environmental gridding is the `grid_resolution`. Instead of guessing this value, we can derive it objectively from the data by analyzing the **distribution of pairwise environmental distances**.
+
+The logic is to calculate the Euclidean distance between all pairs of points in the (scaled) environmental space. A small quantile of this distribution (e.g., the 10th percentile) represents a typical distance between "close" points. Using this value as the grid resolution is statistically justified because it adapts the cell size to the inherent scale of clustering within the dataset.
+
+The `find_env_resolution()` function automates this process.
+
+```{r find-resolution}
+# Set a seed for reproducibility of the resampling in the correlogram
+set.seed(81)  
+
+# Let's use the 10th percentile of distances as our resolution
+resolution_results <- find_env_resolution(
+  data = occ_data,
+  env_vars = c("BIO1", "BIO12"),
+  quantile = 0.1
+)
+
+# The function returns a suggested resolution and the full distance distribution
+resolution_results
+
+# We can also plot the distribution to visualize the analysis
+# The blue line shows the distance at the chosen quantile.
+plot(resolution_results)
+
+# Let's use this objective resolution in the next step
+grid_res <- resolution_results$suggested_resolution
+```
+
+### Step 3: Parameter Exploration with `find_optimal_cap()`
 
 This is the most important step for ensuring a defensible thinning strategy. Instead of guessing parameters, `find_optimal_cap()` allows you to explore the trade-offs and make a data-driven choice.
 
@@ -84,8 +114,8 @@ The function returns two key recommendations to guide your choice:
 # For reproducibility of the random sampling within the function
 set.seed(81) 
 
-# Define the grid resolution based on ecological knowledge
-grid_res <- 0.1 # A resolution of 0.1 unit for the environmental axies
+# You can manually define the grid resolution based on ecological knowledge
+# grid_res <- 0.1 # A resolution of 0.1 unit for the environmental axies
 
 # Let's target retaining 50% of the data
 optimal_params <- find_optimal_cap(
@@ -107,7 +137,7 @@ plot(optimal_params)
 ```
 
 
-### Step 3: Apply Thinning with `thin_env_density()`
+### Step 4: Apply Thinning with `thin_env_density()`
 
 Based on the exploration in Step 2, you can now make an informed decision and apply the final thinning. For this protocol, we will proceed with the `best_cap_above_target` to ensure we meet our minimum data requirement.
 
@@ -134,7 +164,7 @@ cat(sprintf("Thinned number of points:  %d\n", nrow(thinned_data)))
 cat(sprintf("Percentage of points remaining: %.1f%%\n", 100 * (nrow(thinned_data) / nrow(occ_data))))
 ```
 
-### 4. Visualize the Thinning Process with Grids
+### 5. Visualize the Thinning Process with Grids
 
 To see exactly what the function is doing, we can draw the environmental grid over our plots.
 
@@ -184,7 +214,10 @@ ggplot(occ_data, aes(x = BIO1, y = BIO12)) +
     x = "Mean Annual Temperature (BIO1)",
     y = "Annual Precipitation (BIO12)"
   ) +
-  theme_bw()
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank())
 ```
 
 #### Thinned Data with Grid
@@ -202,7 +235,10 @@ ggplot(thinned_data, aes(x = BIO1, y = BIO12)) +
     x = "Mean Annual Temperature (BIO1)",
     y = "Annual Precipitation (BIO12)"
   ) +
-  theme_bw()
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank())
 ```
 
 Combined Comparison with Grid
@@ -211,7 +247,7 @@ Combined Comparison with Grid
 ggplot() +
   # 1. Plot the original data as a background layer
   geom_point(data = occ_data, aes(x = BIO1, y = BIO12), 
-             color = "#D55E00", alpha = 0.5, size = 1.5) +
+             color = "#D55E00", alpha = 0.6, size = 2) +
   
   # 2. Add the grid lines
   geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
@@ -228,7 +264,10 @@ ggplot() +
     x = "Mean Annual Temperature (BIO1)",
     y = "Annual Precipitation (BIO12)"
   ) +
-  theme_bw()
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank())
 ```
 
 This complete workflow demonstrates how `bean` can be used to make a data-driven, transparent, and reproducible choice about thinning parameters, strengthening the scientific validity of subsequent modeling efforts.
