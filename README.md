@@ -413,8 +413,8 @@ ggplot() +
                      "unique cell centers (orange crosses) from", 
                      nrow(thinned_data_center$original_points), 
                      "original points (grey)"),
-    x = "Scaled Mean Annual Temperature (BIO1)",
-    y = "Scaled Annual Precipitation (BIO12)"
+    x = "Mean Annual Temperature (BIO1)",
+    y = "Annual Precipitation (BIO12)"
   ) +
   theme_bw() +
   theme(panel.grid.major = element_blank(),
