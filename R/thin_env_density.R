@@ -11,48 +11,51 @@
 #'   grid to be applied to the environmental space.
 #' @param max_per_cell An integer specifying the maximum number of points to
 #'   retain per grid cell.
-#' @param seed An optional integer to set the random seed for reproducibility
-#'   of the sampling step.
 #'
-#' @return A data frame containing the thinned set of occurrence points.
+#' @return An object of class \code{bean_thinned_density}.
 #'
 #' @export
-#' @importFrom dplyr mutate group_by group_modify ungroup slice_sample select filter all_of
+#' @importFrom dplyr mutate group_by group_modify ungroup slice_sample select filter
 #' @importFrom rlang sym
-#' @importFrom stats complete.cases
 #' @examples
 #' \dontrun{
 #'   # Assume 'my_occ_data' is a data frame with temp_mean and salinity_mean columns
-#'   thinned_data <- thin_env_density(
+#'   set.seed(123) # Set seed before calling for reproducibility
+#'   thinned_data_obj <- thin_env_density(
 #'     data = my_occ_data,
 #'     env_vars = c("temp_mean", "salinity_mean"),
 #'     grid_resolution = 0.1,
-#'     max_per_cell = 1,
-#'     seed = 123
+#'     max_per_cell = 1
 #'   )
 #' }
-thin_env_density <- function(data, env_vars, grid_resolution, max_per_cell, seed = NULL) {
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
-
+thin_env_density <- function(data, env_vars, grid_resolution, max_per_cell) {
   # --- Input Validation and NA Handling ---
   if (!all(env_vars %in% names(data))) {
     stop("One or both specified env_vars not found in the data frame.")
   }
 
-  # Filter out rows with NA in the specified environmental variables
-  clean_data <- data[stats::complete.cases(data[, env_vars]), ]
+  env_var1_sym <- rlang::sym(env_vars[1])
+  env_var2_sym <- rlang::sym(env_vars[2])
+
+  clean_data <- data %>%
+    dplyr::filter(is.finite(!!env_var1_sym) & is.finite(!!env_var2_sym))
 
   if (nrow(clean_data) < nrow(data)) {
     warning(paste(nrow(data) - nrow(clean_data),
-                  "rows with NA in environmental variables were removed."),
+                  "rows with non-finite values were removed."),
             call. = FALSE)
   }
 
   if (nrow(clean_data) == 0) {
     message("No complete observations to thin.")
-    return(clean_data)
+    # Return an object with the correct structure, but empty
+    results <- list(
+      thinned_data = clean_data,
+      n_original = 0,
+      n_thinned = 0
+    )
+    class(results) <- "bean_thinned_density"
+    return(results)
   }
 
   # Use non-standard evaluation to handle variable column names
@@ -78,6 +81,22 @@ thin_env_density <- function(data, env_vars, grid_resolution, max_per_cell, seed
     dplyr::ungroup() %>%
     dplyr::select(-env_cell_id)
 
+  # --- FIX: Construct and return the S3 object ---
+  results <- list(
+    thinned_data = thinned_df,
+    n_original = nrow(clean_data),
+    n_thinned = nrow(thinned_df)
+  )
+  class(results) <- "bean_thinned_density"
 
-  return(thinned_df)
+  return(results)
+}
+
+#' @export
+print.bean_thinned_density <- function(x, ...) {
+  cat("--- Bean Stochastic Thinning Results ---\n\n")
+  cat(sprintf("Thinned %d original points to %d points.\n", x$n_original, x$n_thinned))
+  if (x$n_original > 0) {
+    cat(sprintf("This represents a retention of %.1f%% of the data.\n", 100 * (x$n_thinned / x$n_original)))
+  }
 }

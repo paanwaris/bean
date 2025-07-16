@@ -209,8 +209,6 @@ optimal_params
 #> Recommendation for 'Closest Above Target':
 #>   - Best Cap: 228
 #>   - Retained Points: 5006
-#> 
-#> To see the diagnostic plot, run plot(your_results_object).
 
 # Visualize the search process to understand the trade-offs
 # The plot is also saved as a PNG in the output directory.
@@ -223,7 +221,9 @@ plot(optimal_params)
 #The plot and the output list show that to get closest to our target of 50%.
 ```
 
-### Step 4: Apply Thinning with `thin_env_density()`
+### Step 4: Apply Thinning
+
+#### Method A: Stochastic Thinning with `thin_env_density`
 
 Based on the exploration in Step 2, you can now make an informed
 decision and apply the final thinning. For this protocol, we will
@@ -236,8 +236,9 @@ data requirement.
 
 # Default to a safe value
 chosen_cap <- optimal_params$best_cap_above_target
-cat(sprintf("Proceeding with cap = %d\n", chosen_cap))
-#> Proceeding with cap = 228
+# Proceeding with cap 
+chosen_cap
+#> [1] 228
 
 # Set a seed again for the final, reproducible thinning
 set.seed(81) 
@@ -249,15 +250,14 @@ thinned_data <- thin_env_density(
   max_per_cell = chosen_cap
 )
 
-cat(sprintf("Original number of points: %d\n", nrow(occ_data)))
-#> Original number of points: 10000
-cat(sprintf("Thinned number of points:  %d\n", nrow(thinned_data)))
-#> Thinned number of points:  5006
-cat(sprintf("Percentage of points remaining: %.1f%%\n", 100 * (nrow(thinned_data) / nrow(occ_data))))
-#> Percentage of points remaining: 50.1%
+thinned_data
+#> --- Bean Stochastic Thinning Results ---
+#> 
+#> Thinned 10000 original points to 5006 points.
+#> This represents a retention of 50.1% of the data.
 ```
 
-### 5. Visualize the Thinning Process with Grids
+### Visualize the Thinning Process with Grids
 
 To see exactly what the function is doing, we can draw the environmental
 grid over our plots.
@@ -287,7 +287,7 @@ y_breaks <- seq(
 occ_data_labeled <- occ_data %>%
   mutate(unique_id = paste(x, y, sep = "_"))
 
-thinned_data_labeled <- thinned_data %>%
+thinned_data_labeled <- thinned_data$thinned_data %>%
   mutate(unique_id = paste(x, y, sep = "_"))
 ```
 
@@ -322,7 +322,7 @@ ggplot(occ_data, aes(x = BIO1, y = BIO12)) +
 This plot shows the result: a maximum of 228 point(s) per cell.
 
 ``` r
-ggplot(thinned_data, aes(x = BIO1, y = BIO12)) +
+ggplot(thinned_data$thinned_data, aes(x = BIO1, y = BIO12)) +
   geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
   geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
   geom_point(color = "#0072B2", alpha = 0.6, size = 1.5) +
@@ -353,13 +353,13 @@ ggplot() +
   geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
   
   # 3. Plot the thinned data on top in a prominent color
-  geom_point(data = thinned_data, aes(x = BIO1, y = BIO12), 
+  geom_point(data = thinned_data$thinned_data, aes(x = BIO1, y = BIO12), 
              color = "#0072B2", alpha = 0.7, size = 1) +
   
   # 4. Add informative labels
   labs(
     title = "Thinned Points Overlaid on Original Data",
-    subtitle = paste(nrow(thinned_data), "points remaining (blue) from", nrow(occ_data), "original points (orange)"),
+    subtitle = paste(nrow(thinned_data$thinned_data), "points remaining (blue) from", nrow(occ_data), "original points (orange)"),
     x = "Mean Annual Temperature (BIO1)",
     y = "Annual Precipitation (BIO12)"
   ) +
@@ -371,16 +371,71 @@ ggplot() +
 
 <img src="man/figures/README-plot-combined-comparison-grid-1.png" width="100%" />
 
-### Step 6: Delineate and Visualize the Niche Ellipse
+#### Method B: Deterministic Thinning with `thin_env_center`
+
+This method is simpler as it does not require choosing a cap. It returns
+one point for every occupied grid cell.
+
+``` r
+thinned_data_center <- thin_env_center(
+  data = occ_data,
+  env_vars = c("BIO1", "BIO12"),
+  grid_resolution = grid_res
+)
+
+thinned_data_center
+#> --- Bean Deterministic Thinning Results ---
+#> 
+#> Thinned 10000 original points to 101 unique grid cell centers.
+```
+
+#### Create the Thinned Center Data with Grid
+
+``` r
+ggplot() +
+  # 1. Plot the original data points as a faded background
+  geom_point(data = occ_data, 
+             aes(x = BIO1, y = BIO12), 
+             color = "grey40", alpha = 0.5, size = 1.5) + 
+  # 2. Add the grid lines
+  geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
+  geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
+  
+  # 3. Plot the new grid cell centers on top
+  geom_point(data = thinned_data_center$thinned_points, 
+             aes(x = BIO1, y = BIO12), 
+             color = "#D55E00", size = 2, shape = 3, stroke = 1) +
+  
+  # 4. Add informative labels
+  labs(
+    title = "Deterministic Thinning to Grid Cell Centers",
+    subtitle = paste(nrow(thinned_data_center$thinned_points), 
+                     "unique cell centers (orange crosses) from", 
+                     nrow(thinned_data_center$original_points), 
+                     "original points (grey)"),
+    x = "Scaled Mean Annual Temperature (BIO1)",
+    y = "Scaled Annual Precipitation (BIO12)"
+  ) +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank())
+```
+
+<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
+
+### Step 5: Delineate and Visualize the Niche Ellipse
 
 The final step is to take the cleaned, thinned occurrence points and
 formalize the environmental niche by fitting a bivariate ellipse. The
 `fit_ellipsoid()` function delineates this niche boundary.
 
+### Thinned Density Ellipsoid
+
 ``` r
 # Fit an ellipse that contains 95% of the thinned data
 niche_ellipse <- fit_ellipsoid(
-  data = thinned_data,
+  data = thinned_data$thinned_data,
   env_vars = c("BIO1", "BIO12"),
   level = 0.95
 )
@@ -401,9 +456,34 @@ niche_ellipse
 plot(niche_ellipse)
 ```
 
-<img src="man/figures/README-fit-ellipse-1.png" width="100%" />
+<img src="man/figures/README-fit-ellipse-part1-1.png" width="100%" />
 
-This complete workflow demonstrates how `bean` can be used to make a
-data-driven, transparent, and reproducible choice about thinning
-parameters, strengthening the scientific validity of subsequent modeling
-efforts.
+### Thinned Center Ellipsoid
+
+``` r
+# Fit an ellipse that contains 95% of the thinned data
+center_niche_ellipse <- fit_ellipsoid(
+  data = thinned_data_center$thinned_points,
+  env_vars = c("BIO1", "BIO12"),
+  level = 0.95
+)
+
+# The returned object contains all the details
+# We can use the custom print() method for a clean summary
+center_niche_ellipse
+#> --- Bean Environmental Niche Ellipse ---
+#> 
+#> Fitted to 101 data points at a 95.00% confidence level.
+#> 101 out of 101 points (100.0%) fall within the ellipse boundary.
+#> 
+#> Niche Center (Mean Vector):
+#>       BIO1      BIO12 
+#> -0.1177085 -0.2831996
+
+# And we can use the custom plot() method for a powerful visualization
+plot(center_niche_ellipse)
+```
+
+<img src="man/figures/README-fit-ellipse-part2-1.png" width="100%" />
+
+### The End ❤️

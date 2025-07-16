@@ -133,8 +133,8 @@ plot.bean_ellipsoid <- function(x, ...) {
     ggplot2::labs(
       title = "Fitted Environmental Niche Ellipse",
       subtitle = sprintf("Ellipse contains %.0f%% of the core environmental niche", x$level * 100),
-      x = paste("Scaled", env_vars[1]),
-      y = paste("Scaled", env_vars[2])
+      x = paste(env_vars[1]),
+      y = paste(env_vars[2])
     ) +
     ggplot2::theme_bw()
 }

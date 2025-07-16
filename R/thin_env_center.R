@@ -1,0 +1,79 @@
+#' Thin occurrence data to grid cell centers (deterministic)
+#'
+#' @description This function thins species occurrence records by finding all
+#' occupied cells in a 2D environmental grid and returning a single new point
+#' at the exact center of each of those cells. This is a deterministic method.
+#'
+#' @param data A data frame containing species occurrences and environmental data.
+#' @param env_vars A character vector of length two specifying the names of the
+#'   environmental variables to use.
+#' @param grid_resolution A single numeric value specifying the resolution of the
+#'   grid.
+#' @param verbose (logical) If TRUE, prints progress messages. Default = TRUE.
+#'
+#' @return An object of class \code{bean_thinned_center}.
+#'
+#' @export
+#' @importFrom dplyr mutate distinct
+#' @importFrom rlang sym
+thin_env_center <- function(data, env_vars, grid_resolution, verbose = TRUE) {
+  # --- Input Validation and Robust NA/Inf Handling ---
+  if (!all(env_vars %in% names(data))) {
+    stop("One or both specified env_vars not found in the data frame.")
+  }
+
+  env_var1_sym <- rlang::sym(env_vars[1])
+  env_var2_sym <- rlang::sym(env_vars[2])
+
+  clean_data <- data %>%
+    dplyr::filter(is.finite(!!env_var1_sym) & is.finite(!!env_var2_sym))
+
+  if (verbose && nrow(clean_data) < nrow(data)) {
+    warning(paste(nrow(data) - nrow(clean_data),
+                  "rows with non-finite values were removed."),
+            call. = FALSE)
+  }
+
+  if (nrow(clean_data) == 0) {
+    if (verbose) {
+      message("No complete observations to process.")
+    }
+    # Return an empty object of the correct structure
+    results <- list(
+      thinned_points = clean_data[, env_vars],
+      original_points = clean_data[, env_vars]
+    )
+    class(results) <- "bean_thinned_center"
+    return(results)
+  }
+
+  # --- Calculate Centroids ---
+  centroids <- clean_data %>%
+    dplyr::mutate(
+      center_x = floor(!!env_var1_sym / grid_resolution) * grid_resolution + (grid_resolution / 2),
+      center_y = floor(!!env_var2_sym / grid_resolution) * grid_resolution + (grid_resolution / 2)
+    )
+
+  # --- Get Unique Centroids ---
+  thinned_df <- centroids %>%
+    dplyr::distinct(center_x, center_y)
+
+  colnames(thinned_df) <- env_vars
+
+  # --- Construct S3 Object ---
+  results <- list(
+    thinned_points = thinned_df,
+    original_points = clean_data[, env_vars]
+  )
+  class(results) <- "bean_thinned_center"
+
+  return(results)
+}
+
+#' @export
+print.bean_thinned_center <- function(x, ...) {
+  cat("--- Bean Deterministic Thinning Results ---\n\n")
+  cat(sprintf("Thinned %d original points to %d unique grid cell centers.\n",
+              nrow(x$original_points), nrow(x$thinned_points)))
+}
+

@@ -16,8 +16,8 @@ test_that("thin_env_density returns an object of the correct class and size", {
   )
 
   # Expectations:
-  expect_s3_class(thinned_result, "data.frame")
-  expect_true(nrow(thinned_result) <= nrow(mock_data))
+  expect_s3_class(thinned_result, "bean_thinned_density")
+  expect_true(thinned_result$n_thinned <= nrow(mock_data))
 })
 
 test_that("thin_env_density handles bad input gracefully", {

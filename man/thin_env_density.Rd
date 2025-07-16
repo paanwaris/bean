@@ -4,7 +4,7 @@
 \alias{thin_env_density}
 \title{Thin occurrence data based on environmental density}
 \usage{
-thin_env_density(data, env_vars, grid_resolution, max_per_cell, seed = NULL)
+thin_env_density(data, env_vars, grid_resolution, max_per_cell)
 }
 \arguments{
 \item{data}{A data frame containing species occurrences and environmental data.}
@@ -17,12 +17,9 @@ grid to be applied to the environmental space.}
 
 \item{max_per_cell}{An integer specifying the maximum number of points to
 retain per grid cell.}
-
-\item{seed}{An optional integer to set the random seed for reproducibility
-of the sampling step.}
 }
 \value{
-A data frame containing the thinned set of occurrence points.
+An object of class \code{bean_thinned_density}.
 }
 \description{
 This function thins species occurrence records in a 2D environmental space
@@ -32,12 +29,12 @@ and samples points from cells that exceed a given density cap.
 \examples{
 \dontrun{
   # Assume 'my_occ_data' is a data frame with temp_mean and salinity_mean columns
-  thinned_data <- thin_env_density(
+  set.seed(123) # Set seed before calling for reproducibility
+  thinned_data_obj <- thin_env_density(
     data = my_occ_data,
     env_vars = c("temp_mean", "salinity_mean"),
     grid_resolution = 0.1,
-    max_per_cell = 1,
-    seed = 123
+    max_per_cell = 1
   )
 }
 }
