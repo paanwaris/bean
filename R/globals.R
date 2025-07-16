@@ -2,5 +2,6 @@ utils::globalVariables(c(
   ".", "Status", "difference", "env_cell_id", "n",
   "thinned_count", "unique_id", "mean.of.class", "correlation",
   "retained_points", "target_percent", "max_per_cell", "cap",
-  "p", "Moran_I", "p_value", "dist_class", "k", "avg_silhouette_width", "distances"
+  "p", "Moran_I", "p_value", "dist_class", "k", "avg_silhouette_width",
+  "distances", ".data", "y"
 ))

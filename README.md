@@ -340,7 +340,7 @@ ggplot(thinned_data, aes(x = BIO1, y = BIO12)) +
 
 <img src="man/figures/README-plot-thinned-grid-1.png" width="100%" />
 
-Combined Comparison with Grid
+#### Combined Comparison with Grid
 
 ``` r
 ggplot() +
@@ -369,7 +369,39 @@ ggplot() +
     panel.background = element_blank())
 ```
 
-<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
+<img src="man/figures/README-plot-combined-comparison-grid-1.png" width="100%" />
+
+### Step 6: Delineate and Visualize the Niche Ellipse
+
+The final step is to take the cleaned, thinned occurrence points and
+formalize the environmental niche by fitting a bivariate ellipse. The
+`fit_ellipsoid()` function delineates this niche boundary.
+
+``` r
+# Fit an ellipse that contains 95% of the thinned data
+niche_ellipse <- fit_ellipsoid(
+  data = thinned_data,
+  env_vars = c("BIO1", "BIO12"),
+  level = 0.95
+)
+
+# The returned object contains all the details
+# We can use the custom print() method for a clean summary
+niche_ellipse
+#> --- Bean Environmental Niche Ellipse ---
+#> 
+#> Fitted to 5006 data points at a 95.00% confidence level.
+#> 4990 out of 5006 points (99.7%) fall within the ellipse boundary.
+#> 
+#> Niche Center (Mean Vector):
+#>       BIO1      BIO12 
+#> -0.4296510 -0.3196515
+
+# And we can use the custom plot() method for a powerful visualization
+plot(niche_ellipse)
+```
+
+<img src="man/figures/README-fit-ellipse-1.png" width="100%" />
 
 This complete workflow demonstrates how `bean` can be used to make a
 data-driven, transparent, and reproducible choice about thinning
