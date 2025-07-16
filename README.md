@@ -32,6 +32,22 @@ The name `bean` reflects the core principle of the method: ensuring that
 each “pod” (a grid cell in environmental space) contains only a
 specified number of “beans” (occurrence points).
 
+## Installation
+
+To use the package, you first need to install it from GitHub. The
+following code will check for the required `devtools` package, install
+it if necessary, and then install `bean`.
+
+``` r
+# 1. Install devtools if you don't have it yet
+if (!require("devtools")) {
+  install.packages("devtools")
+}
+
+# 2. Install bean from GitHub
+devtools::install_github("paanwaris/bean")
+```
+
 ## The `bean` Protocol: A Step-by-Step Guide
 
 The recommended workflow is a four-step process designed to be
@@ -422,7 +438,7 @@ ggplot() +
     panel.background = element_blank())
 ```
 
-<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
 
 ### Step 5: Delineate and Visualize the Niche Ellipse
 
