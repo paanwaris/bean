@@ -4,7 +4,13 @@
 \alias{find_optimal_cap}
 \title{Find optimal density caps based on a target thinning percentage}
 \usage{
-find_optimal_cap(data, env_vars, grid_resolution, target_percent)
+find_optimal_cap(
+  data,
+  env_vars,
+  grid_resolution,
+  target_percent,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{data}{A data frame containing species occurrences and environmental data.}
@@ -12,15 +18,16 @@ find_optimal_cap(data, env_vars, grid_resolution, target_percent)
 \item{env_vars}{A character vector of length two specifying the names of the
 columns to be used as the axes of the environmental space.}
 
-\item{grid_resolution}{A single numeric value specifying the resolution of the
-grid.}
+\item{grid_resolution}{A numeric vector of length one or two specifying the
+resolution(s) for the grid axes. If length one, it is used for both axes.}
 
 \item{target_percent}{A numeric value (0-1) for the target proportion of
 points to retain.}
+
+\item{verbose}{(logical) If TRUE, prints progress messages. Default = TRUE.}
 }
 \value{
-An object of class \code{bean_optimization} containing the optimal
-  cap recommendations and the full search results, which can be plotted.
+An object of class \code{bean_optimization}.
 }
 \description{
 This function searches for optimal density caps using two criteria:

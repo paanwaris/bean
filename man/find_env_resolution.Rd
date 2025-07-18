@@ -2,7 +2,7 @@
 % Please edit documentation in R/find_env_resolution.R
 \name{find_env_resolution}
 \alias{find_env_resolution}
-\title{Find an objective grid resolution using pairwise environmental distances}
+\title{Find objective grid resolutions for each environmental axis}
 \usage{
 find_env_resolution(data, env_vars, quantile = 0.1, verbose = TRUE)
 }
@@ -26,7 +26,7 @@ An object of class \code{bean_resolution}.
 \description{
 This function assumes the environmental variables in the input
 data have already been scaled (e.g., using `scale()`). It calculates the
-distribution of all pairwise Euclidean distances between points in this
-environmental space. The distance at a specified lower quantile of this
-distribution is returned as a suggested grid resolution.
+distribution of all pairwise 1D distances for each variable. The distance
+at a specified lower quantile is returned as a suggested grid resolution
+for each axis.
 }

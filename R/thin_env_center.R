@@ -7,19 +7,24 @@
 #' @param data A data frame containing species occurrences and environmental data.
 #' @param env_vars A character vector of length two specifying the names of the
 #'   environmental variables to use.
-#' @param grid_resolution A single numeric value specifying the resolution of the
-#'   grid.
+#' @param grid_resolution A numeric vector of length one or two specifying the
+#'   resolution(s) for the grid axes. If length one, it is used for both axes.
 #' @param verbose (logical) If TRUE, prints progress messages. Default = TRUE.
 #'
 #' @return An object of class \code{bean_thinned_center}.
 #'
 #' @export
-#' @importFrom dplyr mutate distinct
-#' @importFrom rlang sym
 thin_env_center <- function(data, env_vars, grid_resolution, verbose = TRUE) {
   # --- Input Validation and Robust NA/Inf Handling ---
   if (!all(env_vars %in% names(data))) {
     stop("One or both specified env_vars not found in the data frame.")
+  }
+
+  # Ensure grid_resolution is a vector of length 2
+  if (length(grid_resolution) == 1) {
+    grid_resolution <- c(grid_resolution, grid_resolution)
+  } else if (length(grid_resolution) != 2) {
+    stop("grid_resolution must be a numeric vector of length 1 or 2.")
   }
 
   env_var1_sym <- rlang::sym(env_vars[1])
@@ -35,14 +40,8 @@ thin_env_center <- function(data, env_vars, grid_resolution, verbose = TRUE) {
   }
 
   if (nrow(clean_data) == 0) {
-    if (verbose) {
-      message("No complete observations to process.")
-    }
-    # Return an empty object of the correct structure
-    results <- list(
-      thinned_points = clean_data[, env_vars],
-      original_points = clean_data[, env_vars]
-    )
+    if (verbose) message("No complete observations to process.")
+    results <- list(thinned_points = clean_data[, env_vars], original_points = clean_data[, env_vars])
     class(results) <- "bean_thinned_center"
     return(results)
   }
@@ -50,8 +49,8 @@ thin_env_center <- function(data, env_vars, grid_resolution, verbose = TRUE) {
   # --- Calculate Centroids ---
   centroids <- clean_data %>%
     dplyr::mutate(
-      center_x = floor(!!env_var1_sym / grid_resolution) * grid_resolution + (grid_resolution / 2),
-      center_y = floor(!!env_var2_sym / grid_resolution) * grid_resolution + (grid_resolution / 2)
+      center_x = floor(!!env_var1_sym / grid_resolution[1]) * grid_resolution[1] + (grid_resolution[1] / 2),
+      center_y = floor(!!env_var2_sym / grid_resolution[2]) * grid_resolution[2] + (grid_resolution[2] / 2)
     )
 
   # --- Get Unique Centroids ---

@@ -1,27 +1,35 @@
 #' Find optimal density caps based on a target thinning percentage
 #'
-#' This function searches for optimal density caps using two criteria:
+#' @description This function searches for optimal density caps using two criteria:
 #' 1) the cap that results in a point count closest to the target percentage, and
 #' 2) the cap that results in the closest point count AT OR ABOVE the target.
 #'
 #' @param data A data frame containing species occurrences and environmental data.
 #' @param env_vars A character vector of length two specifying the names of the
 #'   columns to be used as the axes of the environmental space.
-#' @param grid_resolution A single numeric value specifying the resolution of the
-#'   grid.
+#' @param grid_resolution A numeric vector of length one or two specifying the
+#'   resolution(s) for the grid axes. If length one, it is used for both axes.
 #' @param target_percent A numeric value (0-1) for the target proportion of
 #'   points to retain.
+#' @param verbose (logical) If TRUE, prints progress messages. Default = TRUE.
 #'
-#' @return An object of class \code{bean_optimization} containing the optimal
-#'   cap recommendations and the full search results, which can be plotted.
+#' @return An object of class \code{bean_optimization}.
 #'
 #' @export
 #' @importFrom dplyr mutate count pull tibble add_row slice_min filter
 #' @importFrom rlang sym
-find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent) {
+#' @importFrom utils txtProgressBar setTxtProgressBar
+find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent, verbose = TRUE) {
   # --- Input Validation and Robust NA/Inf Handling ---
   if (!all(env_vars %in% names(data))) {
     stop("One or both specified env_vars not found in the data frame.")
+  }
+
+  # Ensure grid_resolution is a vector of length 2
+  if (length(grid_resolution) == 1) {
+    grid_resolution <- c(grid_resolution, grid_resolution)
+  } else if (length(grid_resolution) != 2) {
+    stop("grid_resolution must be a numeric vector of length 1 or 2.")
   }
 
   env_var1_sym <- rlang::sym(env_vars[1])
@@ -30,7 +38,7 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent) {
   clean_data <- data %>%
     dplyr::filter(is.finite(!!env_var1_sym) & is.finite(!!env_var2_sym))
 
-  if (nrow(clean_data) < nrow(data)) {
+  if (verbose && nrow(clean_data) < nrow(data)) {
     warning(paste(nrow(data) - nrow(clean_data),
                   "rows with non-finite values were removed."),
             call. = FALSE)
@@ -45,8 +53,8 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent) {
   max_density <- clean_data %>%
     dplyr::mutate(
       env_cell_id = paste(
-        floor(!!env_var1_sym / grid_resolution),
-        floor(!!env_var2_sym / grid_resolution),
+        floor(!!env_var1_sym / grid_resolution[1]), # Use first resolution
+        floor(!!env_var2_sym / grid_resolution[2]), # Use second resolution
         sep = "_"
       )
     ) %>%
@@ -55,7 +63,7 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent) {
     max(na.rm = TRUE)
 
   if (!is.finite(max_density) || max_density < 1) {
-    message("Could not determine a valid maximum density. No thinning will be performed.")
+    if (verbose) message("Could not determine a valid maximum density. No thinning will be performed.")
     max_density <- 1
   }
 
@@ -66,18 +74,24 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent) {
     thinned_count = integer()
   )
 
-  # Note: A set.seed() call should be made *before* this function for reproducibility
+  if (verbose) {
+    cat("Searching for optimal cap...\n")
+    pb <- utils::txtProgressBar(min = 0, max = max_density, style = 3)
+  }
+
   for (cap in cap_candidates) {
-    # We call the internal data frame, not the S3 object
     thinned_data <- thin_env_density(
-      clean_data, env_vars, grid_resolution, cap
+      clean_data, env_vars, grid_resolution, cap, verbose = FALSE
     )$thinned_data
 
     search_results <- search_results %>%
       dplyr::add_row(cap = cap, thinned_count = nrow(thinned_data))
+
+    if (verbose) utils::setTxtProgressBar(pb, cap)
   }
 
-  # --- Find Optimal Caps ---
+  if (verbose) close(pb)
+
   best_result_closest <- search_results %>%
     dplyr::mutate(difference = abs(thinned_count - target_point_count)) %>%
     dplyr::slice_min(order_by = difference, n = 1, with_ties = TRUE) %>%
@@ -88,7 +102,6 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent) {
     dplyr::slice_min(order_by = thinned_count, n = 1, with_ties = TRUE) %>%
     dplyr::slice_min(order_by = cap, n = 1, with_ties = FALSE)
 
-  # --- FIX: Handle cases where no cap is above the target ---
   if (nrow(best_result_above_target) == 0) {
     best_cap_above_target_val <- NA
     retained_points_above_target <- NA
@@ -97,7 +110,6 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent) {
     retained_points_above_target <- best_result_above_target$thinned_count
   }
 
-  # --- Construct the S3 Object ---
   results <- list(
     best_cap_closest = best_result_closest$cap,
     retained_points_closest = best_result_closest$thinned_count,
@@ -109,9 +121,7 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent) {
     )
   )
 
-  # Assign the custom class
   class(results) <- "bean_optimization"
-
   return(results)
 }
 

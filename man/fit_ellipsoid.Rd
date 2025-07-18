@@ -2,29 +2,24 @@
 % Please edit documentation in R/fit_ellipsoid.R
 \name{fit_ellipsoid}
 \alias{fit_ellipsoid}
-\title{Fit a bivariate ellipse to environmental data}
+\title{Fit a bivariate environmental ellipsoid to occurrence data}
 \usage{
-fit_ellipsoid(data, env_vars, level = 0.95, n_points = 100)
+fit_ellipsoid(data, var1, var2, method = "covmat", level = 95)
 }
 \arguments{
-\item{data}{A data frame containing species occurrences and environmental data.
-It is highly recommended that this data be scaled.}
+\item{data}{A data frame containing scaled environmental values and coordinates.}
 
-\item{env_vars}{A character vector of length two specifying the names of the
-environmental variables to use.}
+\item{var1}{The name of the first environmental variable (e.g., "BIO1").}
 
-\item{level}{The confidence level (e.g., 0.95 for 95%) for the prediction
-ellipse. This determines what proportion of the points the ellipse should
-contain. Default = 0.95.}
+\item{var2}{The name of the second environmental variable (e.g., "BIO12").}
 
-\item{n_points}{The number of points to use for drawing the ellipse polygon.
-Default = 100.}
+\item{method}{Method used to estimate the ellipse: "covmat", "mve1", or "mve2".}
+
+\item{level}{Confidence level (e.g., 95).}
 }
 \value{
 An object of class \code{bean_ellipsoid}.
 }
 \description{
-This function calculates the bivariate ellipse that encompasses
-a specified proportion of the data points in a 2D environmental space. It also
-identifies which of the input points fall within the calculated ellipse.
+Fit a bivariate environmental ellipsoid to occurrence data
 }

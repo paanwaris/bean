@@ -12,8 +12,8 @@ thin_env_center(data, env_vars, grid_resolution, verbose = TRUE)
 \item{env_vars}{A character vector of length two specifying the names of the
 environmental variables to use.}
 
-\item{grid_resolution}{A single numeric value specifying the resolution of the
-grid.}
+\item{grid_resolution}{A numeric vector of length one or two specifying the
+resolution(s) for the grid axes. If length one, it is used for both axes.}
 
 \item{verbose}{(logical) If TRUE, prints progress messages. Default = TRUE.}
 }

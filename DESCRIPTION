@@ -24,9 +24,11 @@ Imports:
     devtools,
     dplyr,
     ggplot2,
+    tidyr,
     magrittr,
     rlang,
     stats,
-    testthat
+    testthat,
+    MASS
 Depends: 
     R (>= 3.5)

@@ -2,39 +2,29 @@
 % Please edit documentation in R/thin_env_density.R
 \name{thin_env_density}
 \alias{thin_env_density}
-\title{Thin occurrence data based on environmental density}
+\title{Thin occurrence data based on environmental density (stochastic)}
 \usage{
-thin_env_density(data, env_vars, grid_resolution, max_per_cell)
+thin_env_density(data, env_vars, grid_resolution, max_per_cell, verbose = TRUE)
 }
 \arguments{
 \item{data}{A data frame containing species occurrences and environmental data.}
 
 \item{env_vars}{A character vector of length two specifying the names of the
-columns to be used as the axes of the environmental space.}
+environmental variables to use.}
 
-\item{grid_resolution}{A single numeric value specifying the resolution of the
-grid to be applied to the environmental space.}
+\item{grid_resolution}{A numeric vector of length one or two specifying the
+resolution(s) for the grid axes. If length one, it is used for both axes.}
 
 \item{max_per_cell}{An integer specifying the maximum number of points to
 retain per grid cell.}
+
+\item{verbose}{(logical) If TRUE, prints progress messages. Default = TRUE.}
 }
 \value{
 An object of class \code{bean_thinned_density}.
 }
 \description{
-This function thins species occurrence records in a 2D environmental space
-defined by two user-specified variables. It applies a grid to this space
-and samples points from cells that exceed a given density cap.
-}
-\examples{
-\dontrun{
-  # Assume 'my_occ_data' is a data frame with temp_mean and salinity_mean columns
-  set.seed(123) # Set seed before calling for reproducibility
-  thinned_data_obj <- thin_env_density(
-    data = my_occ_data,
-    env_vars = c("temp_mean", "salinity_mean"),
-    grid_resolution = 0.1,
-    max_per_cell = 1
-  )
-}
+This function thins species occurrence records in a 2D environmental
+space by randomly sampling a specified number of points from each occupied
+grid cell.
 }
