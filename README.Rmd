@@ -56,10 +56,14 @@ First, load and inspect your data. You'll need cleaned occurrence records and as
 library(bean)
 library(dplyr)
 library(ggplot2)
+library(raster)
+library(dismo)
+library(rJava)
 
 # Load the raw occurrence data
 # This path might need to be adjusted based on your project structure.
-occ_data_raw <- read.csv("data/P_maniculatus_samples.csv")
+occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+occ_data_raw <- read.csv(occ_file)
 
 # --- Critical: Clean the data ---
 # Remove rows with NA or other non-finite values in the environmental variables.
@@ -125,18 +129,15 @@ The function returns two key recommendations to guide your choice:
 2.  `best_cap_above_target`: The cap that results in a point count that is *closest to, but not below*, your target. This is often the safer, more conservative choice if you want to avoid losing too much data.
 
 ```{r find-and-thin-part1}
-# For reproducibility of the random sampling within the function
-set.seed(81) 
-
 # You can manually define the grid resolution based on ecological knowledge
 # grid_res <- 0.1 # A resolution of 0.1 unit for the environmental axies
 
-# Let's target retaining 50% of the data
+# Let's target retaining 80% of the data
 optimal_params <- find_optimal_cap(
   data = occ_data,
   env_vars = c("BIO1", "BIO12"),
   grid_resolution = grid_res,
-  target_percent = 0.50
+  target_percent = 0.80
 )
 
 # The function automatically saves results to the output directory.
@@ -147,7 +148,7 @@ optimal_params
 # Visualize the search process to understand the trade-offs
 # The plot is also saved as a PNG in the output directory.
 plot(optimal_params)
-#The plot and the output list show that to get closest to our target of 50%.
+#The plot and the output list show that to get closest to our target of 80%.
 ```
 
 
@@ -165,9 +166,6 @@ Based on the exploration in Step 2, you can now make an informed decision and ap
 chosen_cap <- optimal_params$best_cap_above_target
 # Proceeding with cap 
 chosen_cap
-
-# Set a seed again for the final, reproducible thinning
-set.seed(81) 
 
 thinned_data <- thin_env_density(
   data = occ_data,
@@ -202,14 +200,6 @@ y_breaks <- seq(
   to = ceiling(y_range[2] / grid_res[2]) * grid_res[2],
   by = grid_res[2]
 )
-
-# --- Create a Labeled Data Frame for Comparison ---
-# We create a unique ID to robustly identify which points were kept.
-occ_data_labeled <- occ_data %>%
-  mutate(unique_id = paste(x, y, sep = "_"))
-
-thinned_data_labeled <- thinned_data$thinned_data %>%
-  mutate(unique_id = paste(x, y, sep = "_"))
 ```
 
 Now, let's create the plots with the grid overlay.
@@ -368,5 +358,99 @@ center_niche_ellipse
 # And we can use the custom plot() method for a powerful visualization
 plot(center_niche_ellipse)
 ```
+
+
+### Step 6: Evaluate Model Performance
+
+This is the most important step: did the thinning actually improve our model? We will build and evaluate two sets of Maxent models—one with the original (but cleaned) data and one with the `bean`-thinned data—and then statistically compare their performance using a t-test.
+
+```{r model-evaluation-1}
+# --- 1. Prepare Environmental and Background Data ---
+# Load the climate rasters from the package's 'inst/extdata' directory
+bio1_file <- system.file("extdata", 
+                         "BIO1.tif", 
+                         package = "bean")
+bio12_file <- system.file("extdata",  
+                          "BIO12.tif",
+                          package = "bean")
+env_rasters <- scale(raster::stack(bio1_file, bio12_file))
+plot(env_rasters)
+
+# Create background points by sampling from the study area
+background_points <- randomPoints(env_rasters, 1000)
+```
+
+
+```{r model-evaluation-2, warning = FALSE, message = FALSE}
+# --- 2. Run Evaluation on ORIGINAL Data ---
+# Note: In a real analysis, use a higher n_repeats (e.g., 50 or 100).
+# We use a small number here so the example runs quickly.
+auc_original <- test_model_auc(
+  presence_data = occ_data, # Use original, unscaled data for modeling
+  background_data = as.data.frame(background_points),
+  env_rasters = env_rasters,
+  longitude = "x",
+  latitude = "y",
+  k = 5,
+  n_repeats = 20
+)
+
+auc_original
+
+plot(auc_original)
+```
+
+```{r model-evaluation-3, warning = FALSE, message = FALSE}
+# --- 3. Run Evaluation on THINNED Data ---
+auc_thinned <- test_model_auc(
+  presence_data = as.data.frame(niche_ellipse$points_in_ellipse), # Use the thinned data frame
+  background_data = as.data.frame(background_points),
+  env_rasters = env_rasters,
+  longitude = "x",
+  latitude = "y",
+  k = 5,
+  n_repeats = 20
+)
+
+auc_thinned
+
+plot(auc_thinned)
+```
+
+
+```{r model-evaluation-4}
+# --- 4. Statistically Compare the Results ---
+# Perform a two-sample t-test
+auc_ttest <- t.test(auc_original$all_auc_scores, auc_thinned$all_auc_scores)
+auc_ttest
+
+# --- 5. Visualize the Comparison ---
+# Combine results into a data frame for plotting
+results_df <- data.frame(
+  AUC = c(auc_original$all_auc_scores, auc_thinned$all_auc_scores),
+  DataType = factor(
+    rep(c("Original", "Thinned"), 
+        each = length(auc_original$all_auc_scores)), 
+    levels = c("Original", "Thinned")
+  )
+)
+
+# Create the final boxplot
+ggplot(results_df, aes(x = DataType, y = AUC, fill = DataType)) +
+  geom_boxplot(alpha = 0.7, width=0.5) +
+  labs(
+    title = "Comparison of Model Performance (AUC)",
+    subtitle = "Comparing models built with original vs. bean-thinned data",
+    x = "Presence Data Type",
+    y = "Area Under Curve (AUC)"
+  ) +
+  scale_fill_manual(values = c("Original" = "#D55E00", "Thinned" = "#0072B2")) +
+  theme_bw() +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5)) +
+  annotate("text", x = 1.5, y = min(results_df$AUC) * 0.99,
+           label = paste("T-test p-value =", format.pval(auc_ttest$p.value, digits = 3)),
+           hjust = 0.5, vjust = 0, fontface = "italic", size=4)
 
 ### The End ❤️

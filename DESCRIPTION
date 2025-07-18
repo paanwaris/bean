@@ -21,6 +21,8 @@ Suggests:
     testthat (>= 3.0.0)
 Imports: 
     cluster,
+    raster,
+    dismo,
     devtools,
     dplyr,
     ggplot2,
@@ -29,6 +31,7 @@ Imports:
     rlang,
     stats,
     testthat,
-    MASS
+    MASS,
+    rJava
 Depends: 
     R (>= 3.5)
