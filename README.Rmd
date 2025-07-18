@@ -340,8 +340,8 @@ The final step is to take the cleaned, thinned occurrence points and formalize t
 ```{r fit-ellipse-part1}
 # Fit an ellipse that contains 95% of the thinned data
 niche_ellipse <- fit_ellipsoid(data = thinned_data$thinned_data, 
-                               var1 = "BIO12", 
-                               var2 = "BIO1", 
+                               var1 = "BIO1", 
+                               var2 = "BIO12", 
                                method = "covmat", 
                                level = 95)
 # The returned object contains all the details

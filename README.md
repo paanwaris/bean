@@ -454,8 +454,8 @@ formalize the environmental niche by fitting a bivariate ellipse. The
 ``` r
 # Fit an ellipse that contains 95% of the thinned data
 niche_ellipse <- fit_ellipsoid(data = thinned_data$thinned_data, 
-                               var1 = "BIO12", 
-                               var2 = "BIO1", 
+                               var1 = "BIO1", 
+                               var2 = "BIO12", 
                                method = "covmat", 
                                level = 95)
 # The returned object contains all the details
@@ -463,12 +463,12 @@ niche_ellipse <- fit_ellipsoid(data = thinned_data$thinned_data,
 niche_ellipse
 #> --- Bean Environmental Niche Ellipse ---
 #> 
-#> Fitted to 5002 data points at a 95.00% confidence level.
+#> Fitted to 5002 data points at a 9500.00% confidence level.
 #> 4980 out of 5002 points (99.6%) fall within the ellipse boundary.
 #> 
 #> Niche Centroid (Mean Vector):
-#>      BIO12       BIO1 
-#> -0.3177522 -0.4784588
+#>       BIO1      BIO12 
+#> -0.4784588 -0.3177522
 
 # And we can use the custom plot() method for a powerful visualization
 plot(niche_ellipse)
@@ -490,7 +490,7 @@ center_niche_ellipse <- fit_ellipsoid(data = thinned_data_center$thinned_points,
 center_niche_ellipse
 #> --- Bean Environmental Niche Ellipse ---
 #> 
-#> Fitted to 289 data points at a 95.00% confidence level.
+#> Fitted to 289 data points at a 9500.00% confidence level.
 #> 283 out of 289 points (97.9%) fall within the ellipse boundary.
 #> 
 #> Niche Centroid (Mean Vector):
