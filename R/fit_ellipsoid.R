@@ -1,65 +1,104 @@
 #' Fit a bivariate environmental ellipsoid to occurrence data
 #'
-#' @param data A data frame containing scaled environmental values and coordinates.
-#' @param var1 The name of the first environmental variable (e.g., "BIO1").
-#' @param var2 The name of the second environmental variable (e.g., "BIO12").
-#' @param method Method used to estimate the ellipse: "covmat", "mve1", or "mve2".
-#' @param level Confidence level (e.g., 95).
+#' @description This function calculates a bivariate ellipse that encompasses a
+#' specified proportion of the data points in a 2D environmental space. It can
+#' use either a standard covariance matrix or a robust Minimum Volume Ellipsoid.
+#' The function also correctly identifies which of the input points fall within
+#' and outside the calculated ellipse boundary, preserving all original columns.
+#'
+#' @param data A data frame containing species occurrences and environmental data.
+#'   It is highly recommended that this data be scaled.
+#' @param var1 (character) The name of the first environmental variable column.
+#' @param var2 (character) The name of the second environmental variable column.
+#' @param method (character) The method for calculating the centroid and
+#'   covariance matrix. Options are "covmat" (standard covariance) and "mve"
+#'   (Minimum Volume Ellipsoid, robust to outliers). Default = "covmat".
+#' @param level (numeric) The confidence level (e.g., 95 for 95%) for the prediction
+#'   ellipse. This determines what proportion of the points the ellipse should
+#'   contain. Default = 95.
 #'
 #' @return An object of class \code{bean_ellipsoid}.
+#'
 #' @export
+#' @importFrom stats cov var qchisq mahalanobis
+#' @importFrom MASS cov.mve
 fit_ellipsoid <- function(data, var1, var2, method = "covmat", level = 95) {
+  # --- Helper function to find the number of points for MVE ---
+  ndata_quantile <- function(n_data, level) {
+    n <- floor(n_data * level)
+    return(min(n, n_data))
+  }
+
+  # --- Input Validation and Data Cleaning ---
   if (!all(c(var1, var2) %in% names(data))) {
-    stop("Both var1 and var2 must be present in the data.")
+    stop("Both var1 and var2 must be present as column names in the data.")
   }
 
-  level <- level / 100
-  env_data <- na.omit(data[, c(var1, var2)])
+  env_vars <- c(var1, var2)
 
-  # --- Centroid and Covariance Matrix ---
+  # Filter for finite rows but keep all original columns
+  clean_data <- data %>%
+    dplyr::filter(is.finite(.data[[var1]]) & is.finite(.data[[var2]]))
+
+  if (nrow(clean_data) < 3) {
+    stop("At least 3 complete observations are needed to fit an ellipse.")
+  }
+
+  # Create a matrix with only the env variables for calculations
+  env_data_matrix <- as.matrix(clean_data[, env_vars])
+  level_prop <- level / 100 # Convert percentage to proportion
+
+  # --- Centroid, Covariance, and Point Inclusion ---
   if (method == "covmat") {
-    centroid <- colMeans(env_data)
-    cov_mat <- stats::cov(env_data)
-  } else if (method == "mve1") {
-    n <- floor(nrow(env_data) * level)
-    mve <- MASS::cov.mve(env_data, quantile.used = n)
-    centroid <- mve$center
-    cov_mat <- mve$cov
-  } else if (method == "mve2") {
-    mvee <- mbased_mve(env_data, fitting_tolerance = 0.001)
-    centroid <- mvee[[1]]
-    cov_mat <- mvee[[2]]
+    centroid <- colMeans(env_data_matrix)
+    cov_mat <- stats::cov(env_data_matrix)
+
+    # Identify points inside using Mahalanobis distance
+    mahal_dist_sq <- stats::mahalanobis(env_data_matrix, center = centroid, cov = cov_mat)
+    threshold <- stats::qchisq(level_prop, df = 2)
+    inside_indices <- which(mahal_dist_sq <= threshold)
+
+  } else if (method == "mve") {
+    n_quant <- ndata_quantile(nrow(env_data_matrix), level_prop)
+    mve_res <- MASS::cov.mve(env_data_matrix, quantile.used = n_quant)
+    centroid <- mve_res$center
+    cov_mat <- mve_res$cov
+
+    # Identify points inside using the 'best' subset from the MVE object
+    inside_indices <- mve_res$best
+
   } else {
-    stop("Invalid method. Use 'covmat', 'mve1', or 'mve2'.")
+    stop("Invalid method. Choose 'covmat' or 'mve'.")
   }
 
-  # --- Ellipse Construction ---
-  radius <- sqrt(stats::qchisq(level, df = 2))
-  angles <- seq(0, 2 * pi, length.out = 100)
+  # Subset the full clean_data data frame to preserve all columns
+  points_inside <- clean_data[inside_indices, ]
+  points_outside <- clean_data[-inside_indices, ]
+
+  # --- Ellipse Polygon Generation ---
+  n_points <- 100 # Hardcoded for smooth plotting
+  radius_plot <- sqrt(stats::qchisq(level_prop, df = 2))
+  eigen_plot <- eigen(cov_mat)
+  transformation_matrix <- eigen_plot$vectors %*% diag(sqrt(eigen_plot$values))
+  angles <- seq(0, 2 * pi, length.out = n_points)
   unit_circle <- cbind(cos(angles), sin(angles))
+  ellipse_points <- t(centroid + radius_plot * transformation_matrix %*% t(unit_circle))
+  colnames(ellipse_points) <- env_vars
 
-  eig <- eigen(cov_mat)
-  transform_mat <- eig$vectors %*% diag(sqrt(eig$values))
-  ellipse_coords <- t(centroid + radius * transform_mat %*% t(unit_circle))
-  colnames(ellipse_coords) <- c(var1, var2)
-
-  # --- Mahalanobis Distance ---
-  md_sq <- mahalanobis(env_data, center = centroid, cov = cov_mat)
-  threshold <- stats::qchisq(level, df = 2)
-  inside_idx <- which(md_sq <= threshold)
-  inside_points <- env_data[inside_idx, ]
-
-  # --- Return S3 Object ---
-  result <- list(
-    niche_ellipse = as.data.frame(ellipse_coords),
-    niche_center = centroid,
+  # --- Construct S3 Object ---
+  results <- list(
+    centroid = centroid,
     covariance_matrix = cov_mat,
-    all_points_used = env_data,
-    points_in_ellipse = inside_points,
-    level = level
+    level = level,
+    method = method,
+    niche_ellipse = as.data.frame(ellipse_points),
+    all_points_used = clean_data,
+    points_in_ellipse = points_inside,
+    points_outside_ellipse = points_outside # New element
   )
-  class(result) <- "bean_ellipsoid"
-  return(result)
+
+  class(results) <- "bean_ellipsoid"
+  return(results)
 }
 
 #' @export
@@ -71,7 +110,7 @@ print.bean_ellipsoid <- function(x, ...) {
               nrow(x$points_in_ellipse), nrow(x$all_points_used),
               100 * nrow(x$points_in_ellipse) / nrow(x$all_points_used)))
   cat("Niche Centroid (Mean Vector):\n")
-  print(x$niche_center)
+  print(x$centroid)
   cat("\n")
 }
 
@@ -103,7 +142,7 @@ plot.bean_ellipsoid <- function(x, ...) {
     ggplot2::geom_point(ggplot2::aes(color = Status), alpha = 0.7) +
     # Add a point for the niche center
     ggplot2::geom_point(
-      data = data.frame(x = x$niche_center[1], y = x$niche_center[2]),
+      data = data.frame(x = x$centroid[1], y = x$centroid[2]),
       ggplot2::aes(x = x, y = y),
       color = "red",
       size = 4,

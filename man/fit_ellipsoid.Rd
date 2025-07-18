@@ -7,19 +7,28 @@
 fit_ellipsoid(data, var1, var2, method = "covmat", level = 95)
 }
 \arguments{
-\item{data}{A data frame containing scaled environmental values and coordinates.}
+\item{data}{A data frame containing species occurrences and environmental data.
+It is highly recommended that this data be scaled.}
 
-\item{var1}{The name of the first environmental variable (e.g., "BIO1").}
+\item{var1}{(character) The name of the first environmental variable column.}
 
-\item{var2}{The name of the second environmental variable (e.g., "BIO12").}
+\item{var2}{(character) The name of the second environmental variable column.}
 
-\item{method}{Method used to estimate the ellipse: "covmat", "mve1", or "mve2".}
+\item{method}{(character) The method for calculating the centroid and
+covariance matrix. Options are "covmat" (standard covariance) and "mve"
+(Minimum Volume Ellipsoid, robust to outliers). Default = "covmat".}
 
-\item{level}{Confidence level (e.g., 95).}
+\item{level}{(numeric) The confidence level (e.g., 95 for 95%) for the prediction
+ellipse. This determines what proportion of the points the ellipse should
+contain. Default = 95.}
 }
 \value{
 An object of class \code{bean_ellipsoid}.
 }
 \description{
-Fit a bivariate environmental ellipsoid to occurrence data
+This function calculates a bivariate ellipse that encompasses a
+specified proportion of the data points in a 2D environmental space. It can
+use either a standard covariance matrix or a robust Minimum Volume Ellipsoid.
+The function also correctly identifies which of the input points fall within
+and outside the calculated ellipse boundary, preserving all original columns.
 }
