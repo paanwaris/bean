@@ -80,7 +80,6 @@ library(raster)
 #> 
 #>     select
 library(dismo)
-library(rJava)
 
 # Load the raw occurrence data
 # This path might need to be adjusted based on your project structure.
@@ -576,7 +575,7 @@ auc_original
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.708  0.005      0.707   0.697   0.718
+#> 1    0.708  0.005      0.708   0.696   0.726
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -632,7 +631,7 @@ auc_thinned
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.713  0.006      0.712   0.702   0.726
+#> 1    0.713  0.007      0.714   0.696   0.729
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -650,13 +649,13 @@ auc_ttest
 #>  Welch Two Sample t-test
 #> 
 #> data:  auc_original$all_auc_scores and auc_thinned$all_auc_scores
-#> t = -6.9145, df = 189.01, p-value = 7.026e-11
+#> t = -5.8961, df = 182.09, p-value = 1.772e-08
 #> alternative hypothesis: true difference in means is not equal to 0
 #> 95 percent confidence interval:
-#>  -0.006521696 -0.003626568
+#>  -0.007159729 -0.003569361
 #> sample estimates:
 #> mean of x mean of y 
-#> 0.7078872 0.7129613
+#> 0.7078035 0.7131680
 
 # --- 5. Visualize the Comparison ---
 # Combine results into a data frame for plotting

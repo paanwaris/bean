@@ -58,7 +58,6 @@ library(dplyr)
 library(ggplot2)
 library(raster)
 library(dismo)
-library(rJava)
 
 # Load the raw occurrence data
 # This path might need to be adjusted based on your project structure.
