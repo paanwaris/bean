@@ -46,7 +46,7 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      # Fix: Register Java with R only on non-Windows runners, after R is installed
+      # Register Java with R only on non-Windows runners, after R is installed
       - name: Register Java with R
         if: runner.os != 'Windows'
         run: sudo R CMD javareconf
@@ -57,20 +57,33 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      # Generate coverage.xml for Codecov
+      - name: Generate coverage.xml
+        run: |
+          Rscript -e 'if (!requireNamespace("covr", quietly = TRUE)) install.packages("covr")'
+          Rscript -e 'covr::to_cobertura(covr::package_coverage(), "coverage.xml")'
+
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
+          files: coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: paanwaris/bean
+
+      # Generate JUnit XML test results for Codecov test-results ingestion
+      - name: Run tests with JUnit output
+        run: |
+          Rscript -e 'if (!requireNamespace("testthat", quietly = TRUE)) install.packages("testthat")'
+          Rscript -e 'testthat::test_dir("tests/testthat", reporter = testthat::JunitReporter$new(file = "test-results.xml"))'
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
+          files: test-results.xml
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
-
