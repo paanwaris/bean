@@ -29,7 +29,6 @@ Imports:
     rlang,
     stats,
     MASS,
-    rJava,
-    covr
+    rJava
 Depends: 
     R (>= 3.5)
