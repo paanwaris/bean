@@ -54,6 +54,10 @@ if (!require("devtools")) {
 devtools::install_github("paanwaris/bean")
 ```
 
+## Package Loading
+
+To perform the necessary analyses, we need several R packages.
+
 ``` r
 # Load required libraries
 library(bean)
@@ -566,7 +570,7 @@ auc_original
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.708  0.006      0.708   0.693   0.723
+#> 1    0.708  0.005      0.708   0.697   0.718
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -622,7 +626,7 @@ auc_thinned
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.713  0.005      0.712   0.702   0.726
+#> 1    0.713  0.006      0.713   0.699   0.727
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -640,13 +644,13 @@ auc_ttest
 #>  Welch Two Sample t-test
 #> 
 #> data:  auc_original$all_auc_scores and auc_thinned$all_auc_scores
-#> t = -6.6898, df = 191.61, p-value = 2.391e-10
+#> t = -6.3905, df = 188.97, p-value = 1.258e-09
 #> alternative hypothesis: true difference in means is not equal to 0
 #> 95 percent confidence interval:
-#>  -0.006874327 -0.003743713
+#>  -0.006843525 -0.003615189
 #> sample estimates:
 #> mean of x mean of y 
-#> 0.7078550 0.7131641
+#> 0.7078940 0.7131234
 
 # --- 5. Visualize the Comparison ---
 # Combine results into a data frame for plotting

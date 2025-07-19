@@ -2,9 +2,6 @@ library(testthat)
 library(raster)
 library(dismo)
 library(rJava)
-# This test requires the 'dismo' package to be installed.
-# We use skip_if_not_installed to prevent errors if it's not available.
-skip_if_not_installed("dismo")
 
 test_that("test_model_auc runs correctly and returns the right structure", {
 

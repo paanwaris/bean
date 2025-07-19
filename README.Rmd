@@ -46,6 +46,9 @@ if (!require("devtools")) {
 devtools::install_github("paanwaris/bean")
 ```
 
+## Package Loading
+To perform the necessary analyses, we need several R packages.
+
 ```{r Installation, warning = FALSE, message = FALSE}
 # Load required libraries
 library(bean)
