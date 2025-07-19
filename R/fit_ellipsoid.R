@@ -105,7 +105,7 @@ fit_ellipsoid <- function(data, var1, var2, method = "covmat", level = 95) {
 print.bean_ellipsoid <- function(x, ...) {
   cat("--- Bean Environmental Niche Ellipse ---\n\n")
   cat(sprintf("Fitted to %d data points at a %.2f%% confidence level.\n",
-              nrow(x$all_points_used), x$level * 100))
+              nrow(x$all_points_used), x$level))
   cat(sprintf("%d out of %d points (%.1f%%) fall within the ellipse boundary.\n\n",
               nrow(x$points_in_ellipse), nrow(x$all_points_used),
               100 * nrow(x$points_in_ellipse) / nrow(x$all_points_used)))

@@ -51,7 +51,7 @@ if (!require("devtools")) {
 }
 
 # 2. Install bean from GitHub
-devtools::install_github("paanwaris/bean")
+devtools::install_github("paanwaris/bean", force = TRUE)
 ```
 
 ## Package Loading
@@ -192,7 +192,7 @@ small environmental variations but may not thin large, dense clusters
 effectively. A large value creates a coarse grid, which is better for
 thinning broad-scale bias but may group distinct environmental
 conditions together. \* `target_percent`: This is your goal for data
-retention. A value of `0.5` means you want to keep approximately 50% of
+retention. A value of `0.8` means you want to keep approximately 80% of
 your data.
 
 The function returns two key recommendations to guide your choice: 1.
@@ -453,7 +453,7 @@ niche_ellipse <- fit_ellipsoid(data = thinned_data$thinned_data,
 niche_ellipse
 #> --- Bean Environmental Niche Ellipse ---
 #> 
-#> Fitted to 8000 data points at a 9500.00% confidence level.
+#> Fitted to 8000 data points at a 95.00% confidence level.
 #> 7495 out of 8000 points (93.7%) fall within the ellipse boundary.
 #> 
 #> Niche Centroid (Mean Vector):
@@ -480,7 +480,7 @@ center_niche_ellipse <- fit_ellipsoid(data = thinned_data_center$thinned_points,
 center_niche_ellipse
 #> --- Bean Environmental Niche Ellipse ---
 #> 
-#> Fitted to 289 data points at a 9500.00% confidence level.
+#> Fitted to 289 data points at a 95.00% confidence level.
 #> 283 out of 289 points (97.9%) fall within the ellipse boundary.
 #> 
 #> Niche Centroid (Mean Vector):
@@ -570,7 +570,7 @@ auc_original
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.708  0.005      0.708   0.696    0.72
+#> 1    0.708  0.005      0.708   0.692   0.724
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -626,7 +626,7 @@ auc_thinned
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.713  0.006      0.713   0.699   0.732
+#> 1    0.713  0.006      0.713   0.695    0.73
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -644,13 +644,13 @@ auc_ttest
 #>  Welch Two Sample t-test
 #> 
 #> data:  auc_original$all_auc_scores and auc_thinned$all_auc_scores
-#> t = -6.5426, df = 190.49, p-value = 5.437e-10
+#> t = -6.0302, df = 192.08, p-value = 8.245e-09
 #> alternative hypothesis: true difference in means is not equal to 0
 #> 95 percent confidence interval:
-#>  -0.006691272 -0.003591235
+#>  -0.006647788 -0.003370829
 #> sample estimates:
 #> mean of x mean of y 
-#> 0.7079495 0.7130908
+#> 0.7079109 0.7129202
 
 # --- 5. Visualize the Comparison ---
 # Combine results into a data frame for plotting

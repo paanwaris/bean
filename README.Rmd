@@ -43,7 +43,7 @@ if (!require("devtools")) {
 }
 
 # 2. Install bean from GitHub
-devtools::install_github("paanwaris/bean")
+devtools::install_github("paanwaris/bean", force = TRUE)
 ```
 
 ## Package Loading
@@ -127,7 +127,7 @@ This is the most important step for ensuring a defensible thinning strategy. Ins
 
 **Key Parameters:**
 * `grid_resolution`: This defines the size of the cells in your environmental grid. The choice is ecologically significant. A small value creates a fine grid, which is sensitive to small environmental variations but may not thin large, dense clusters effectively. A large value creates a coarse grid, which is better for thinning broad-scale bias but may group distinct environmental conditions together.
-* `target_percent`: This is your goal for data retention. A value of `0.5` means you want to keep approximately 50% of your data.
+* `target_percent`: This is your goal for data retention. A value of `0.8` means you want to keep approximately 80% of your data.
 
 The function returns two key recommendations to guide your choice:
 1.  `best_cap_closest`: The cap that results in a point count *numerically closest* to your target.
