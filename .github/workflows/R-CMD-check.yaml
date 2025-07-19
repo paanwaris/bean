@@ -61,12 +61,6 @@ jobs:
       - name: Restore renv dependencies
         run: Rscript -e 'if (requireNamespace("renv", quietly = TRUE)) renv::restore()'
 
-      # Ensure required packages are installed
-      - name: Install xml2 and covr
-        run: |
-          Rscript -e 'if (!requireNamespace("xml2", quietly = TRUE)) install.packages("xml2")'
-          Rscript -e 'if (!requireNamespace("covr", quietly = TRUE)) install.packages("covr")'
-
       # Generate coverage.xml for Codecov
       - name: Generate coverage.xml
         run: |
@@ -82,7 +76,6 @@ jobs:
       # Generate JUnit XML test results for Codecov test-results ingestion
       - name: Run tests with JUnit output
         run: |
-          Rscript -e 'if (!requireNamespace("testthat", quietly = TRUE)) install.packages("testthat")'
           Rscript -e 'testthat::test_dir("tests/testthat", reporter = testthat::JunitReporter$new(file = "test-results.xml"))'
 
       - name: Upload test results to Codecov
