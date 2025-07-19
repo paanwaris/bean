@@ -18,20 +18,16 @@ URL: https://github.com/paanwaris/bean
 BugReports: https://github.com/paanwaris/bean/issues
 RoxygenNote: 7.3.2
 Suggests: 
-    testthat (>= 3.0.0)
 Imports: 
-    cluster,
     raster,
+    testthat,
     dismo,
-    devtools,
     dplyr,
     ggplot2,
     tidyr,
     magrittr,
     rlang,
     stats,
-    testthat,
-    MASS,
-    rJava
+    MASS
 Depends: 
     R (>= 3.5)
