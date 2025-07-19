@@ -7,13 +7,11 @@
 
 [![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
-coverage](https://codecov.io/gh/paanwaris/bean/branch/main/graph/badge.svg)](https://app.codecov.io/gh/paanwaris/bean?branch=main)
+coverage](https://codecov.io/gh/paanwaris/bean/graph/badge.svg)](https://app.codecov.io/gh/paanwaris/bean)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Codecov test
-coverage](https://codecov.io/gh/paanwaris/bean/graph/badge.svg)](https://app.codecov.io/gh/paanwaris/bean)
 <!-- badges: end -->
 
 ## Ecological Motivation
@@ -572,7 +570,7 @@ auc_original
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.708  0.005      0.708   0.696   0.718
+#> 1    0.708  0.005      0.708   0.696    0.72
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -628,7 +626,7 @@ auc_thinned
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.713  0.006      0.713   0.694   0.726
+#> 1    0.713  0.006      0.713   0.699   0.732
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -646,13 +644,13 @@ auc_ttest
 #>  Welch Two Sample t-test
 #> 
 #> data:  auc_original$all_auc_scores and auc_thinned$all_auc_scores
-#> t = -6.674, df = 178.55, p-value = 3.028e-10
+#> t = -6.5426, df = 190.49, p-value = 5.437e-10
 #> alternative hypothesis: true difference in means is not equal to 0
 #> 95 percent confidence interval:
-#>  -0.006807833 -0.003700704
+#>  -0.006691272 -0.003591235
 #> sample estimates:
 #> mean of x mean of y 
-#> 0.7078687 0.7131229
+#> 0.7079495 0.7130908
 
 # --- 5. Visualize the Comparison ---
 # Combine results into a data frame for plotting
