@@ -1,13 +1,15 @@
-# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
-# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+# In .github/workflows/R-CMD-check.yaml
+# This file should ONLY be responsible for running R CMD check.
+
 on:
   push:
     branches: [main, master]
   pull_request:
 
-name: R-CMD-check.yaml
+name: R-CMD-check
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   R-CMD-check:
@@ -21,20 +23,20 @@ jobs:
         config:
           - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'oldrel-1'}
+          - {os: ubuntu-latest,    r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,    r: 'release'}
+          - {os: ubuntu-latest,    r: 'oldrel-1'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
 
     steps:
-      - name: Set up Java
+      - name: Set up JDK 11
         uses: actions/setup-java@v4
         with:
+          java-version: '11'
           distribution: 'temurin'
-          java-version: '17'
 
       - uses: actions/checkout@v4
 
@@ -46,55 +48,15 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      # Register Java with R only on non-Windows runners, after R is installed
       - name: Register Java with R
         if: runner.os != 'Windows'
         run: sudo R CMD javareconf
         shell: bash
 
-      # Ensure Xcode and pkg-config are present on macOS for building packages
-      - name: Ensure Xcode and build tools
-        if: runner.os == 'macOS'
-        run: |
-          xcode-select --install || true
-          brew install pkg-config || true
-
-      # Prefer binary packages to reduce build failures
-      - name: Set R to prefer binary packages
-        run: echo 'options(pkgType = "binary")' >> ~/.Rprofile
-
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
-
-      # Restore dependencies with renv if used
-      - name: Restore renv dependencies
-        run: Rscript -e 'if (requireNamespace("renv", quietly = TRUE)) renv::restore()'
-
-      # Generate coverage.xml for Codecov
-      - name: Generate coverage.xml
-        run: |
-          Rscript -e 'covr::to_cobertura(covr::package_coverage(), "coverage.xml")'
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          files: coverage.xml
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: paanwaris/bean
-
-      # Generate JUnit XML test results for Codecov test-results ingestion
-      - name: Run tests with JUnit output
-        run: |
-          Rscript -e 'testthat::test_dir("tests/testthat", reporter = testthat::JunitReporter$new(file = "test-results.xml"))'
-
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          files: test-results.xml
-          token: ${{ secrets.CODECOV_TOKEN }}
 
       - uses: r-lib/actions/check-r-package@v2
         with:
