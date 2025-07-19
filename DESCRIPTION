@@ -28,6 +28,7 @@ Imports:
     magrittr,
     rlang,
     stats,
-    MASS
+    MASS,
+    rJava
 Depends: 
     R (>= 3.5)

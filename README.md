@@ -6,6 +6,12 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/paanwaris/bean/branch/main/graph/badge.svg)](https://app.codecov.io/gh/paanwaris/bean?branch=main)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
 ## Ecological Motivation
@@ -48,10 +54,16 @@ if (!require("devtools")) {
 devtools::install_github("paanwaris/bean")
 ```
 
-## The `bean` Protocol: A Step-by-Step Guide
+``` r
+# Load required libraries
+library(bean)
+library(dplyr)
+library(ggplot2)
+library(raster)
+library(dismo)
+```
 
-The recommended workflow is a four-step process designed to be
-transparent and reproducible.
+## The `bean` Protocol: A Step-by-Step Guide
 
 ### Step 1: Data Preparation and Visualization
 
@@ -60,27 +72,6 @@ records and associated environmental variables. It’s essential to remove
 missing values, as they will interfere with analysis.
 
 ``` r
-# Load required libraries
-library(bean)
-library(dplyr)
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
-library(ggplot2)
-library(raster)
-#> Loading required package: sp
-#> 
-#> Attaching package: 'raster'
-#> The following object is masked from 'package:dplyr':
-#> 
-#>     select
-library(dismo)
-
 # Load the raw occurrence data
 # This path might need to be adjusted based on your project structure.
 occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
@@ -575,7 +566,7 @@ auc_original
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.708  0.005      0.708   0.696   0.726
+#> 1    0.708  0.006      0.708   0.693   0.723
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -631,7 +622,7 @@ auc_thinned
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.713  0.007      0.714   0.696   0.729
+#> 1    0.713  0.005      0.712   0.702   0.726
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -649,13 +640,13 @@ auc_ttest
 #>  Welch Two Sample t-test
 #> 
 #> data:  auc_original$all_auc_scores and auc_thinned$all_auc_scores
-#> t = -5.8961, df = 182.09, p-value = 1.772e-08
+#> t = -6.6898, df = 191.61, p-value = 2.391e-10
 #> alternative hypothesis: true difference in means is not equal to 0
 #> 95 percent confidence interval:
-#>  -0.007159729 -0.003569361
+#>  -0.006874327 -0.003743713
 #> sample estimates:
 #> mean of x mean of y 
-#> 0.7078035 0.7131680
+#> 0.7078550 0.7131641
 
 # --- 5. Visualize the Comparison ---
 # Combine results into a data frame for plotting
@@ -689,7 +680,4 @@ ggplot(results_df, aes(x = DataType, y = AUC, fill = DataType)) +
 
 <img src="man/figures/README-model-evaluation-4-1.png" width="100%" />
 
-``` r
-
 ### The End ❤️
-```

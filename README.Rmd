@@ -19,6 +19,9 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/paanwaris/bean/branch/main/graph/badge.svg)](https://app.codecov.io/gh/paanwaris/bean?branch=main)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
 ## Ecological Motivation
@@ -43,22 +46,22 @@ if (!require("devtools")) {
 devtools::install_github("paanwaris/bean")
 ```
 
-## The `bean` Protocol: A Step-by-Step Guide
-
-The recommended workflow is a four-step process designed to be transparent and reproducible.
-
-### Step 1: Data Preparation and Visualization
-
-First, load and inspect your data. You'll need cleaned occurrence records and associated environmental variables. It's essential to remove missing values, as they will interfere with analysis.
-
-```{r setup}
+```{r Installation, warning = FALSE, message = FALSE}
 # Load required libraries
 library(bean)
 library(dplyr)
 library(ggplot2)
 library(raster)
 library(dismo)
+```
 
+## The `bean` Protocol: A Step-by-Step Guide
+
+### Step 1: Data Preparation and Visualization
+
+First, load and inspect your data. You'll need cleaned occurrence records and associated environmental variables. It's essential to remove missing values, as they will interfere with analysis.
+
+```{r setup}
 # Load the raw occurrence data
 # This path might need to be adjusted based on your project structure.
 occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
@@ -463,5 +466,6 @@ ggplot(results_df, aes(x = DataType, y = AUC, fill = DataType)) +
   annotate("text", x = 1.5, y = min(results_df$AUC) * 0.99,
            label = paste("T-test p-value =", format.pval(auc_ttest$p.value, digits = 3)),
            hjust = 0.5, vjust = 0, fontface = "italic", size=4)
+```
 
 ### The End ❤️

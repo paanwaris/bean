@@ -1,4 +1,5 @@
-# In tests/testthat/test-thin_env_density.R
+library(testthat)
+
 test_that("thin_env_density returns an object of the correct class and size", {
   # Setup: create some dummy data
   mock_data <- data.frame(
