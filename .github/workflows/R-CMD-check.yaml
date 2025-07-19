@@ -57,10 +57,19 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      # Restore dependencies with renv if used
+      - name: Restore renv dependencies
+        run: Rscript -e 'if (requireNamespace("renv", quietly = TRUE)) renv::restore()'
+
+      # Ensure required packages are installed
+      - name: Install xml2 and covr
+        run: |
+          Rscript -e 'if (!requireNamespace("xml2", quietly = TRUE)) install.packages("xml2")'
+          Rscript -e 'if (!requireNamespace("covr", quietly = TRUE)) install.packages("covr")'
+
       # Generate coverage.xml for Codecov
       - name: Generate coverage.xml
         run: |
-          Rscript -e 'if (!requireNamespace("covr", quietly = TRUE)) install.packages("covr")'
           Rscript -e 'covr::to_cobertura(covr::package_coverage(), "coverage.xml")'
 
       - name: Upload coverage reports to Codecov
