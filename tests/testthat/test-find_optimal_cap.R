@@ -58,7 +58,39 @@ test_that("find_optimal_cap handles edge cases and bad input", {
   # Throws error if grid_resolution has wrong length
   expect_error(find_optimal_cap(mock_data, c("temp", "precip"), c(1, 2, 3), 0.5))
 
-  # Throws error with no complete observations
-  no_data <- data.frame(temp = c(1, NA), precip = c(NA, 2))
-  expect_error(find_optimal_cap(no_data, c("temp"), 1, 0.5))
+  # Throws error with no incomplete variable
+  expect_error(find_optimal_cap(mock_data, c("temp"), 1, 0.5))
+})
+
+test_that("print.bean_optimization prints expected output", {
+  mock_data <- data.frame(
+    temp = c(1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 3.1),
+    precip = c(10.1, 10.2, 10.3, 20.1, 20.2, 20.3, 20.4, 30.1)
+  )
+  set.seed(1)
+  optimal_result <- find_optimal_cap(
+    data = mock_data,
+    env_vars = c("temp", "precip"),
+    grid_resolution = 1,
+    target_percent = 0.75,
+    verbose = FALSE
+  )
+  expect_output(print(optimal_result), "Bean Optimization Results")
+})
+
+test_that("plot.bean_optimization returns a ggplot object", {
+  mock_data <- data.frame(
+    temp = c(1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 3.1),
+    precip = c(10.1, 10.2, 10.3, 20.1, 20.2, 20.3, 20.4, 30.1)
+  )
+  set.seed(1)
+  optimal_result <- find_optimal_cap(
+    data = mock_data,
+    env_vars = c("temp", "precip"),
+    grid_resolution = 1,
+    target_percent = 0.75,
+    verbose = FALSE
+  )
+  plt <- plot(optimal_result)
+  expect_s3_class(plt, "ggplot")
 })

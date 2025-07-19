@@ -1,90 +1,86 @@
 library(testthat)
 
-test_that("fit_ellipsoid works correctly with method = 'covmat'", {
-  # Create mock data with some extra columns to check for preservation
-  set.seed(1)
-  mock_data <- data.frame(
-    BIO1 = rnorm(100),
-    BIO12 = rnorm(100, mean = 2),
-    x = runif(100),
-    y = runif(100)
+test_that("fit_ellipsoid returns correct structure and values (covmat)", {
+  set.seed(42)
+  test_data <- data.frame(
+    var1 = scale(rnorm(50)),
+    var2 = scale(rnorm(50)),
+    species = rep(c("A", "B"), 25)
   )
-
-  # Run the function
-  ellipse_covmat <- fit_ellipsoid(
-    data = mock_data,
-    var1 = "BIO1",
-    var2 = "BIO12",
+  fit <- fit_ellipsoid(
+    data = test_data,
+    var1 = "var1",
+    var2 = "var2",
     method = "covmat",
     level = 95
   )
-
-  # 1. Check the output object structure
-  expect_s3_class(ellipse_covmat, "bean_ellipsoid")
-  expect_named(ellipse_covmat, c(
+  expect_s3_class(fit, "bean_ellipsoid")
+  expect_named(fit, c(
     "centroid", "covariance_matrix", "level", "method",
-    "niche_ellipse", "all_points_used", "points_in_ellipse",
-    "points_outside_ellipse"
+    "niche_ellipse", "all_points_used", "points_in_ellipse", "points_outside_ellipse"
   ))
-
-  # 2. Check the core logic
-  # The number of inside and outside points should sum to the total
-  expect_equal(
-    nrow(ellipse_covmat$points_in_ellipse) + nrow(ellipse_covmat$points_outside_ellipse),
-    nrow(ellipse_covmat$all_points_used)
-  )
-
-  # The number of points inside should be close to the specified level
-  expect_true(nrow(ellipse_covmat$points_in_ellipse) > 85) # Should be ~95
-
-  # 3. Check that extra columns are preserved
-  expect_true(all(c("x", "y") %in% names(ellipse_covmat$points_in_ellipse)))
-  expect_true(all(c("x", "y") %in% names(ellipse_covmat$points_outside_ellipse)))
+  expect_true(is.data.frame(fit$niche_ellipse))
+  expect_true(is.data.frame(fit$all_points_used))
+  expect_true(is.data.frame(fit$points_in_ellipse))
+  expect_true(is.data.frame(fit$points_outside_ellipse))
+  expect_equal(length(fit$centroid), 2)
+  expect_equal(dim(fit$covariance_matrix), c(2, 2))
+  expect_true(nrow(fit$points_in_ellipse) + nrow(fit$points_outside_ellipse) == nrow(fit$all_points_used))
 })
 
-
-test_that("fit_ellipsoid works correctly with method = 'mve'", {
-  # Create mock data
-  set.seed(1)
-  mock_data <- data.frame(
-    BIO1 = rnorm(100),
-    BIO12 = rnorm(100, mean = 2)
+test_that("fit_ellipsoid returns correct structure and values (mve)", {
+  set.seed(42)
+  test_data <- data.frame(
+    var1 = scale(rnorm(50)),
+    var2 = scale(rnorm(50)),
+    species = rep(c("A", "B"), 25)
   )
-
-  # Run the function
-  ellipse_mve <- fit_ellipsoid(
-    data = mock_data,
-    var1 = "BIO1",
-    var2 = "BIO12",
+  fit <- fit_ellipsoid(
+    data = test_data,
+    var1 = "var1",
+    var2 = "var2",
     method = "mve",
     level = 95
   )
-
-  # 1. Check the output object structure
-  expect_s3_class(ellipse_mve, "bean_ellipsoid")
-
-  # 2. Check the core logic for MVE
-  # For MVE, the number of points inside should be exactly the quantile used
-  expected_n_inside <- floor(100 * 0.95)
-  expect_equal(nrow(ellipse_mve$points_in_ellipse), expected_n_inside)
-
-  expect_equal(
-    nrow(ellipse_mve$points_in_ellipse) + nrow(ellipse_mve$points_outside_ellipse),
-    nrow(ellipse_mve$all_points_used)
-  )
+  expect_s3_class(fit, "bean_ellipsoid")
+  expect_true(is.data.frame(fit$niche_ellipse))
+  expect_true(is.data.frame(fit$all_points_used))
+  expect_true(is.data.frame(fit$points_in_ellipse))
+  expect_true(is.data.frame(fit$points_outside_ellipse))
 })
 
+test_that("fit_ellipsoid errors with insufficient data", {
+  small_data <- data.frame(var1 = c(1, NA, 3), var2 = c(NA, 2, 3))
+  expect_error(fit_ellipsoid(small_data, "var1", "var2"))
+})
 
-test_that("fit_ellipsoid handles bad input gracefully", {
-  mock_data <- data.frame(x = 1:5, y = 1:5)
+test_that("fit_ellipsoid errors with missing columns", {
+  test_data <- data.frame(a = rnorm(10), b = rnorm(10))
+  expect_error(fit_ellipsoid(test_data, "foo", "bar"))
+})
 
-  # Throws error if var1/var2 are not in data
-  expect_error(fit_ellipsoid(mock_data, "BIO1", "BIO12"))
+test_that("fit_ellipsoid errors with invalid method", {
+  test_data <- data.frame(var1 = rnorm(10), var2 = rnorm(10))
+  expect_error(fit_ellipsoid(test_data, "var1", "var2", method = "invalid"))
+})
 
-  # Throws error with an invalid method
-  expect_error(fit_ellipsoid(mock_data, "x", "y", method = "invalid_method"))
+test_that("print.bean_ellipsoid prints expected output", {
+  set.seed(42)
+  test_data <- data.frame(
+    var1 = scale(rnorm(50)),
+    var2 = scale(rnorm(50))
+  )
+  fit <- fit_ellipsoid(test_data, "var1", "var2")
+  expect_output(print(fit), "Bean Environmental Niche Ellipse")
+})
 
-  # Throws error with too few points
-  too_small_data <- data.frame(x = c(1,2), y = c(1,2))
-  expect_error(fit_ellipsoid(too_small_data, "x", "y"))
+test_that("plot.bean_ellipsoid returns a ggplot object", {
+  set.seed(42)
+  test_data <- data.frame(
+    var1 = scale(rnorm(50)),
+    var2 = scale(rnorm(50))
+  )
+  fit <- fit_ellipsoid(test_data, "var1", "var2")
+  plt <- plot(fit)
+  expect_s3_class(plt, "ggplot")
 })

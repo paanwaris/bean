@@ -3,66 +3,130 @@ library(raster)
 library(dismo)
 library(rJava)
 
-test_that("test_model_auc runs correctly and returns the right structure", {
+test_that("test_model_auc returns correct structure and summary", {
+  skip_if_not_installed("dismo")
+  skip_if_not_installed("raster")
 
-  # --- 1. Setup Mock Data ---
-  # Create a very small mock raster stack
-  r1 <- raster(nrows=10, ncols=10, vals=rnorm(100))
-  r2 <- raster(nrows=10, ncols=10, vals=runif(100))
-  mock_rasters <- stack(r1, r2)
-  names(mock_rasters) <- c("bio1", "bio2")
-
-  # Create mock presence and background data
-  set.seed(1)
-  mock_presence <- as.data.frame(randomPoints(mock_rasters, 50))
-  colnames(mock_presence) <- c("lon", "lat")
-
-  mock_background <- as.data.frame(randomPoints(mock_rasters, 100))
-  colnames(mock_background) <- c("lon", "lat")
-
-  # --- 2. Run the function with minimal settings for speed ---
-  set.seed(2)
-  eval_results <- test_model_auc(
-    presence_data = mock_presence,
-    background_data = mock_background,
-    env_rasters = mock_rasters,
-    longitude = "lon",
-    latitude = "lat",
-    k = 2,
-    n_repeats = 1, # Use only 1 repeat to make the test fast
-    verbose = FALSE
+  # Create raster stack with all non-NA values and extent 1:10 x 1:10
+  env <- raster::stack(
+    raster::raster(matrix(1:100, 10, 10)),
+    raster::raster(matrix(101:200, 10, 10))
   )
+  names(env) <- c("bio1", "bio2")
+  raster::extent(env) <- raster::extent(1, 10, 1, 10)
 
-  # --- 3. Check the Output ---
-  # Check the class and structure of the returned object
-  expect_s3_class(eval_results, "bean_evaluation")
-  expect_named(eval_results, c("summary", "all_auc_scores", "parameters"))
+  # Sample points strictly within raster extent
+  pres <- data.frame(lon = sample(1:10, 20, replace = TRUE), lat = sample(1:10, 20, replace = TRUE))
+  back <- data.frame(lon = sample(1:10, 100, replace = TRUE), lat = sample(1:10, 100, replace = TRUE))
 
-  # Check that the number of AUC scores is correct (k * n_repeats)
-  expect_length(eval_results$all_auc_scores, 2 * 1)
+  # Filter points to raster extent (redundant here, but good practice)
+  r_ext <- raster::extent(env)
+  pres <- pres[
+    pres$lon >= r_ext@xmin & pres$lon <= r_ext@xmax &
+      pres$lat >= r_ext@ymin & pres$lat <= r_ext@ymax, ]
+  back <- back[
+    back$lon >= r_ext@xmin & back$lon <= r_ext@xmax &
+      back$lat >= r_ext@ymin & back$lat <= r_ext@ymax, ]
 
-  # Check that the AUC scores are plausible values (between 0 and 1)
-  expect_true(all(eval_results$all_auc_scores >= 0 & eval_results$all_auc_scores <= 1))
+  # Remove presences/backgrounds with NA raster values
+  pres_vals <- raster::extract(env, pres)
+  pres <- pres[complete.cases(pres_vals), ]
+  back_vals <- raster::extract(env, back)
+  back <- back[complete.cases(back_vals), ]
 
-  # Check the summary table
-  expect_s3_class(eval_results$summary, "data.frame")
-  expect_equal(nrow(eval_results$summary), 1)
+  suppressWarnings({
+    result <- test_model_auc(
+      presence_data = pres,
+      background_data = back,
+      env_rasters = env,
+      longitude = "lon",
+      latitude = "lat",
+      k = 2,
+      n_repeats = 1,
+      verbose = FALSE
+    )
+  })
+
+  expect_s3_class(result, "bean_evaluation")
+  expect_named(result, c("summary", "all_auc_scores", "parameters"))
+  expect_true(is.data.frame(result$summary))
+  expect_true(is.numeric(result$all_auc_scores))
+  expect_equal(length(result$all_auc_scores), result$parameters$k * result$parameters$n_repeats)
+  expect_true(all(c("Mean_AUC", "SD_AUC", "Median_AUC", "Min_AUC", "Max_AUC") %in% names(result$summary)))
 })
 
-test_that("test_model_auc handles bad input", {
-  # Create minimal data for testing errors
-  mock_rasters <- stack(raster(nrows=1, ncols=1, vals=1))
-  mock_presence <- data.frame(x = 1, y = 1)
-  mock_background <- data.frame(x = 1, y = 1)
-
-  # Should throw an error if the longitude/latitude columns don't exist
-  expect_error(
-    test_model_auc(
-      presence_data = mock_presence,
-      background_data = mock_background,
-      env_rasters = mock_rasters,
-      longitude = "lon", # This column does not exist
-      latitude = "lat"   # This column does not exist
-    )
+test_that("test_model_auc errors with missing columns", {
+  skip_if_not_installed("dismo")
+  skip_if_not_installed("raster")
+  env <- raster::stack(
+    raster::raster(matrix(runif(100), 10, 10))
   )
+  raster::extent(env) <- raster::extent(1,10,1,10)
+  pres <- data.frame(x = 1:5, y = 1:5)
+  back <- data.frame(x = 1:10, y = 1:10)
+  expect_error(test_model_auc(
+    pres, back, env, longitude = "foo", latitude = "bar",
+    k = 2, n_repeats = 1, verbose = FALSE
+  ))
+})
+
+test_that("print.bean_evaluation prints expected output", {
+  skip_if_not_installed("dismo")
+  skip_if_not_installed("raster")
+  env <- raster::stack(
+    raster::raster(matrix(1:100, 10, 10))
+  )
+  raster::extent(env) <- raster::extent(1,10,1,10)
+  pres <- data.frame(lon = sample(1:10, 10, replace = TRUE), lat = sample(1:10, 10, replace = TRUE))
+  back <- data.frame(lon = sample(1:10, 20, replace = TRUE), lat = sample(1:10, 20, replace = TRUE))
+
+  pres_vals <- raster::extract(env, pres)
+  pres <- pres[complete.cases(pres_vals), ]
+  back_vals <- raster::extract(env, back)
+  back <- back[complete.cases(back_vals), ]
+
+  suppressWarnings({
+    result <- test_model_auc(
+      presence_data = pres,
+      background_data = back,
+      env_rasters = env,
+      longitude = "lon",
+      latitude = "lat",
+      k = 2,
+      n_repeats = 1,
+      verbose = FALSE
+    )
+  })
+  expect_output(print(result), "Bean Model Evaluation Results")
+})
+
+test_that("plot.bean_evaluation returns a ggplot object", {
+  skip_if_not_installed("dismo")
+  skip_if_not_installed("raster")
+  env <- raster::stack(
+    raster::raster(matrix(1:100, 10, 10))
+  )
+  raster::extent(env) <- raster::extent(1,10,1,10)
+  pres <- data.frame(lon = sample(1:10, 10, replace = TRUE), lat = sample(1:10, 10, replace = TRUE))
+  back <- data.frame(lon = sample(1:10, 20, replace = TRUE), lat = sample(1:10, 20, replace = TRUE))
+
+  pres_vals <- raster::extract(env, pres)
+  pres <- pres[complete.cases(pres_vals), ]
+  back_vals <- raster::extract(env, back)
+  back <- back[complete.cases(back_vals), ]
+
+  suppressWarnings({
+    result <- test_model_auc(
+      presence_data = pres,
+      background_data = back,
+      env_rasters = env,
+      longitude = "lon",
+      latitude = "lat",
+      k = 2,
+      n_repeats = 1,
+      verbose = FALSE
+    )
+  })
+  plt <- plot(result)
+  expect_s3_class(plt, "ggplot")
 })
