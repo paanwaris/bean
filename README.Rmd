@@ -390,9 +390,15 @@ auc_original <- test_model_auc(
   background_data = as.data.frame(background_points),
   env_rasters = env_rasters,
   longitude = "x",
-  latitude = "y",
-  k = 5,
-  n_repeats = 20
+  latitude = "y", 
+  k = 5, 
+  n_repeats = 20,
+  maxent_args = c("linear=true", 
+                  "quadratic=true", 
+                  "product=false",
+                  "threshold=false", 
+                  "hinge=false", 
+                  "doclamp=true")
 )
 
 auc_original
@@ -407,9 +413,15 @@ auc_thinned <- test_model_auc(
   background_data = as.data.frame(background_points),
   env_rasters = env_rasters,
   longitude = "x",
-  latitude = "y",
-  k = 5,
-  n_repeats = 20
+  latitude = "y", 
+  k = 5, 
+  n_repeats = 20,
+  maxent_args = c("linear=true", 
+                  "quadratic=true", 
+                  "product=false",
+                  "threshold=false", 
+                  "hinge=false", 
+                  "doclamp=true")
 )
 
 auc_thinned

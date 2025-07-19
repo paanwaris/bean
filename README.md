@@ -536,9 +536,15 @@ auc_original <- test_model_auc(
   background_data = as.data.frame(background_points),
   env_rasters = env_rasters,
   longitude = "x",
-  latitude = "y",
-  k = 5,
-  n_repeats = 20
+  latitude = "y", 
+  k = 5, 
+  n_repeats = 20,
+  maxent_args = c("linear=true", 
+                  "quadratic=true", 
+                  "product=false",
+                  "threshold=false", 
+                  "hinge=false", 
+                  "doclamp=true")
 )
 #> Starting 20 repetitions of 5-fold cross-validation...
 #>   - Repetition 1 of 20...
@@ -570,7 +576,7 @@ auc_original
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.708  0.005      0.708   0.692   0.722
+#> 1    0.708  0.005      0.707   0.697   0.718
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -586,9 +592,15 @@ auc_thinned <- test_model_auc(
   background_data = as.data.frame(background_points),
   env_rasters = env_rasters,
   longitude = "x",
-  latitude = "y",
-  k = 5,
-  n_repeats = 20
+  latitude = "y", 
+  k = 5, 
+  n_repeats = 20,
+  maxent_args = c("linear=true", 
+                  "quadratic=true", 
+                  "product=false",
+                  "threshold=false", 
+                  "hinge=false", 
+                  "doclamp=true")
 )
 #> Starting 20 repetitions of 5-fold cross-validation...
 #>   - Repetition 1 of 20...
@@ -620,7 +632,7 @@ auc_thinned
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.713  0.006      0.713   0.699   0.728
+#> 1    0.713  0.006      0.712   0.702   0.726
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -638,13 +650,13 @@ auc_ttest
 #>  Welch Two Sample t-test
 #> 
 #> data:  auc_original$all_auc_scores and auc_thinned$all_auc_scores
-#> t = -7.1925, df = 194.7, p-value = 1.336e-11
+#> t = -6.9145, df = 189.01, p-value = 7.026e-11
 #> alternative hypothesis: true difference in means is not equal to 0
 #> 95 percent confidence interval:
-#>  -0.006757891 -0.003849338
+#>  -0.006521696 -0.003626568
 #> sample estimates:
 #> mean of x mean of y 
-#> 0.7078352 0.7131388
+#> 0.7078872 0.7129613
 
 # --- 5. Visualize the Comparison ---
 # Combine results into a data frame for plotting
