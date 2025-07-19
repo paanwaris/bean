@@ -52,6 +52,17 @@ jobs:
         run: sudo R CMD javareconf
         shell: bash
 
+      # Ensure Xcode and pkg-config are present on macOS for building packages
+      - name: Ensure Xcode and build tools
+        if: runner.os == 'macOS'
+        run: |
+          xcode-select --install || true
+          brew install pkg-config || true
+
+      # Prefer binary packages to reduce build failures
+      - name: Set R to prefer binary packages
+        run: echo 'options(pkgType = "binary")' >> ~/.Rprofile
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
