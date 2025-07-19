@@ -36,12 +36,30 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true
+
+      # Fix: Register Java with R only on non-Windows runners, after R is installed
       - name: Register Java with R
+        if: runner.os != 'Windows'
         run: sudo R CMD javareconf
+        shell: bash
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
 
       - name: Run tests and generate coverage
         run: |
-          Rscript -e '"'library(covr); covr::codecov()'
+          Rscript -e 'library(covr); covr::codecov()'
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
@@ -54,21 +72,6 @@ jobs:
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      - uses: actions/checkout@v4
-
-      - uses: r-lib/actions/setup-pandoc@v2
-
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: ${{ matrix.config.r }}
-          http-user-agent: ${{ matrix.config.http-user-agent }}
-          use-public-rspm: true
-
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          extra-packages: any::rcmdcheck
-          needs: check
 
       - uses: r-lib/actions/check-r-package@v2
         with:
