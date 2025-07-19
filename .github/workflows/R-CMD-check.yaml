@@ -30,11 +30,18 @@ jobs:
       R_KEEP_PKG_SOURCE: yes
 
     steps:
-      - name: Set up JDK 11
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
           distribution: 'temurin'
+          java-version: '17'
+
+      - name: Register Java with R
+        run: sudo R CMD javareconf
+
+      - name: Run tests and generate coverage
+        run: |
+          Rscript -e '"'library(covr); covr::codecov()'
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
