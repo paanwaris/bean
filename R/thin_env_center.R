@@ -14,6 +14,25 @@
 #' @return An object of class \code{bean_thinned_center}.
 #'
 #' @export
+#' @examples
+#' \dontrun{
+#' # 1. Load and prepare the data
+#' occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+#' occ_data <- read.csv(occ_file)
+#'
+#' # 2. Thin the data to grid cell centers
+#' thinned_center_obj <- thin_env_center(
+#'   data = occ_data,
+#'   env_vars = c("BIO1", "BIO12"),
+#'   grid_resolution = c(0.2, 0.2)
+#' )
+#'
+#' # 3. Print the summary
+#' print(thinned_center_obj)
+#'
+#' # 4. Access the new centroid points
+#' thinned_centers_df <- thinned_center_obj$thinned_points
+#' }
 thin_env_center <- function(data, env_vars, grid_resolution, verbose = TRUE) {
   # --- Input Validation and Robust NA/Inf Handling ---
   if (!all(env_vars %in% names(data))) {

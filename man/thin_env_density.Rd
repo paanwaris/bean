@@ -28,3 +28,25 @@ This function thins species occurrence records in a 2D environmental
 space by randomly sampling a specified number of points from each occupied
 grid cell.
 }
+\examples{
+\dontrun{
+# 1. Load and prepare the data
+occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+occ_data <- read.csv(occ_file)
+
+# 2. Thin the data to a max of 1 point per cell
+set.seed(81) # For reproducible results
+thinned_obj <- thin_env_density(
+  data = occ_data,
+  env_vars = c("BIO1", "BIO12"),
+  grid_resolution = c(0.2, 0.2),
+  max_per_cell = 1
+)
+
+# 3. Print the summary
+print(thinned_obj)
+
+# 4. Access the thinned data frame
+thinned_df <- thinned_obj$thinned_data
+}
+}

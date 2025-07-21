@@ -32,3 +32,26 @@ use either a standard covariance matrix or a robust Minimum Volume Ellipsoid.
 The function also correctly identifies which of the input points fall within
 and outside the calculated ellipse boundary, preserving all original columns.
 }
+\examples{
+\dontrun{
+# 1. Create some thinned data to work with
+set.seed(81)
+thinned_data <- data.frame(
+  BIO1 = rnorm(50),
+  BIO12 = rnorm(50)
+)
+
+# 2. Fit a 95\% ellipse using the robust covariance matrix method
+niche_ellipse <- fit_ellipsoid(
+  data = thinned_data,
+  var1 = "BIO1",
+  var2 = "BIO12",
+  method = "covmat",
+  level = 95
+)
+
+# 3. Print the summary and plot the result
+print(niche_ellipse)
+plot(niche_ellipse)
+}
+}

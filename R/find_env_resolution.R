@@ -21,6 +21,26 @@
 #' @export
 #' @importFrom stats dist quantile
 #' @importFrom tidyr pivot_longer
+#' @examples
+#' \dontrun{
+#' # 1. Load the example occurrence data included with the package
+#' occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+#' occ_data <- read.csv(occ_file)
+#
+#' # 2. Find the resolution at the 10th percentile
+#' resolutions <- find_env_resolution(
+#'   data = occ_data,
+#'   env_vars = c("BIO1", "BIO12"),
+#'   quantile = 0.1
+#' )
+#'
+#' # 3. Print the summary and plot the results
+#' print(resolutions)
+#' plot(resolutions)
+#'
+#' # 4. Extract the suggested resolution
+#' grid_res <- resolution_results$suggested_resolution
+#' }
 find_env_resolution <- function(data, env_vars, quantile = 0.1, verbose = TRUE) {
   # --- Input Validation and Data Cleaning ---
   if (!all(env_vars %in% names(data))) {
@@ -86,7 +106,14 @@ print.bean_resolution <- function(x, ...) {
   cat(sprintf("  - %s: %f\n\n", names(x$suggested_resolution)[2], x$suggested_resolution[2]))
   cat("To see the full distance distributions, run plot(your_results_object).\n")
 }
-
+#' Plot bean_resolution results
+#'
+#' Creates a diagnostic plot from the output of \code{\link{find_env_resolution}}.
+#'
+#' @param x An object of class \code{bean_resolution}.
+#' @param ... Additional arguments (not used).
+#'
+#' @return A ggplot object.
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_histogram geom_vline labs theme_bw facet_wrap
 plot.bean_resolution <- function(x, ...) {
@@ -94,7 +121,7 @@ plot.bean_resolution <- function(x, ...) {
   res_data <- data.frame(variable = names(x$suggested_resolution),
                          resolution = x$suggested_resolution)
 
-  ggplot2::ggplot(plot_data, ggplot2::aes(x = distances)) +
+  res_plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = distances)) +
     ggplot2::geom_histogram(bins = 50, fill = "grey80", color = "black") +
     ggplot2::geom_vline(data = res_data, ggplot2::aes(xintercept = resolution),
                         linetype = "dashed", color = "blue", linewidth = 1) +
@@ -106,4 +133,6 @@ plot.bean_resolution <- function(x, ...) {
       y = "Frequency"
     ) +
     ggplot2::theme_bw()
+
+  return(res_plot)
 }

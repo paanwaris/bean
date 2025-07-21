@@ -19,6 +19,28 @@
 #' @importFrom dplyr mutate count pull tibble add_row slice_min filter
 #' @importFrom rlang sym
 #' @importFrom utils txtProgressBar setTxtProgressBar
+#' @examples
+#' \dontrun{
+#' # 1. Load and prepare the data
+#' occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+#' occ_data <- read.csv(occ_file)
+#'
+#' # 2. Find optimal cap to retain ~80% of the data
+#' set.seed(81) # For reproducibility
+#' optimal_params <- find_optimal_cap(
+#'   data = occ_data,
+#'   env_vars = c("BIO1", "BIO12"),
+#'   grid_resolution = 0.2, # Using an example resolution
+#'   target_percent = 0.80
+#' )
+#'
+#' # 3. Print the summary and plot the results
+#' print(optimal_params)
+#' plot(optimal_params)
+#'
+#' # 4. Extract the best cap
+#' best_cap <- optimal_params$best_cap_above_target
+#' }
 find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent, verbose = TRUE) {
   # --- Input Validation and Robust NA/Inf Handling ---
   if (!all(env_vars %in% names(data))) {

@@ -22,6 +22,28 @@
 #' @export
 #' @importFrom stats cov var qchisq mahalanobis
 #' @importFrom MASS cov.mve
+#' @examples
+#' \dontrun{
+#' # 1. Create some thinned data to work with
+#' set.seed(81)
+#' thinned_data <- data.frame(
+#'   BIO1 = rnorm(50),
+#'   BIO12 = rnorm(50)
+#' )
+#'
+#' # 2. Fit a 95% ellipse using the robust covariance matrix method
+#' niche_ellipse <- fit_ellipsoid(
+#'   data = thinned_data,
+#'   var1 = "BIO1",
+#'   var2 = "BIO12",
+#'   method = "covmat",
+#'   level = 95
+#' )
+#'
+#' # 3. Print the summary and plot the result
+#' print(niche_ellipse)
+#' plot(niche_ellipse)
+#' }
 fit_ellipsoid <- function(data, var1, var2, method = "covmat", level = 95) {
   # --- Helper function to find the number of points for MVE ---
   ndata_quantile <- function(n_data, level) {
@@ -113,7 +135,14 @@ print.bean_ellipsoid <- function(x, ...) {
   print(x$centroid)
   cat("\n")
 }
-
+#' Plot bean_ellipsoid results
+#'
+#' Creates a diagnostic plot from the output of \code{\link{fit_ellipsoid}}.
+#'
+#' @param x An object of class \code{bean_ellipsoid}.
+#' @param ... Additional arguments (not used).
+#'
+#' @return A ggplot object.
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_point geom_polygon labs theme_bw scale_color_manual
 plot.bean_ellipsoid <- function(x, ...) {
@@ -135,7 +164,7 @@ plot.bean_ellipsoid <- function(x, ...) {
   plot_data$Status <- ifelse(plot_data$stable_id %in% points_inside$stable_id,
                              "Inside", "Outside")
 
-  ggplot2::ggplot(plot_data, ggplot2::aes(x = .data[[env_vars[1]]], y = .data[[env_vars[2]]])) +
+  fit_ellip_plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = .data[[env_vars[1]]], y = .data[[env_vars[2]]])) +
     # Draw the ellipse polygon first, as a background
     ggplot2::geom_polygon(data = x$niche_ellipse, fill = "#0072B2", alpha = 0.2) +
     # Draw all points, colored by status
@@ -157,4 +186,6 @@ plot.bean_ellipsoid <- function(x, ...) {
       y = paste(env_vars[2])
     ) +
     ggplot2::theme_bw()
+
+  return(fit_ellip_plot)
 }

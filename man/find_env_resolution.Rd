@@ -30,3 +30,23 @@ distribution of all pairwise 1D distances for each variable. The distance
 at a specified lower quantile is returned as a suggested grid resolution
 for each axis.
 }
+\examples{
+\dontrun{
+# 1. Load the example occurrence data included with the package
+occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+occ_data <- read.csv(occ_file)
+# 2. Find the resolution at the 10th percentile
+resolutions <- find_env_resolution(
+  data = occ_data,
+  env_vars = c("BIO1", "BIO12"),
+  quantile = 0.1
+)
+
+# 3. Print the summary and plot the results
+print(resolutions)
+plot(resolutions)
+
+# 4. Extract the suggested resolution
+grid_res <- resolution_results$suggested_resolution
+}
+}

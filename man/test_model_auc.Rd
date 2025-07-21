@@ -49,3 +49,44 @@ model's performance using repeated k-fold cross-validation. It calculates the
 Area Under the Curve (AUC) for each run, providing a distribution of scores
 to assess model stability and predictive accuracy.
 }
+\examples{
+\dontrun{
+# This is a long-running example and requires Maxent to be installed.
+
+# 1. Load the package's example data
+library(raster)
+occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+occ_data <- read.csv(occ_file)
+
+bio1_file <- system.file("extdata", "climate", "BIO1.tif", package = "bean")
+bio12_file <- system.file("extdata", "climate", "BIO12.tif", package = "bean")
+env_rasters <- raster::stack(bio1_file, bio12_file)
+
+# 2. Create background points
+set.seed(1)
+background_pts <- dismo::randomPoints(env_rasters, 1000)
+background_df <- as.data.frame(background_pts)
+colnames(background_df) <- c("x", "y")
+
+# 3. Run the evaluation with minimal settings for the example
+auc_results <- test_model_auc(
+  presence_data = occ_data,
+  background_data = background_df,
+  env_rasters = env_rasters,
+  longitude = "x",
+  latitude = "y",
+  k = 2,
+  n_repeats = 2, # Use a small number for the example
+    maxent_args = c("linear=true",
+    "quadratic=true",
+    "product=false",
+    "threshold=false",
+    "hinge=false",
+    "doclamp=true")
+)
+
+# 4. Print the summary and plot the distribution of AUC scores
+print(auc_results)
+plot(auc_results)
+}
+}

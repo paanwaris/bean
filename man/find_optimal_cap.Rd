@@ -34,3 +34,26 @@ This function searches for optimal density caps using two criteria:
 1) the cap that results in a point count closest to the target percentage, and
 2) the cap that results in the closest point count AT OR ABOVE the target.
 }
+\examples{
+\dontrun{
+# 1. Load and prepare the data
+occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+occ_data <- read.csv(occ_file)
+
+# 2. Find optimal cap to retain ~80\% of the data
+set.seed(81) # For reproducibility
+optimal_params <- find_optimal_cap(
+  data = occ_data,
+  env_vars = c("BIO1", "BIO12"),
+  grid_resolution = 0.2, # Using an example resolution
+  target_percent = 0.80
+)
+
+# 3. Print the summary and plot the results
+print(optimal_params)
+plot(optimal_params)
+
+# 4. Extract the best cap
+best_cap <- optimal_params$best_cap_above_target
+}
+}

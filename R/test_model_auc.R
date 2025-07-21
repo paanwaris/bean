@@ -24,6 +24,46 @@
 #' @export
 #' @importFrom dismo kfold maxent evaluate
 #' @importFrom raster stack
+#' @examples
+#' \dontrun{
+#' # This is a long-running example and requires Maxent to be installed.
+#'
+#' # 1. Load the package's example data
+#' library(raster)
+#' occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+#' occ_data <- read.csv(occ_file)
+#'
+#' bio1_file <- system.file("extdata", "climate", "BIO1.tif", package = "bean")
+#' bio12_file <- system.file("extdata", "climate", "BIO12.tif", package = "bean")
+#' env_rasters <- raster::stack(bio1_file, bio12_file)
+#'
+#' # 2. Create background points
+#' set.seed(1)
+#' background_pts <- dismo::randomPoints(env_rasters, 1000)
+#' background_df <- as.data.frame(background_pts)
+#' colnames(background_df) <- c("x", "y")
+#'
+#' # 3. Run the evaluation with minimal settings for the example
+#' auc_results <- test_model_auc(
+#'   presence_data = occ_data,
+#'   background_data = background_df,
+#'   env_rasters = env_rasters,
+#'   longitude = "x",
+#'   latitude = "y",
+#'   k = 2,
+#'   n_repeats = 2, # Use a small number for the example
+#'     maxent_args = c("linear=true",
+#'     "quadratic=true",
+#'     "product=false",
+#'     "threshold=false",
+#'     "hinge=false",
+#'     "doclamp=true")
+#' )
+#'
+#' # 4. Print the summary and plot the distribution of AUC scores
+#' print(auc_results)
+#' plot(auc_results)
+#' }
 test_model_auc <- function(presence_data, background_data, env_rasters,
                            longitude, latitude, k = 4, n_repeats = 10,
                            maxent_args = c("linear=true", "quadratic=true", "product=false",
@@ -103,13 +143,20 @@ print.bean_evaluation <- function(x, ...) {
 
   cat("\nTo see the distribution of AUC scores, run plot(your_results_object).\n")
 }
-
+#' Plot bean_evaluation results
+#'
+#' Creates a diagnostic plot from the output of \code{\link{test_model_auc}}.
+#'
+#' @param x An object of class \code{bean_evaluation}.
+#' @param ... Additional arguments (not used).
+#'
+#' @return A ggplot object.
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_histogram geom_density geom_vline labs theme_bw
 plot.bean_evaluation <- function(x, ...) {
   plot_data <- data.frame(auc = x$all_auc_scores)
 
-  ggplot2::ggplot(plot_data, ggplot2::aes(x = auc)) +
+  model_auc_plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = auc)) +
     ggplot2::geom_histogram(ggplot2::aes(y = ggplot2::after_stat(density)), bins = 20, fill = "grey80", color = "black", alpha = 0.7) +
     ggplot2::geom_density(color = "blue", linewidth = 1) +
     ggplot2::geom_vline(xintercept = x$summary$Mean_AUC, color = "red", linetype = "dashed", linewidth = 1) +
@@ -120,4 +167,5 @@ plot.bean_evaluation <- function(x, ...) {
       y = "Density"
     ) +
     ggplot2::theme_bw()
+  return(model_auc_plot)
 }

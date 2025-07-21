@@ -25,3 +25,23 @@ This function thins species occurrence records by finding all
 occupied cells in a 2D environmental grid and returning a single new point
 at the exact center of each of those cells. This is a deterministic method.
 }
+\examples{
+\dontrun{
+# 1. Load and prepare the data
+occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+occ_data <- read.csv(occ_file)
+
+# 2. Thin the data to grid cell centers
+thinned_center_obj <- thin_env_center(
+  data = occ_data,
+  env_vars = c("BIO1", "BIO12"),
+  grid_resolution = c(0.2, 0.2)
+)
+
+# 3. Print the summary
+print(thinned_center_obj)
+
+# 4. Access the new centroid points
+thinned_centers_df <- thinned_center_obj$thinned_points
+}
+}
