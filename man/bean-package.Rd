@@ -6,7 +6,7 @@
 \alias{bean-package}
 \title{bean: Data Thinning of Species Occurrences in Environmental Space}
 \description{
-Provides a suite of tools to address sampling bias in species occurrence records by thinning the data in environmental space. This process is a crucial pre-processing step for ecological niche modeling (ENM). The package offers a data-driven protocol to objectively determine thinning parameters and includes multiple methods for thinning (stochastic, deterministic) and for delineating the final environmental condition using robust ellipses. The name "bean"" reflects the core principle of the method: ensuring that each “pod” (a grid cell in environmental space) contains only a specified number of “beans” (occurrence points).
+Provides a suite of tools to address sampling bias in species occurrence records by thinning the data in environmental space. This process is a crucial pre-processing step for ecological niche modeling (ENM). The package offers a data-driven protocol to objectively determine thinning parameters and includes multiple methods for thinning (stochastic, deterministic) and for delineating the final environmental condition using robust ellipses. The name 'bean' reflects the core principle of the method, ensuring that each “pod” (a grid cell in environmental space) contains only a specified number of “beans” (occurrence points).
 }
 \seealso{
 Useful links:
