@@ -30,7 +30,7 @@
 #' optimal_params <- find_optimal_cap(
 #'   data = occ_data,
 #'   env_vars = c("BIO1", "BIO12"),
-#'   grid_resolution = 0.2, # Using an example resolution
+#'   grid_resolution = c(0.2, 0.2), # Using an example resolution
 #'   target_percent = 0.80
 #' )
 #'
