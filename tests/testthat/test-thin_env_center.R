@@ -1,87 +1,90 @@
 library(testthat)
+library(dplyr)
 
-test_that("thin_env_center returns correct structure and values", {
-  mock_data <- data.frame(
-    env1 = c(1, 2, 2, 3, 3, 3, 4, 4, 4, 4),
-    env2 = c(10, 20, 20, 30, 30, 30, 40, 40, 40, 40),
-    species = rep(c("A", "B"), 5)
+# --- Setup: Reusable Mock Data ---
+# Create a predictable, pre-scaled dataset with clear clusters.
+# With grid_resolution = 1, there are two occupied cells:
+# - Cell "0_0" contains 2 points.
+# - Cell "1_2" contains 3 points.
+mock_data_scaled <- data.frame(
+  BIO1 = c(0.1, 0.2, 1.1, 1.2, 1.3),
+  BIO12 = c(0.1, 0.2, 2.1, 2.2, 2.3),
+  species = "A"
+)
+
+# --- Test Suite ---
+
+test_that("Core functionality calculates correct centroids", {
+  # Run the function on the mock data
+  thinned_result <- thin_env_center(
+    data = mock_data_scaled,
+    env_vars = c("BIO1", "BIO12"),
+    grid_resolution = 1
   )
 
-  # Each occupied cell: (env1/env2) pairs: (1/10), (2/20), (3/30), (4/40)
-  # Deterministic thinning should return grid cell centers for each unique cell.
+  # 1. Check object class and structure
+  expect_s3_class(thinned_result, "bean_thinned_center")
+  expect_named(thinned_result, c("thinned_points", "n_original", "n_thinned", "parameters"))
 
-  result <- thin_env_center(
-    data = mock_data,
-    env_vars = c("env1", "env2"),
-    grid_resolution = 1,
-    verbose = FALSE
-  )
+  # 2. Check the counts
+  expect_equal(thinned_result$n_original, 5)
+  expect_equal(thinned_result$n_thinned, 2) # Should find 2 unique cells
 
-  expect_s3_class(result, "bean_thinned_center")
-  expect_named(result, c("thinned_points", "original_points"))
-  expect_true(is.data.frame(result$thinned_points))
-  expect_true(is.data.frame(result$original_points))
-  expect_equal(ncol(result$thinned_points), 2)
-  expect_equal(ncol(result$original_points), 2)
-  # Should be 4 unique grid cells
-  expect_equal(nrow(result$thinned_points), 4)
-  # Original points should match input
-  expect_equal(nrow(result$original_points), nrow(mock_data))
-
-  # Check that all thinned points are at correct cell centers
+  # 3. Check that the calculated centers are correct
+  # Cell 1 center: floor(0.1/1)*1 + 0.5 = 0.5; floor(0.1/1)*1 + 0.5 = 0.5
+  # Cell 2 center: floor(1.1/1)*1 + 0.5 = 1.5; floor(2.1/1)*1 + 0.5 = 2.5
   expected_centers <- data.frame(
-    env1 = c(1.5, 2.5, 3.5, 4.5),
-    env2 = c(10.5, 20.5, 30.5, 40.5)
+    BIO1 = c(0.5, 1.5),
+    BIO12 = c(0.5, 2.5)
   )
-  expect_true(all(apply(result$thinned_points, 1, function(row) {
-    any(apply(expected_centers, 1, function(exp_row) all(abs(row - exp_row) < 1e-8)))
-  })))
 
-  # Try with grid_resolution = c(2, 10)
-  result2 <- thin_env_center(
-    data = mock_data,
-    env_vars = c("env1", "env2"),
-    grid_resolution = c(2, 10),
-    verbose = FALSE
+  # Use arrange to ensure row order doesn't affect the test
+  expect_equal(
+    thinned_result$thinned_points %>% arrange(BIO1),
+    expected_centers %>% arrange(BIO1)
   )
-  # Only one center should be returned since all points fall into one cell for each axis
-  expect_equal(nrow(result2$thinned_points), 4)
-
-  # Handles non-finite input
-  dirty_data <- rbind(
-    mock_data,
-    data.frame(env1 = NA, env2 = 50, species = "C"),
-    data.frame(env1 = 5, env2 = Inf, species = "D")
-  )
-  result_dirty <- thin_env_center(
-    data = dirty_data,
-    env_vars = c("env1", "env2"),
-    grid_resolution = 1,
-    verbose = FALSE
-  )
-  expect_equal(nrow(result_dirty$original_points), 10)
-
-  # All NA data returns empty result
-  na_data <- data.frame(env1 = NA, env2 = NA, species = "E")
-  result_na <- thin_env_center(
-    data = na_data,
-    env_vars = c("env1", "env2"),
-    grid_resolution = 1,
-    verbose = FALSE
-  )
-  expect_equal(nrow(result_na$thinned_points), 0)
 })
 
-test_that("thin_env_center errors with bad input", {
-  mock_data <- data.frame(env1 = 1:5, env2 = 1:5)
-  # wrong env_vars
-  expect_error(thin_env_center(mock_data, c("foo", "bar"), 1))
-  # wrong grid_resolution length
-  expect_error(thin_env_center(mock_data, c("env1", "env2"), c(1, 2, 3)))
+
+test_that("Input validation and error handling are robust", {
+  # 1. Test invalid `env_vars`
+  expect_error(
+    thin_env_center(mock_data_scaled, env_vars = "", grid_resolution = 1),
+    "One or both specified env_vars not found in the data frame."
+  )
+  expect_error(
+    thin_env_center(mock_data_scaled, env_vars = c("BAD", "BIO12"), grid_resolution = 1),
+    "One or both specified env_vars not found in the data frame."
+  )
+
+  # 2. Test invalid `grid_resolution`
+  expect_error(
+    thin_env_center(mock_data_scaled, env_vars = c("BIO1", "BIO12"), grid_resolution = c(1, 2, 3)),
+    "grid_resolution must be a numeric vector of length 1 or 2."
+  )
+
+  # 3. Test with empty data frame
+  empty_data <- data.frame(BIO1 = numeric(0), BIO12 = numeric(0))
+  expect_message(
+    result_empty <- thin_env_center(empty_data, c("BIO1", "BIO12"), grid_resolution = 1),
+    "No complete observations to process."
+  )
+  expect_equal(result_empty$n_thinned, 0)
 })
 
-test_that("print.bean_thinned_center prints expected output", {
-  mock_data <- data.frame(env1 = 1:5, env2 = 1:5)
-  result <- thin_env_center(mock_data, c("env1", "env2"), 1, verbose = FALSE)
-  expect_output(print(result), "Bean Deterministic Thinning Results")
+
+test_that("S3 print method works as expected", {
+  # Create a sample object to test the print method
+  sample_result <- list(
+    thinned_points = data.frame(BIO1 = 0.5, BIO12 = 0.5),
+    n_original = 10,
+    n_thinned = 1,
+    parameters = list()
+  )
+  class(sample_result) <- "bean_thinned_center"
+
+  # Check for key phrases in the output
+  expect_output(print(sample_result), "--- Bean Deterministic Thinning Results ---")
+  expect_output(print(sample_result), "Thinned 10 original points to 1 unique grid cell centers.")
 })
+

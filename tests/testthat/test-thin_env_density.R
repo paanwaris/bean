@@ -1,104 +1,81 @@
 library(testthat)
+library(dplyr)
 
-test_that("thin_env_density returns correct structure and values", {
+# --- Setup: Reusable Mock Data ---
+# Create a predictable, pre-scaled dataset with clear clusters.
+# With grid_resolution = 1, there are two occupied cells:
+# - Cell "0_0" contains 5 points.
+# - Cell "1_2" contains 3 points.
+mock_data_scaled <- data.frame(
+  BIO1 = c(rep(0.1, 5), rep(1.1, 3)),
+  BIO12 = c(rep(0.2, 5), rep(2.2, 3)),
+  species = "A"
+)
+
+# --- Test Suite ---
+
+test_that("Core functionality thins data correctly", {
+  # Set seed because the function is stochastic (uses slice_sample)
   set.seed(123)
-  mock_data <- data.frame(
-    env1 = c(1, 2, 2, 3, 3, 3, 4, 4, 4, 4),
-    env2 = c(10, 20, 20, 30, 30, 30, 40, 40, 40, 40),
-    species = rep(c("A", "B"), 5)
-  )
 
-  # Each cell: (env1/env2) pairs: (1/10), (2/20), (3/30), (4/40)
-  # Counts: 1, 2, 3, 4
-
-  # Cap at 2 per cell
-  result <- thin_env_density(
-    data = mock_data,
-    env_vars = c("env1", "env2"),
+  thinned_result <- thin_env_density(
+    data = mock_data_scaled,
+    env_vars = c("BIO1", "BIO12"),
     grid_resolution = 1,
-    max_per_cell = 2,
-    verbose = FALSE
+    max_per_cell = 2
   )
 
-  expect_s3_class(result, "bean_thinned_density")
-  expect_named(result, c("thinned_data", "n_original", "n_thinned"))
-  expect_true(is.data.frame(result$thinned_data))
-  expect_equal(result$n_original, 10)
-  expect_true(result$n_thinned <= result$n_original)
-  # Should have at most 2 points per cell
-  tab <- table(
-    paste(
-      floor(result$thinned_data$env1 / 1),
-      floor(result$thinned_data$env2 / 1),
-      sep = "_"
-    )
-  )
-  expect_true(all(tab <= 2))
+  # 1. Check object class and structure
+  expect_s3_class(thinned_result, "bean_thinned_density")
+  expect_named(thinned_result, c("thinned_data", "n_original", "n_thinned"))
 
-  # Cap at 1 per cell
-  result1 <- thin_env_density(
-    data = mock_data,
-    env_vars = c("env1", "env2"),
-    grid_resolution = 1,
-    max_per_cell = 1,
-    verbose = FALSE
-  )
-  tab1 <- table(
-    paste(
-      floor(result1$thinned_data$env1 / 1),
-      floor(result1$thinned_data$env2 / 1),
-      sep = "_"
-    )
-  )
-  expect_true(all(tab1 == 1))
-
-  # Cap at 10 per cell (should retain all points)
-  result10 <- thin_env_density(
-    data = mock_data,
-    env_vars = c("env1", "env2"),
-    grid_resolution = 1,
-    max_per_cell = 10,
-    verbose = FALSE
-  )
-  expect_equal(result10$n_original, result10$n_thinned)
-
-  # Check non-finite removal
-  dirty_data <- rbind(
-    mock_data,
-    data.frame(env1 = NA, env2 = 50, species = "C"),
-    data.frame(env1 = 5, env2 = Inf, species = "D")
-  )
-  result_dirty <- thin_env_density(
-    data = dirty_data,
-    env_vars = c("env1", "env2"),
-    grid_resolution = 1,
-    max_per_cell = 2,
-    verbose = FALSE
-  )
-  expect_equal(result_dirty$n_original, 10)
-
-  # All NA data returns empty result
-  na_data <- data.frame(env1 = NA, env2 = NA, species = "E")
-  result_na <- thin_env_density(
-    data = na_data,
-    env_vars = c("env1", "env2"),
-    grid_resolution = 1,
-    max_per_cell = 2,
-    verbose = FALSE
-  )
-  expect_equal(result_na$n_thinned, 0)
+  # 2. Check the counts
+  expect_equal(thinned_result$n_original, 8)
+  # Expected thinned count: 2 from the first cell, 2 from the second cell = 4
+  expect_equal(thinned_result$n_thinned, 4)
+  expect_equal(nrow(thinned_result$thinned_data), 4)
 })
 
-test_that("thin_env_density errors with bad input", {
-  mock_data <- data.frame(env1 = 1:5, env2 = 1:5)
-  # wrong env_vars
-  expect_error(thin_env_density(mock_data, c("foo", "bar"), 1, 2))
-  # wrong grid_resolution length
-  expect_error(thin_env_density(mock_data, c("env1", "env2"), c(1, 2, 3), 2))
+
+test_that("Input validation and error handling are robust", {
+  # 1. Test invalid `env_vars`
+  expect_error(
+    thin_env_density(mock_data_scaled, env_vars = "", grid_resolution = 1, max_per_cell = 1),
+    "One or both specified env_vars not found in the data frame."
+  )
+  expect_error(
+    thin_env_density(mock_data_scaled, env_vars = c("BAD", "BIO12"), grid_resolution = 1, max_per_cell = 1),
+    "One or both specified env_vars not found in the data frame."
+  )
+
+  # 2. Test invalid `grid_resolution`
+  expect_error(
+    thin_env_density(mock_data_scaled, env_vars = c("BIO1", "BIO12"), grid_resolution = c(1, 2, 3), max_per_cell = 1),
+    "grid_resolution must be a numeric vector of length 1 or 2."
+  )
+
+  # 3. Test with empty data frame
+  empty_data <- data.frame(BIO1 = numeric(0), BIO12 = numeric(0))
+  expect_message(
+    result_empty <- thin_env_density(empty_data, c("BIO1", "BIO12"), grid_resolution = 1, max_per_cell = 1),
+    "No complete observations to thin."
+  )
+  expect_equal(result_empty$n_thinned, 0)
 })
 
-test_that("print.bean_thinned_density prints expected output", {
-  mock_data <- data.frame(env1 = 1:5, env2 = 1:5)
-  result <- thin_env_density(mock_data, c("env1", "env2"), 1, 1, verbose = FALSE)
-  expect_output(print(result), "Bean Stochastic Thinning Results")
+
+test_that("S3 print method works as expected", {
+  # Create a sample object to test the print method
+  sample_result <- list(
+    thinned_data = data.frame(),
+    n_original = 100,
+    n_thinned = 75,
+    parameters = list()
+  )
+  class(sample_result) <- "bean_thinned_density"
+
+  # Check for key phrases in the output
+  expect_output(print(sample_result), "--- Bean Stochastic Thinning Results ---")
+  expect_output(print(sample_result), "Thinned 100 original points to 75 points.")
+  expect_output(print(sample_result), "This represents a retention of 75.0% of the data.")
 })

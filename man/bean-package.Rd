@@ -6,7 +6,7 @@
 \alias{bean-package}
 \title{bean: Data Thinning of Species Occurrences in Environmental Space}
 \description{
-Provides tools to address sampling bias in species occurrence records by thinning data in environmental space (E-space), a crucial pre-processing step for ecological niche modeling (ENM). The package offers a data-driven protocol to objectively determine thinning parameters, provides both stochastic and deterministic thinning methods, and includes functions to delineate the resulting environmental niche using robust ellipses. The name 'bean' reflects the core principle of the method: ensuring that each “pod” (a grid cell in E-space) contains only a specified number of “beans” (occurrence points).
+Provides a suite of tools to mitigate sampling bias in species occurrence records by thinning data in the environmental space (E-space). This process could help increase accuracy and precision in species distribution modeling (SDM) and ecological niche modeling (ENM). The package offers a data-driven protocol to determine thinning parameters. Thinning methods (stochastic and deterministic) help reduce oversampled conditions and outlier observations. The name 'bean' reflects the core principle of the method: ensuring that each “pod” (a grid cell in E-space) contains only a specified number of “beans” (occurrence points).
 }
 \seealso{
 Useful links:
@@ -19,9 +19,9 @@ Useful links:
 \author{
 \strong{Maintainer}: Paanwaris Paansri \email{paanwaris@vt.edu}
 
-Authors:
+Other contributors:
 \itemize{
-  \item Luis E. Escobar \email{escobar1@vt.edu}
+  \item Luis E. Escobar \email{escobar1@vt.edu} [contributor]
 }
 
 }

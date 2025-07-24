@@ -4,56 +4,84 @@
 \alias{find_optimal_cap}
 \title{Find optimal density caps based on a target thinning percentage}
 \usage{
-find_optimal_cap(
-  data,
-  env_vars,
-  grid_resolution,
-  target_percent,
-  verbose = TRUE
-)
+find_optimal_cap(data, env_vars, grid_resolution, target_percent = 0.95)
 }
 \arguments{
-\item{data}{A data frame containing species occurrences and environmental data.}
+\item{data}{A data.frame containing species occurrence coordinates and the environmental variables.}
 
-\item{env_vars}{A character vector of length two specifying the names of the
-columns to be used as the axes of the environmental space.}
+\item{env_vars}{A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.}
 
 \item{grid_resolution}{A numeric vector of length one or two specifying the
-resolution(s) for the grid axes. If length one, it is used for both axes.}
+resolution(s) for the grid axes. If length one, it is used for both axes. See Details}
 
-\item{target_percent}{A numeric value (0-1) for the target proportion of
-points to retain.}
-
-\item{verbose}{(logical) If TRUE, prints progress messages. Default = TRUE.}
+\item{target_percent}{A numeric value (0-1) for the target percentage of
+points to retain. A value of 0.95 is recommended to remove 5 percent of the most densely clustered points while retaining most of the data. Default = 0.95.}
 }
 \value{
-An object of class \code{bean_optimization}.
+An object of class \code{bean_optimization}, which is a list containing:
+  \item{best_cap_closest}{The integer density cap value that results in a final count of occurrence points nearest to the target count.}
+  \item{retained_points_closest}{The number of occurrence points retained after thinning with the density cap that provides the closest result.}
+  \item{best_cap_above_target}{The smallest integer density cap value that retains a number of occurrence points greater than or equal to the target occurrence point count. This is often the most practical value to use.}
+  \item{retained_points_above_target}{The number of occurrence points retained after thinning with the best density cap that is at or above the target.}
+  \item{search_results}{A data.frame (as a tibble) containing the thinning results for every density cap value tested.}
+  \item{parameters}{A list of key input parameters used in the optimization, such as the calculated target occurrence point count.}
 }
 \description{
-This function searches for optimal density caps using two criteria:
-1) the cap that results in a point count closest to the target percentage, and
-2) the cap that results in the closest point count AT OR ABOVE the target.
+This function searches for an optimal density cap by evaluating two criteria:
+1) the density cap that results in an occurrence point count closest
+   to the target percentage, and
+2) the density cap that results in an occurrence point count that is closest
+   to, but not below, the target percentage.
+}
+\details{
+### Defining Environmental Grid Axes
+
+The "grid_resolution" parameter is fundamental to how this function operates.
+It defines the dimensions of the grid cells in the environmental space,
+which are used to calculate occurrence density.
+
+A single numeric value (e.g., "grid_resolution = 0.2") will create
+    square grid cells, applying the same resolution to both environmental
+    axes.
+A numeric vector of two values (e.g., "grid_resolution = c(0.2, 0.5)")
+    will create rectangular grid cells, applying a different resolution
+    to each respective axis.
+
+This function's flexibility allows you to tailor the thinning process to the specific
+characteristics of your environmental data.
+}
+\note{
+It is highly recommended to first use the \code{\link{find_env_resolution}}
+function to determine an objective, data-driven resolution. This allows you
+to tailor the thinning process to the specific characteristics of your
+environmental data.
 }
 \examples{
 \dontrun{
-# 1. Load and prepare the data
-occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
-occ_data <- read.csv(occ_file)
+# 1. Create the example occurrence records and environmental variables
+occ_data <- data.frame(
+ BIO1 = c(0, 1, 3, 6),
+ BIO12 = c(0, 10, 30, 60),
+ x = c(1, 1, 0, 0.5),
+ y = c(0, 0.5, 2, 1.5),
+ species = "A"
+)
 
-# 2. Find optimal cap to retain ~80\% of the data
+# 2. Find optimal cap to retain ~95\% of the data
 set.seed(81) # For reproducibility
 optimal_params <- find_optimal_cap(
   data = occ_data,
   env_vars = c("BIO1", "BIO12"),
-  grid_resolution = c(0.2, 0.2), # Using an example resolution
-  target_percent = 0.80
+  scale = TRUE,
+  grid_resolution = c(0.1, 0.2), # Using an example resolution
+  target_percent = 0.95
 )
 
 # 3. Print the summary and plot the results
 print(optimal_params)
 plot(optimal_params)
-
-# 4. Extract the best cap
-best_cap <- optimal_params$best_cap_above_target
 }
+}
+\seealso{
+\code{\link{find_env_resolution}}
 }

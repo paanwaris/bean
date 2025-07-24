@@ -14,6 +14,9 @@ utils::globalVariables(c('env_cell_id',
                          'median',
                          'center_x',
                          'center_y',
-                         'env_cell_id'
+                         'env_cell_id',
+                         'scale',
+                         'unscaled_x',
+                         'unscaled_y'
 
 ))

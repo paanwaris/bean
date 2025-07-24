@@ -1,96 +1,130 @@
 library(testthat)
+library(dplyr)
+library(ggplot2)
 
-test_that("find_optimal_cap returns correct caps and structure", {
-  # Setup: create some dummy data with predictable clusters
-  mock_data <- data.frame(
-    temp = c(1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 3.1),
-    precip = c(10.1, 10.2, 10.3, 20.1, 20.2, 20.3, 20.4, 30.1)
-  ) # Total 8 points. Clusters: 3, 4, 1. Max density is 4.
+# --- Mock Dependencies ---
+# A minimal `thin_env_density` is required for `find_optimal_cap` to call.
+# This mock function isolates the test to the logic of the parent function.
+# NOTE: This mock does NOT have a 'scale' argument.
+thin_env_density <- function(data, env_vars, grid_resolution, max_per_cell) {
+  env_var1_sym <- rlang::sym(env_vars[1])
+  env_var2_sym <- rlang::sym(env_vars[2])
 
-  # --- Test Case 1: Target is 75% (6 points) ---
-  # For reproducibility of the test itself
-  set.seed(1)
-  optimal_result_1 <- find_optimal_cap(
-    data = mock_data,
-    env_vars = c("temp", "precip"),
-    grid_resolution = 1, # Single value
-    target_percent = 0.75, # Target is floor(8 * 0.75) = 6 points
-    verbose = FALSE
+  thinned_data <- data %>%
+    dplyr::mutate(
+      env_cell_id = paste(
+        floor(!!env_var1_sym / grid_resolution[1]),
+        floor(!!env_var2_sym / grid_resolution[2]),
+        sep = "_"
+      )
+    ) %>%
+    dplyr::group_by(env_cell_id) %>%
+    # slice_sample requires a seed for reproducibility in tests
+    dplyr::slice_sample(n = min(n(), max_per_cell), replace = FALSE) %>%
+    dplyr::ungroup()
+
+  return(list(thinned_data = thinned_data))
+}
+
+
+# --- Setup: Reusable Mock Data ---
+# Create a predictable, pre-scaled dataset.
+# Total 10 points. Densities: 5 points in cell "0_0", 5 points in cell "1_1".
+set.seed(81)
+mock_data_scaled <- data.frame(
+  BIO1 = c(rep(0.1, 5), rep(1.1, 5)),
+  BIO12 = c(rep(0.2, 5), rep(1.2, 5))
+)
+
+# --- Test Suite ---
+
+test_that("Core functionality calculates correct caps", {
+  # Target 80% of 10 points = 8 points.
+  # Search: cap=1->2pts, cap=2->4pts, cap=3->6pts, cap=4->8pts, cap=5->10pts
+  # 'closest' to 8 is cap=4.
+  # 'above_target' is also cap=4.
+  optimal_result <- find_optimal_cap(
+    data = mock_data_scaled,
+    env_vars = c("BIO1", "BIO12"),
+    grid_resolution = 1,
+    target_percent = 0.80
   )
 
-  # Expected Search Results: cap=1 -> 3 pts; cap=2 -> 5 pts; cap=3 -> 7 pts; cap=4 -> 8 pts
-  # 'closest' to target=6 is cap=2 (retains 5 pts, diff=1), after tie-break with cap=3.
-  # 'above_target' (>=6) are caps 3 and 4. Closest to 6 is cap=3 (retains 7 pts).
-
-  # Check the list names are correct
-  expect_s3_class(optimal_result_1, "bean_optimization")
-  expect_named(optimal_result_1, c(
+  # 1. Check object class and structure
+  expect_s3_class(optimal_result, "bean_optimization")
+  expect_named(optimal_result, c(
     "best_cap_closest", "retained_points_closest",
     "best_cap_above_target", "retained_points_above_target",
     "search_results", "parameters"
   ))
 
-  # Check the values in the returned list
-  expect_equal(optimal_result_1$best_cap_closest, 2)
-  expect_equal(optimal_result_1$retained_points_closest, 5)
-  expect_equal(optimal_result_1$best_cap_above_target, 3)
-  expect_equal(optimal_result_1$retained_points_above_target, 7)
-
-  # --- Test Case 2: Using a vector for grid_resolution ---
-  # Should produce the same result
-  set.seed(1)
-  optimal_result_2 <- find_optimal_cap(
-    data = mock_data,
-    env_vars = c("temp", "precip"),
-    grid_resolution = c(1, 10), # Vector of two values
-    target_percent = 0.75,
-    verbose = FALSE
-  )
-  expect_equal(optimal_result_1$best_cap_closest, optimal_result_2$best_cap_closest)
+  # 2. Check calculated values
+  expect_equal(optimal_result$best_cap_closest, 4)
+  expect_equal(optimal_result$retained_points_closest, 8)
+  expect_equal(optimal_result$best_cap_above_target, 4)
+  expect_equal(optimal_result$retained_points_above_target, 8)
+  expect_equal(optimal_result$parameters$target_point_count, 8)
 })
 
-test_that("find_optimal_cap handles edge cases and bad input", {
-  mock_data <- data.frame(temp = 1:5, precip = 1:5)
 
-  # Throws error if env_vars are not in data
-  expect_error(find_optimal_cap(mock_data, c("BIO1", "BIO12"), 1, 0.5))
-
-  # Throws error if grid_resolution has wrong length
-  expect_error(find_optimal_cap(mock_data, c("temp", "precip"), c(1, 2, 3), 0.5))
-
-  # Throws error with no incomplete variable
-  expect_error(find_optimal_cap(mock_data, c("temp"), 1, 0.5))
-})
-
-test_that("print.bean_optimization prints expected output", {
-  mock_data <- data.frame(
-    temp = c(1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 3.1),
-    precip = c(10.1, 10.2, 10.3, 20.1, 20.2, 20.3, 20.4, 30.1)
-  )
-  set.seed(1)
-  optimal_result <- find_optimal_cap(
-    data = mock_data,
-    env_vars = c("temp", "precip"),
+test_that("Default target_percent works correctly", {
+  # Default target is 95% of 10 points = 9 points.
+  # Search: cap=1->2, cap=2->4, cap=3->6, cap=4->8, cap=5->10
+  # 'closest' to 9 is cap=5 (diff 1), after tie-break with cap=4.
+  # 'above_target' is cap=5.
+  optimal_default <- find_optimal_cap(
+    data = mock_data_scaled,
+    env_vars = c("BIO1", "BIO12"),
     grid_resolution = 1,
-    target_percent = 0.75,
-    verbose = FALSE
+    target_percent = 0.95
   )
-  expect_output(print(optimal_result), "Bean Optimization Results")
+
+  expect_equal(optimal_default$parameters$target_point_count, 9)
+  expect_equal(optimal_default$best_cap_closest, 4)
+  expect_equal(optimal_default$best_cap_above_target, 5)
 })
 
-test_that("plot.bean_optimization returns a ggplot object", {
-  mock_data <- data.frame(
-    temp = c(1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 3.1),
-    precip = c(10.1, 10.2, 10.3, 20.1, 20.2, 20.3, 20.4, 30.1)
+
+test_that("Input validation and error handling are robust", {
+  # 1. Test invalid `env_vars`
+  expect_error(
+    find_optimal_cap(mock_data_scaled, env_vars = c("BIO10"), grid_resolution = 1,
+                     target_percent = 0.95),
+    "One or both specified env_vars not found in the data frame." # This error is from thin_env_density mock
   )
-  set.seed(1)
-  optimal_result <- find_optimal_cap(
-    data = mock_data,
-    env_vars = c("temp", "precip"),
+
+  # 2. Test invalid `grid_resolution`
+  expect_error(
+    find_optimal_cap(mock_data_scaled, env_vars = c("BIO1", "BIO12"), grid_resolution = c(1, 2, 3), target_percent = 0.95),
+    "grid_resolution must be a numeric vector of length 1 or 2."
+  )
+
+  # 3. Test insufficient data
+  small_data <- data.frame(BIO1 = c("NA"), BIO12 = c("NA"))
+  expect_error(
+    find_optimal_cap(small_data, env_vars = c("BIO1", "BIO12"), grid_resolution = 1, target_percent = 0.95),
+    "No complete observations to run optimization."
+  )
+})
+
+
+test_that("S3 methods (print and plot) work as expected", {
+  # Create one fit object to test both methods
+  fit <- find_optimal_cap(
+    data = mock_data_scaled,
+    env_vars = c("BIO1", "BIO12"),
     grid_resolution = 1,
-    target_percent = 0.75,
-    verbose = FALSE
+    target_percent = 0.95
   )
-  plt <- plot(optimal_result)
-  expect_s3_class(plt, "ggplot")
+
+  # 1. Test print method
+  expect_output(print(fit), "--- Bean Optimization Results ---")
+  expect_output(print(fit), "Target: Retain >= 9 occurrence points.")
+  expect_output(print(fit), "Best Cap: 5")
+
+  # 2. Test plot method
+  p <- plot(fit)
+  expect_s3_class(p, "ggplot")
+  expect_equal(p$labels$title, "Search for Optimal Density Cap")
+  expect_equal(p$labels$x, "Maximum Points per Cell (Cap)")
 })

@@ -4,37 +4,69 @@
 \alias{find_env_resolution}
 \title{Find objective grid resolutions for each environmental axis}
 \usage{
-find_env_resolution(data, env_vars, quantile = 0.1, verbose = TRUE)
+find_env_resolution(data, env_vars, quantile = 0.1)
 }
 \arguments{
-\item{data}{A data frame containing species occurrences and pre-scaled
-environmental data.}
+\item{data}{A data.frame containing species occurrence coordinates and the environmental variables.}
 
-\item{env_vars}{A character vector of length two specifying the names of the
-environmental variables to use.}
+\item{env_vars}{A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.}
 
 \item{quantile}{(numeric) The quantile of pairwise distances to use for the
-resolution. A smaller value (e.g., 0.05 or 0.1) is recommended.
-Default = 0.1.}
-
-\item{verbose}{(logical) If TRUE, prints progress messages and warnings.
-Default = TRUE.}
+precision. A smaller value (e.g., 0.05 or 0.1) is recommended to retain most of the original points and it represents the spacing between closely clustered points.
+Default = 0.1 (10th percentile). See Details.}
 }
 \value{
-An object of class \code{bean_resolution}.
+An object of class \code{bean_resolution}, which is a list containing:
+  \item{suggested_resolution}{A named numeric vector of the calculated grid
+    resolutions for each environmental variable.}
+  \item{distance_distributions}{A data frame containing all pairwise
+    distances for each variable, suitable for plotting.}
+  \item{quantile}{The percentile used for the calculation.}
 }
 \description{
-This function assumes the environmental variables in the input
-data have already been scaled (e.g., using `scale()`). It calculates the
-distribution of all pairwise 1D distances for each variable. The distance
-at a specified lower quantile is returned as a suggested grid resolution
-for each axis.
+This function calculates an objective, data-driven grid resolution for use in
+environmental thinning. It operates by analyzing the distribution of pairwise
+1D distances for each environmental variable separately. The distance at a
+specified lower quantile of this distribution is returned as a suggested
+grid resolution for each axis. The function allows for the creation of rectangular
+grid cells that are adapted to the unique scale and clustering within each
+environmental dimension.
+}
+\details{
+### The Rationale for Using a Distance Quantile (\code{quantile})
+
+Selecting an appropriate grid resolution for environmental thinning is crucial
+for reducing sampling bias without discarding excessive data. Rather than
+relying on an arbitrary, user-defined value, this function employs a
+data-driven heuristic to determine a characteristic scale from the data
+itself based on environmental filtering (Varela et al., 2014).
+
+For each environmental variable, the function calculates all pairwise
+distances between the occurrence points. This creates a distribution that
+reflects the internal spacing and clustering of the data in that one
+dimension. By selecting a low quantile of this distribution (e.g.,
+"quantile = 0.1" for the 10th percentile is recommended), we identify a distance that is
+representative of the spacing between closely clustered points.
+This approach is conceptually powerful because it focuses on the
+distributional edges to identify limiting factors or characteristic scales,
+rather than being limited to an analysis of the mean (Cade & Noon, 2003).
+
+Using the grid resolution from the quantile approach is a robust strategy because it
+adapts the cell size to the inherent data structure. If points are tightly
+clustered in one dimension (e.g., a species has a narrow thermal tolerance),
+the resulting resolution will be fine. If points are spread out, the
+resolution will be coarser.
 }
 \examples{
 \dontrun{
-# 1. Load the example occurrence data included with the package
-occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
-occ_data <- read.csv(occ_file)
+# 1. Create the example occurrence records and environmental variables
+occ_data <- data.frame(
+ BIO1 = c(0, 1, 3, 6),
+ BIO12 = c(0, 10, 30, 60),
+ x = c(1, 1, 0, 0.5),
+ y = c(0, 0.5, 2, 1.5),
+ species = "A"
+)
 # 2. Find the resolution at the 10th percentile
 resolutions <- find_env_resolution(
   data = occ_data,
@@ -45,8 +77,10 @@ resolutions <- find_env_resolution(
 # 3. Print the summary and plot the results
 print(resolutions)
 plot(resolutions)
-
-# 4. Extract the suggested resolution
-grid_res <- resolution_results$suggested_resolution
 }
+}
+\references{
+Cade, B. S., & Noon, B. R. (2003). A gentle introduction to quantile regression for ecologists. Frontiers in Ecology and the Environment, 1(8), 412–420.
+
+Varela, S., Anderson, R. P., García-Valdés, R., & Fernández-González, F. (2014). Environmental filters reduce the effects of sampling bias and improve predictions of ecological niche models. Ecography, 37(11), 1084–1091.
 }

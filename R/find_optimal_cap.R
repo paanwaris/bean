@@ -1,19 +1,48 @@
 #' Find optimal density caps based on a target thinning percentage
 #'
-#' @description This function searches for optimal density caps using two criteria:
-#' 1) the cap that results in a point count closest to the target percentage, and
-#' 2) the cap that results in the closest point count AT OR ABOVE the target.
+#' @description This function searches for an optimal density cap by evaluating two criteria:
+#' 1) the density cap that results in an occurrence point count closest
+#'    to the target percentage, and
+#' 2) the density cap that results in an occurrence point count that is closest
+#'    to, but not below, the target percentage.
 #'
-#' @param data A data frame containing species occurrences and environmental data.
-#' @param env_vars A character vector of length two specifying the names of the
-#'   columns to be used as the axes of the environmental space.
+#' @param data A data.frame containing species occurrence coordinates and the environmental variables.
+#' @param env_vars A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.
 #' @param grid_resolution A numeric vector of length one or two specifying the
-#'   resolution(s) for the grid axes. If length one, it is used for both axes.
-#' @param target_percent A numeric value (0-1) for the target proportion of
-#'   points to retain.
-#' @param verbose (logical) If TRUE, prints progress messages. Default = TRUE.
+#'   resolution(s) for the grid axes. If length one, it is used for both axes. See Details
+#' @param target_percent A numeric value (0-1) for the target percentage of
+#'   points to retain. A value of 0.95 is recommended to remove 5 percent of the most densely clustered points while retaining most of the data. Default = 0.95.
+#' @details
+#' ### Defining Environmental Grid Axes
 #'
-#' @return An object of class \code{bean_optimization}.
+#' The "grid_resolution" parameter is fundamental to how this function operates.
+#' It defines the dimensions of the grid cells in the environmental space,
+#' which are used to calculate occurrence density.
+#'
+#' A single numeric value (e.g., "grid_resolution = 0.2") will create
+#'     square grid cells, applying the same resolution to both environmental
+#'     axes.
+#' A numeric vector of two values (e.g., "grid_resolution = c(0.2, 0.5)")
+#'     will create rectangular grid cells, applying a different resolution
+#'     to each respective axis.
+#'
+#' This function's flexibility allows you to tailor the thinning process to the specific
+#' characteristics of your environmental data.
+#'
+#' @note It is highly recommended to first use the \code{\link{find_env_resolution}}
+#' function to determine an objective, data-driven resolution. This allows you
+#' to tailor the thinning process to the specific characteristics of your
+#' environmental data.
+#'
+#' @seealso \code{\link{find_env_resolution}}
+#'
+#' @return An object of class \code{bean_optimization}, which is a list containing:
+#'   \item{best_cap_closest}{The integer density cap value that results in a final count of occurrence points nearest to the target count.}
+#'   \item{retained_points_closest}{The number of occurrence points retained after thinning with the density cap that provides the closest result.}
+#'   \item{best_cap_above_target}{The smallest integer density cap value that retains a number of occurrence points greater than or equal to the target occurrence point count. This is often the most practical value to use.}
+#'   \item{retained_points_above_target}{The number of occurrence points retained after thinning with the best density cap that is at or above the target.}
+#'   \item{search_results}{A data.frame (as a tibble) containing the thinning results for every density cap value tested.}
+#'   \item{parameters}{A list of key input parameters used in the optimization, such as the calculated target occurrence point count.}
 #'
 #' @export
 #' @importFrom dplyr mutate count pull tibble add_row slice_min filter
@@ -21,33 +50,34 @@
 #' @importFrom utils txtProgressBar setTxtProgressBar
 #' @examples
 #' \dontrun{
-#' # 1. Load and prepare the data
-#' occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
-#' occ_data <- read.csv(occ_file)
+#' # 1. Create the example occurrence records and environmental variables
+#' occ_data <- data.frame(
+#'  BIO1 = c(0, 1, 3, 6),
+#'  BIO12 = c(0, 10, 30, 60),
+#'  x = c(1, 1, 0, 0.5),
+#'  y = c(0, 0.5, 2, 1.5),
+#'  species = "A"
+#' )
 #'
-#' # 2. Find optimal cap to retain ~80% of the data
+#' # 2. Find optimal cap to retain ~95% of the data
 #' set.seed(81) # For reproducibility
 #' optimal_params <- find_optimal_cap(
 #'   data = occ_data,
 #'   env_vars = c("BIO1", "BIO12"),
-#'   grid_resolution = c(0.2, 0.2), # Using an example resolution
-#'   target_percent = 0.80
+#'   scale = TRUE,
+#'   grid_resolution = c(0.1, 0.2), # Using an example resolution
+#'   target_percent = 0.95
 #' )
 #'
 #' # 3. Print the summary and plot the results
 #' print(optimal_params)
 #' plot(optimal_params)
-#'
-#' # 4. Extract the best cap
-#' best_cap <- optimal_params$best_cap_above_target
 #' }
-find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent, verbose = TRUE) {
-  # --- Input Validation and Robust NA/Inf Handling ---
+find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent = 0.95) {
+  # --- Input Validation ---
   if (!all(env_vars %in% names(data))) {
     stop("One or both specified env_vars not found in the data frame.")
   }
-
-  # Ensure grid_resolution is a vector of length 2
   if (length(grid_resolution) == 1) {
     grid_resolution <- c(grid_resolution, grid_resolution)
   } else if (length(grid_resolution) != 2) {
@@ -57,26 +87,23 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent, ve
   env_var1_sym <- rlang::sym(env_vars[1])
   env_var2_sym <- rlang::sym(env_vars[2])
 
+  # --- Data Cleaning ---
+  # Data is assumed to be pre-cleaned by prepare_data(), but we filter just in case.
   clean_data <- data %>%
     dplyr::filter(is.finite(!!env_var1_sym) & is.finite(!!env_var2_sym))
-
-  if (verbose && nrow(clean_data) < nrow(data)) {
-    warning(paste(nrow(data) - nrow(clean_data),
-                  "rows with non-finite values were removed."),
-            call. = FALSE)
-  }
 
   if (nrow(clean_data) == 0) {
     stop("No complete observations to run optimization.")
   }
 
+  # --- Begin Optimization ---
   target_point_count <- floor(nrow(clean_data) * target_percent)
 
   max_density <- clean_data %>%
     dplyr::mutate(
       env_cell_id = paste(
-        floor(!!env_var1_sym / grid_resolution[1]), # Use first resolution
-        floor(!!env_var2_sym / grid_resolution[2]), # Use second resolution
+        floor(!!env_var1_sym / grid_resolution[1]),
+        floor(!!env_var2_sym / grid_resolution[2]),
         sep = "_"
       )
     ) %>%
@@ -85,35 +112,33 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent, ve
     max(na.rm = TRUE)
 
   if (!is.finite(max_density) || max_density < 1) {
-    if (verbose) message("Could not determine a valid maximum density. No thinning will be performed.")
+    message("Could not determine a valid maximum density. No thinning will be performed.")
     max_density <- 1
   }
 
   cap_candidates <- 1:max_density
+  search_results <- dplyr::tibble(cap = integer(), thinned_count = integer())
 
-  search_results <- dplyr::tibble(
-    cap = integer(),
-    thinned_count = integer()
-  )
-
-  if (verbose) {
-    cat("Searching for optimal cap...\n")
-    pb <- utils::txtProgressBar(min = 0, max = max_density, style = 3)
-  }
+  cat("Searching for optimal cap...\n")
+  pb <- utils::txtProgressBar(min = 0, max = max_density, style = 3)
 
   for (cap in cap_candidates) {
+    # Assuming thin_env_density has also been updated to remove the 'scale' argument
     thinned_data <- thin_env_density(
-      clean_data, env_vars, grid_resolution, cap, verbose = FALSE
+      data = clean_data,
+      env_vars = env_vars,
+      grid_resolution = grid_resolution,
+      max_per_cell = cap
     )$thinned_data
 
     search_results <- search_results %>%
       dplyr::add_row(cap = cap, thinned_count = nrow(thinned_data))
 
-    if (verbose) utils::setTxtProgressBar(pb, cap)
+    utils::setTxtProgressBar(pb, cap)
   }
+  close(pb)
 
-  if (verbose) close(pb)
-
+  # --- Process Results ---
   best_result_closest <- search_results %>%
     dplyr::mutate(difference = abs(thinned_count - target_point_count)) %>%
     dplyr::slice_min(order_by = difference, n = 1, with_ties = TRUE) %>%
@@ -148,47 +173,71 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent, ve
 }
 
 #' @export
+#' @keywords internal
 print.bean_optimization <- function(x, ...) {
   cat("--- Bean Optimization Results ---\n\n")
+  cat(sprintf("Target: Retain >= %d occurrence points.\n\n", x$parameters$target_point_count))
+
   cat("Recommendation for 'Closest to Target':\n")
   cat(sprintf("  - Best Cap: %d\n", x$best_cap_closest))
-  cat(sprintf("  - Retained Points: %d\n\n", x$retained_points_closest))
+  cat(sprintf("  - Retained Points: %d (Difference of %d)\n\n",
+              x$retained_points_closest,
+              abs(x$retained_points_closest - x$parameters$target_point_count)))
 
-  cat("Recommendation for 'Closest Above Target':\n")
+  cat("Recommendation for 'Closest Above Target' (Recommended for use):\n")
   if (is.na(x$best_cap_above_target)) {
-    cat("  - No cap found that was at or above the target percentage.\n")
+    cat("  - No cap found that was at or above the target count.\n")
   } else {
     cat(sprintf("  - Best Cap: %d\n", x$best_cap_above_target))
-    cat(sprintf("  - Retained Points: %d\n\n", x$retained_points_above_target))
+    cat(sprintf("  - Retained Points: %d\n", x$retained_points_above_target))
   }
+
+  cat("\n---------------------------------\n")
+  invisible(x)
 }
-#' Plot bean_optimization results
-#'
-#' Creates a diagnostic plot from the output of \code{\link{find_optimal_cap}}.
-#'
-#' @param x An object of class \code{bean_optimization}.
-#' @param ... Additional arguments (not used).
-#'
-#' @return A ggplot object.
+
 #' @export
-#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_vline geom_hline labs theme_bw
+#' @keywords internal
+#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_vline geom_hline labs theme_bw scale_y_continuous
+#' @importFrom scales comma
 plot.bean_optimization <- function(x, ...) {
-  # --- Create Plot ---
   cap_plot <- ggplot2::ggplot(x$search_results, ggplot2::aes(x = cap, y = thinned_count)) +
-    ggplot2::geom_line(color = "gray50") +
-    ggplot2::geom_point(color = "black") +
-    ggplot2::geom_hline(yintercept = x$parameters$target_point_count, linetype = "dashed", color = "red") +
-    ggplot2::geom_vline(xintercept = x$best_cap_closest, linetype = "dashed", color = "blue") +
+    ggplot2::geom_line(color = "gray50", alpha = 0.8) +
+    ggplot2::geom_point(color = "black", size = 2) +
+    ggplot2::geom_hline(
+      yintercept = x$parameters$target_point_count,
+      linetype = "dashed", color = "#E41A1C", linewidth = 1
+    ) +
+    ggplot2::geom_vline(
+      xintercept = x$best_cap_closest,
+      linetype = "dashed", color = "#377EB8", linewidth = 1
+    )
+
+  if (!is.na(x$best_cap_above_target)) {
+    cap_plot <- cap_plot +
+      ggplot2::geom_vline(
+        xintercept = x$best_cap_above_target,
+        linetype = "dashed", color = "#4DAF4A", linewidth = 1
+      )
+  }
+
+  caption_text <- paste0(
+    "Red line: Target count (", x$parameters$target_point_count, ")\n",
+    "Blue line: 'Closest' cap (", x$best_cap_closest, ")"
+  )
+  if (!is.na(x$best_cap_above_target)) {
+    caption_text <- paste0(caption_text, "\nGreen line: 'Above Target' cap (", x$best_cap_above_target, ")")
+  }
+
+  cap_plot <- cap_plot +
     ggplot2::labs(
       title = "Search for Optimal Density Cap",
       x = "Maximum Points per Cell (Cap)",
       y = "Number of Points Retained",
-      caption = paste0(
-        "Red line: Target count (", x$parameters$target_point_count, ")\n",
-        "Blue line: 'Closest' cap (", x$best_cap_closest, ")"
-      )
+      caption = caption_text
     ) +
-    ggplot2::theme_bw()
+    ggplot2::scale_y_continuous(labels = scales::comma) +
+    ggplot2::theme_bw(base_size = 12)
 
   return(cap_plot)
 }

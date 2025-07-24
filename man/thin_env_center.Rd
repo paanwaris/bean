@@ -2,23 +2,28 @@
 % Please edit documentation in R/thin_env_center.R
 \name{thin_env_center}
 \alias{thin_env_center}
-\title{Thin occurrence data to grid cell centers (deterministic)}
+\title{Deterministic centroid}
 \usage{
-thin_env_center(data, env_vars, grid_resolution, verbose = TRUE)
+thin_env_center(data, env_vars, grid_resolution)
 }
 \arguments{
-\item{data}{A data frame containing species occurrences and environmental data.}
+\item{data}{A data.frame containing species occurrence coordinates and the environmental variables.}
 
-\item{env_vars}{A character vector of length two specifying the names of the
-environmental variables to use.}
+\item{env_vars}{A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.}
 
 \item{grid_resolution}{A numeric vector of length one or two specifying the
-resolution(s) for the grid axes. If length one, it is used for both axes.}
-
-\item{verbose}{(logical) If TRUE, prints progress messages. Default = TRUE.}
+resolution(s) for the grid axes. If length one, it is used for both axes. See the Details section of \code{\link{find_optimal_cap}} for a full explanation}
 }
 \value{
-An object of class \code{bean_thinned_center}.
+An object of class \code{bean_thinned_center}. which is a list containing:
+  \item{thinned_points}{A data.frame with two columns representing the new
+    points at the center of each occupied environmental grid cell.}
+  \item{n_original}{An integer representing the number of complete occurrence
+    records in the input data.}
+  \item{n_thinned}{An integer representing the number of unique grid cells
+    that were occupied, which is also the number of points returned.}
+  \item{parameters}{A list of the key parameters used, such as whether
+    scaling was applied.}
 }
 \description{
 This function thins species occurrence records by finding all
@@ -27,21 +32,24 @@ at the exact center of each of those cells. This is a deterministic method.
 }
 \examples{
 \dontrun{
-# 1. Load and prepare the data
-occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
-occ_data <- read.csv(occ_file)
+# 1. Create environmental data
+set.seed(81)
+env_data <- data.frame(
+BIO1 = c(0.1, 0.2, 1.1, 1.2, 1.3),
+BIO12 = c(0.1, 0.2, 2.1, 2.2, 2.3)
+)
 
 # 2. Thin the data to grid cell centers
 thinned_center_obj <- thin_env_center(
-  data = occ_data,
+  data = env_data,
   env_vars = c("BIO1", "BIO12"),
-  grid_resolution = c(0.2, 0.2)
+  grid_resolution = c(0.1, 0.2)
 )
 
 # 3. Print the summary
 print(thinned_center_obj)
-
-# 4. Access the new centroid points
-thinned_centers_df <- thinned_center_obj$thinned_points
 }
+}
+\seealso{
+\code{\link{find_optimal_cap}}, \code{\link{find_env_resolution}}
 }

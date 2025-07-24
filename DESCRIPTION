@@ -1,10 +1,9 @@
 Package: bean
 Type: Package
 Title: Data Thinning of Species Occurrences in Environmental Space
-Version: 0.1.0
-Authors@R: c(person(given = "Paanwaris", family = "Paansri", email = "paanwaris@vt.edu", role = c("aut", "cre")), person(given = "Luis E.", family = "Escobar", email = "escobar1@vt.edu", role = "aut"))
+Version: 0.1.1
 Maintainer: Paanwaris Paansri <paanwaris@vt.edu>
-Description: Provides tools to address sampling bias in species occurrence records by thinning data in environmental space (E-space), a crucial pre-processing step for ecological niche modeling (ENM). The package offers a data-driven protocol to objectively determine thinning parameters, provides both stochastic and deterministic thinning methods, and includes functions to delineate the resulting environmental niche using robust ellipses. The name 'bean' reflects the core principle of the method: ensuring that each “pod” (a grid cell in E-space) contains only a specified number of “beans” (occurrence points).
+Description: Provides a suite of tools to mitigate sampling bias in species occurrence records by thinning data in the environmental space (E-space). This process could help increase accuracy and precision in species distribution modeling (SDM) and ecological niche modeling (ENM). The package offers a data-driven protocol to determine thinning parameters. Thinning methods (stochastic and deterministic) help reduce oversampled conditions and outlier observations. The name 'bean' reflects the core principle of the method: ensuring that each “pod” (a grid cell in E-space) contains only a specified number of “beans” (occurrence points).
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -12,6 +11,11 @@ URL: https://github.com/paanwaris/bean
 BugReports: https://github.com/paanwaris/bean/issues
 RoxygenNote: 7.3.2
 Suggests: 
-Imports: raster, testthat, dismo, dplyr, ggplot2, tidyr, magrittr, rlang, stats, MASS, rJava, covr
-Depends: 
-    R (>= 3.5)
+Imports: raster, terra, testthat, dismo, dplyr, ggplot2, tidyr, magrittr, rlang, stats, MASS, rJava, covr, scales
+Depends: R (>= 3.5)
+Authors@R: c(
+	person("Paanwaris", "Paansri", role = c("cre", "aut"),  
+			email = "paanwaris@vt.edu"),
+	person("Luis E.", "Escobar", role = "ctb", email = "escobar1@vt.edu"))
+Author: Paanwaris Paansri [cre, aut] (ORCID: <https://orcid.org/0000-0001-9992-098X>)
+	Luis E. Escobar [ctb] (ORCID: <https://orcid.org/0000-0001-5735-2750>)
