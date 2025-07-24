@@ -7,9 +7,9 @@
 #' @param data A data.frame containing species occurrence coordinates and the environmental variables.
 #' @param env_vars A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.
 #' @param grid_resolution A numeric vector of length one or two specifying the
-#'   resolution(s) for the grid axes. If length one, it is used for both axes. See the Details section of \code{\link{find_optimal_cap}} for a full explanation
+#'   resolution(s) for the grid axes. If length one, it is used for both axes. See the Details section of \code{\link{find_env_resolution}} for a full explanation
 #' @param max_per_cell An integer specifying the maximum number of points to
-#'   retain per grid cell.
+#'   retain per grid cell. See the Details section of \code{\link{find_optimal_cap}} for a full explanation
 #' @return An object of class \code{bean_thinned_density}, which is a list containing:
 #'   \item{thinned_data}{A data.frame containing the occurrence records that were retained after the thinning process.}
 #'   \item{n_original}{An integer representing the number of complete occurrence records in the input data before thinning.}

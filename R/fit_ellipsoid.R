@@ -56,7 +56,7 @@
 #'
 #' The \code{level} parameter specifies the confidence level for the ellipse,
 #' representing the percentage of the data that the ellipse is intended to
-#' encompass(Cobos et al., 2024). It determines the size of the ellipse by defining a
+#' encompass (Cobos et al., 2024). It determines the size of the ellipse by defining a
 #' statistical boundary based on Mahalanobis distances from the centroid.
 #'
 #' Assuming the data follows a multivariate normal distribution, the boundary of
