@@ -19,7 +19,7 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 The `bean` package provides a tool to address a fundamental challenge in
 species distribution modeling (SDM) and ecological niche modeling (ENM):
 **sampling bias**. Occurrence records for species are rarely collected
-through a systematic, random process. Instead, they often cluster in
+through a systematic, stratified process. Instead, they often cluster in
 easily accessible areas (like roads and cities) or in well-studied
 research sites. This spatial bias can translate into an **environmental
 bias**, where the model incorrectly learns that the species is
@@ -32,7 +32,7 @@ distribution of points across the species’ observed environmental niche,
 reducing the influence of densely clustered records. This allows for the
 construction of a more accurate **fundamental niche** volume, which can
 then be projected into geographic space to create a less biased
-prediction of habitat suitability.
+prediction of area with environmental suitability.
 
 The name `bean` reflects the core principle of the method: ensuring that
 each “pod” (a grid cell in environmental space) contains only a
@@ -51,18 +51,20 @@ if (!require("devtools")) {
 }
 
 # 2. Install bean from GitHub
-devtools::install_github("paanwaris/bean", force = TRUE)
+devtools::install_github("paanwaris/bean")
 ```
 
 ## Package Loading
 
-To perform the necessary analyses, we need several R packages.
+To perform the necessary analyses, we need several R packages for data
+manipulation, visualization, and modeling.
 
 ``` r
 # Load required libraries
 library(bean)
 library(dplyr)
 library(ggplot2)
+library(terra)
 library(raster)
 library(dismo)
 ```
@@ -71,61 +73,97 @@ library(dismo)
 
 ### Step 1: Data Preparation and Visualization
 
-First, load and inspect your data. You’ll need cleaned occurrence
-records and associated environmental variables. It’s essential to remove
-missing values, as they will interfere with analysis.
+The first step is to load your raw species occurrence data and
+environmental raster layers. It’s always a good practice to visualize
+the spatial distribution of your points and inspect the environmental
+layers.
 
 ``` r
-# Load the raw occurrence data
-# This path might need to be adjusted based on your project structure.
-occ_file <- system.file("extdata", "P_maniculatus_samples.csv", package = "bean")
+# Load the raw occurrence data from the package
+occ_file <- system.file("extdata", "Peromyscus_maniculatus_original.csv", package = "bean")
 occ_data_raw <- read.csv(occ_file)
 
-# --- Critical: Clean the data ---
-# Remove rows with NA or other non-finite values in the environmental variables.
-# The functions in 'bean' have internal checks, but it's best practice to do this explicitly.
-occ_data <- occ_data_raw %>%
-  filter(is.finite(BIO1) & is.finite(BIO12))
+# Display the first few rows to understand its structure
+head(occ_data_raw)
+#>                  species          x        y
+#> 1 Peromyscus maniculatus -119.47519 47.37757
+#> 2 Peromyscus maniculatus -119.51685 34.42286
+#> 3 Peromyscus maniculatus  -77.40364 39.08822
+#> 4 Peromyscus maniculatus -122.59932 45.58640
+#> 5 Peromyscus maniculatus -111.85233 34.83941
+#> 6 Peromyscus maniculatus -117.22582 33.38149
 
-head(occ_data)
-#>   X       BIO1       BIO2        BIO3       BIO4       BIO5       BIO6
-#> 1 1 -1.4532242  0.2093895 -1.25028926  1.4868788 -1.2801579 -1.5555510
-#> 2 2 -0.8089705 -0.1140447 -0.38563031  0.4086082 -1.4298291 -0.8036575
-#> 3 3 -0.7874954 -0.1140447 -0.38563031  0.3989951 -1.4048839 -0.7805223
-#> 4 4 -1.8397765  0.5004803  0.04669916  0.1666783 -1.7541167 -1.1159825
-#> 5 5 -1.3028984 -0.2757618 -1.25028926  1.1990196 -1.3300483 -1.1159825
-#> 6 6 -0.3150427 -0.9873171 -0.38563031 -0.8934342 -0.1077337  0.5497509
-#>         BIO7      BIO10      BIO11       BIO12      BIO13      BIO14      BIO15
-#> 1  1.0605147 -1.3376190 -1.6452726 -0.35902605 -0.1057818 -1.0525058  0.7984393
-#> 2  0.1550299 -1.0101018 -0.7985610  0.08377747  0.3391621 -0.5027304  0.7224502
-#> 3  0.1422766 -0.9828087 -0.7698589  0.09254586  0.3454289 -0.4909072  0.7203555
-#> 4  0.3335762 -2.1837049 -1.2290923 -1.18763858 -1.2087413 -0.6859888 -0.9703739
-#> 5  0.5503824 -1.3103259 -1.4587090 -0.30641573  0.0947563 -1.0111248  1.0056930
-#> 6 -0.6611818 -0.8736363  0.1629590 -0.41602056 -0.8327324  0.1889226 -1.4147882
-#>         BIO16      BIO17          x        y
-#> 1 -0.08591658 -1.1162098  -90.10842 45.79468
-#> 2  0.30954512 -0.2943088  -72.23842 42.46228
-#> 3  0.31592354 -0.2832766  -72.23842 42.42062
-#> 4 -1.17981468 -0.8348880 -105.47911 40.21291
-#> 5  0.08630061 -1.0996615  -89.56690 46.25288
-#> 6 -0.84175871  0.2131737 -122.01615 45.83633
-
-# Visualize the initial distribution in environmental space
-ggplot(occ_data, aes(x = BIO1, y = BIO12)) +
+# Visualize the spatial distribution of the occurrence points
+ggplot(occ_data_raw, aes(x = x, y = y)) +
   geom_point(alpha = 0.5, color = "darkred") +
-  labs(
-    title = "Original Occurrence Points in Environmental Space",
-    subtitle = paste(nrow(occ_data), "total points (after cleaning)"),
-    x = "Mean Annual Temperature (BIO1)",
-    y = "Annual Precipitation (BIO12)",
-    caption = "Data for Peromyscus maniculatus"
-  ) +
+  labs(title = "Raw Occurrence Point Distribution") +
   theme_bw()
 ```
 
 <img src="man/figures/README-setup-1.png" width="100%" />
 
-### Step 2: Objective Grid Resolution using Pairwise Distances
+``` r
+
+# Load the environmental raster layers
+bio1_file <- system.file("extdata", "BIO1.tif", package = "bean")
+bio12_file <- system.file("extdata", "BIO12.tif", package = "bean")
+env_rasters <- terra::rast(c(bio1_file, bio12_file))
+
+# Plot the environmental layers to check their extent and values
+plot(env_rasters)
+```
+
+<img src="man/figures/README-setup-2.png" width="100%" />
+
+### Step 2: Prepare Data for Environmental Thinning
+
+Before any analysis, the raw data must be cleaned and standardized. The
+`prepare_bean()` function streamlines this process by: 1. Removing
+records with missing coordinates. 2. Extracting environmental data for
+each point from scaled raster layers. 3. Removing records that fall
+outside the raster extent.
+
+This ensures all subsequent functions work with a clean, complete, and
+scaled dataset.
+
+``` r
+# Run the preparation function to clean and scale the data
+origin_dat_prepared <- prepare_bean(
+  data = occ_data_raw,
+  env_rasters = env_rasters,
+  longitude = "x",
+  latitude = "y"
+)
+#> Extracting environmental data for occurrence points...
+#> Data preparation complete. Returning 1588 clean records.
+
+# View the structure and summary of the clean, scaled data
+head(origin_dat_prepared)
+#>                  species          x        y        BIO1      BIO12
+#> 1 Peromyscus maniculatus -119.47519 47.37757 -0.29112739 -0.9497783
+#> 2 Peromyscus maniculatus -119.51685 34.42286  1.69266992 -0.4476771
+#> 3 Peromyscus maniculatus  -77.40364 39.08822  0.14013289  0.6049739
+#> 4 Peromyscus maniculatus -122.59932 45.58640  0.05388084 -0.2582880
+#> 5 Peromyscus maniculatus -111.85233 34.83941  0.33420002 -0.8704992
+#> 6 Peromyscus maniculatus -117.22582 33.38149  1.97298911 -0.1173473
+summary(origin_dat_prepared)
+#>    species                x                 y              BIO1         
+#>  Length:1588        Min.   :-124.35   Min.   :30.05   Min.   :-2.77087  
+#>  Class :character   1st Qu.:-122.14   1st Qu.:38.46   1st Qu.:-0.74395  
+#>  Mode  :character   Median :-113.85   Median :41.84   Median :-0.09706  
+#>                     Mean   :-105.49   Mean   :41.49   Mean   :-0.12503  
+#>                     3rd Qu.: -87.60   3rd Qu.:44.92   3rd Qu.: 0.44202  
+#>                     Max.   : -67.16   Max.   :48.96   Max.   : 2.36112  
+#>      BIO12         
+#>  Min.   :-1.38581  
+#>  1st Qu.:-0.57210  
+#>  Median :-0.20984  
+#>  Mean   :-0.23528  
+#>  3rd Qu.: 0.08195  
+#>  Max.   : 2.14211
+```
+
+### Step 3: Objective Grid Resolution using Pairwise Distances
 
 The most critical parameter in environmental gridding is the
 `grid_resolution`. Instead of guessing this value, we can derive it
@@ -145,24 +183,21 @@ The `find_env_resolution()` function automates this process.
 # Set a seed for reproducibility of the resampling in the correlogram
 set.seed(81)  
 
-# Let's use the 10th percentile of distances as our resolution
+# A smaller value (e.g., 0.05 or 0.1) is recommended to retain most of the original points and it represents the spacing between closely clustered points.
 resolution_results <- find_env_resolution(
-  data = occ_data,
+  data = origin_dat_prepared,
   env_vars = c("BIO1", "BIO12"),
   quantile = 0.1
 )
 #> Calculating pairwise distances for each environmental axis...
-#> Resolution at 0.10 quantile:
-#>  - BIO1: 0.107376
-#>  - BIO12: 0.039458
 
 # The function returns a suggested resolution and the full distance distribution
 resolution_results
-#> --- Bean Environmental Resolution Analysis (Per-Axis Distance) ---
+#> --- Bean Environmental Resolution Analysis ---
 #> 
-#> Suggested Grid Resolutions:
-#>   - BIO1: 0.107376
-#>   - BIO12: 0.039458
+#> Suggested Grid Resolutions (at the 10% quantile):
+#>   - BIO1: 0.150941
+#>   - BIO12: 0.079279
 #> 
 #> To see the full distance distributions, run plot(your_results_object).
 
@@ -179,7 +214,7 @@ plot(resolution_results)
 grid_res <- resolution_results$suggested_resolution
 ```
 
-### Step 3: Parameter Exploration with `find_optimal_cap()`
+### Step 4: Parameter Exploration with `find_optimal_cap()`
 
 This is the most important step for ensuring a defensible thinning
 strategy. Instead of guessing parameters, `find_optimal_cap()` allows
@@ -193,7 +228,8 @@ effectively. A large value creates a coarse grid, which is better for
 thinning broad-scale bias but may group distinct environmental
 conditions together. \* `target_percent`: This is your goal for data
 retention. A value of `0.8` means you want to keep approximately 80% of
-your data.
+your data. A value of `0.95` is recommended to remove 5% of the most
+densely clustered points while retaining most of the data.
 
 The function returns two key recommendations to guide your choice: 1.
 `best_cap_closest`: The cap that results in a point count *numerically
@@ -203,18 +239,15 @@ target. This is often the safer, more conservative choice if you want to
 avoid losing too much data.
 
 ``` r
-# You can manually define the grid resolution based on ecological knowledge
-# grid_res <- 0.1 # A resolution of 0.1 unit for the environmental axies
-
-# Let's target retaining 80% of the data
+# Let's target retaining 95% of the data as recommended
 optimal_params <- find_optimal_cap(
-  data = occ_data,
+  data = origin_dat_prepared,
   env_vars = c("BIO1", "BIO12"),
   grid_resolution = grid_res,
-  target_percent = 0.80
+  target_percent = 0.95
 )
 #> Searching for optimal cap...
-#>   |                                                                              |                                                                      |   0%  |                                                                              |                                                                      |   1%  |                                                                              |=                                                                     |   1%  |                                                                              |=                                                                     |   2%  |                                                                              |==                                                                    |   2%  |                                                                              |==                                                                    |   3%  |                                                                              |==                                                                    |   4%  |                                                                              |===                                                                   |   4%  |                                                                              |===                                                                   |   5%  |                                                                              |====                                                                  |   5%  |                                                                              |====                                                                  |   6%  |                                                                              |=====                                                                 |   6%  |                                                                              |=====                                                                 |   7%  |                                                                              |=====                                                                 |   8%  |                                                                              |======                                                                |   8%  |                                                                              |======                                                                |   9%  |                                                                              |=======                                                               |   9%  |                                                                              |=======                                                               |  10%  |                                                                              |=======                                                               |  11%  |                                                                              |========                                                              |  11%  |                                                                              |========                                                              |  12%  |                                                                              |=========                                                             |  12%  |                                                                              |=========                                                             |  13%  |                                                                              |=========                                                             |  14%  |                                                                              |==========                                                            |  14%  |                                                                              |==========                                                            |  15%  |                                                                              |===========                                                           |  15%  |                                                                              |===========                                                           |  16%  |                                                                              |============                                                          |  16%  |                                                                              |============                                                          |  17%  |                                                                              |============                                                          |  18%  |                                                                              |=============                                                         |  18%  |                                                                              |=============                                                         |  19%  |                                                                              |==============                                                        |  19%  |                                                                              |==============                                                        |  20%  |                                                                              |==============                                                        |  21%  |                                                                              |===============                                                       |  21%  |                                                                              |===============                                                       |  22%  |                                                                              |================                                                      |  22%  |                                                                              |================                                                      |  23%  |                                                                              |================                                                      |  24%  |                                                                              |=================                                                     |  24%  |                                                                              |=================                                                     |  25%  |                                                                              |==================                                                    |  25%  |                                                                              |==================                                                    |  26%  |                                                                              |===================                                                   |  26%  |                                                                              |===================                                                   |  27%  |                                                                              |===================                                                   |  28%  |                                                                              |====================                                                  |  28%  |                                                                              |====================                                                  |  29%  |                                                                              |=====================                                                 |  29%  |                                                                              |=====================                                                 |  30%  |                                                                              |=====================                                                 |  31%  |                                                                              |======================                                                |  31%  |                                                                              |======================                                                |  32%  |                                                                              |=======================                                               |  32%  |                                                                              |=======================                                               |  33%  |                                                                              |=======================                                               |  34%  |                                                                              |========================                                              |  34%  |                                                                              |========================                                              |  35%  |                                                                              |=========================                                             |  35%  |                                                                              |=========================                                             |  36%  |                                                                              |==========================                                            |  36%  |                                                                              |==========================                                            |  37%  |                                                                              |==========================                                            |  38%  |                                                                              |===========================                                           |  38%  |                                                                              |===========================                                           |  39%  |                                                                              |============================                                          |  39%  |                                                                              |============================                                          |  40%  |                                                                              |============================                                          |  41%  |                                                                              |=============================                                         |  41%  |                                                                              |=============================                                         |  42%  |                                                                              |==============================                                        |  42%  |                                                                              |==============================                                        |  43%  |                                                                              |==============================                                        |  44%  |                                                                              |===============================                                       |  44%  |                                                                              |===============================                                       |  45%  |                                                                              |================================                                      |  45%  |                                                                              |================================                                      |  46%  |                                                                              |=================================                                     |  47%  |                                                                              |=================================                                     |  48%  |                                                                              |==================================                                    |  48%  |                                                                              |==================================                                    |  49%  |                                                                              |===================================                                   |  49%  |                                                                              |===================================                                   |  50%  |                                                                              |===================================                                   |  51%  |                                                                              |====================================                                  |  51%  |                                                                              |====================================                                  |  52%  |                                                                              |=====================================                                 |  52%  |                                                                              |=====================================                                 |  53%  |                                                                              |======================================                                |  54%  |                                                                              |======================================                                |  55%  |                                                                              |=======================================                               |  55%  |                                                                              |=======================================                               |  56%  |                                                                              |========================================                              |  56%  |                                                                              |========================================                              |  57%  |                                                                              |========================================                              |  58%  |                                                                              |=========================================                             |  58%  |                                                                              |=========================================                             |  59%  |                                                                              |==========================================                            |  59%  |                                                                              |==========================================                            |  60%  |                                                                              |==========================================                            |  61%  |                                                                              |===========================================                           |  61%  |                                                                              |===========================================                           |  62%  |                                                                              |============================================                          |  62%  |                                                                              |============================================                          |  63%  |                                                                              |============================================                          |  64%  |                                                                              |=============================================                         |  64%  |                                                                              |=============================================                         |  65%  |                                                                              |==============================================                        |  65%  |                                                                              |==============================================                        |  66%  |                                                                              |===============================================                       |  66%  |                                                                              |===============================================                       |  67%  |                                                                              |===============================================                       |  68%  |                                                                              |================================================                      |  68%  |                                                                              |================================================                      |  69%  |                                                                              |=================================================                     |  69%  |                                                                              |=================================================                     |  70%  |                                                                              |=================================================                     |  71%  |                                                                              |==================================================                    |  71%  |                                                                              |==================================================                    |  72%  |                                                                              |===================================================                   |  72%  |                                                                              |===================================================                   |  73%  |                                                                              |===================================================                   |  74%  |                                                                              |====================================================                  |  74%  |                                                                              |====================================================                  |  75%  |                                                                              |=====================================================                 |  75%  |                                                                              |=====================================================                 |  76%  |                                                                              |======================================================                |  76%  |                                                                              |======================================================                |  77%  |                                                                              |======================================================                |  78%  |                                                                              |=======================================================               |  78%  |                                                                              |=======================================================               |  79%  |                                                                              |========================================================              |  79%  |                                                                              |========================================================              |  80%  |                                                                              |========================================================              |  81%  |                                                                              |=========================================================             |  81%  |                                                                              |=========================================================             |  82%  |                                                                              |==========================================================            |  82%  |                                                                              |==========================================================            |  83%  |                                                                              |==========================================================            |  84%  |                                                                              |===========================================================           |  84%  |                                                                              |===========================================================           |  85%  |                                                                              |============================================================          |  85%  |                                                                              |============================================================          |  86%  |                                                                              |=============================================================         |  86%  |                                                                              |=============================================================         |  87%  |                                                                              |=============================================================         |  88%  |                                                                              |==============================================================        |  88%  |                                                                              |==============================================================        |  89%  |                                                                              |===============================================================       |  89%  |                                                                              |===============================================================       |  90%  |                                                                              |===============================================================       |  91%  |                                                                              |================================================================      |  91%  |                                                                              |================================================================      |  92%  |                                                                              |=================================================================     |  92%  |                                                                              |=================================================================     |  93%  |                                                                              |=================================================================     |  94%  |                                                                              |==================================================================    |  94%  |                                                                              |==================================================================    |  95%  |                                                                              |===================================================================   |  95%  |                                                                              |===================================================================   |  96%  |                                                                              |====================================================================  |  96%  |                                                                              |====================================================================  |  97%  |                                                                              |====================================================================  |  98%  |                                                                              |===================================================================== |  98%  |                                                                              |===================================================================== |  99%  |                                                                              |======================================================================|  99%  |                                                                              |======================================================================| 100%
+#>   |                                                                              |                                                                      |   0%  |                                                                              |==                                                                    |   2%  |                                                                              |===                                                                   |   5%  |                                                                              |=====                                                                 |   7%  |                                                                              |=======                                                               |  10%  |                                                                              |=========                                                             |  12%  |                                                                              |==========                                                            |  15%  |                                                                              |============                                                          |  17%  |                                                                              |==============                                                        |  20%  |                                                                              |===============                                                       |  22%  |                                                                              |=================                                                     |  24%  |                                                                              |===================                                                   |  27%  |                                                                              |====================                                                  |  29%  |                                                                              |======================                                                |  32%  |                                                                              |========================                                              |  34%  |                                                                              |==========================                                            |  37%  |                                                                              |===========================                                           |  39%  |                                                                              |=============================                                         |  41%  |                                                                              |===============================                                       |  44%  |                                                                              |================================                                      |  46%  |                                                                              |==================================                                    |  49%  |                                                                              |====================================                                  |  51%  |                                                                              |======================================                                |  54%  |                                                                              |=======================================                               |  56%  |                                                                              |=========================================                             |  59%  |                                                                              |===========================================                           |  61%  |                                                                              |============================================                          |  63%  |                                                                              |==============================================                        |  66%  |                                                                              |================================================                      |  68%  |                                                                              |==================================================                    |  71%  |                                                                              |===================================================                   |  73%  |                                                                              |=====================================================                 |  76%  |                                                                              |=======================================================               |  78%  |                                                                              |========================================================              |  80%  |                                                                              |==========================================================            |  83%  |                                                                              |============================================================          |  85%  |                                                                              |=============================================================         |  88%  |                                                                              |===============================================================       |  90%  |                                                                              |=================================================================     |  93%  |                                                                              |===================================================================   |  95%  |                                                                              |====================================================================  |  98%  |                                                                              |======================================================================| 100%
 
 # The function automatically saves results to the output directory.
 # We can also inspect the returned list object.
@@ -222,13 +255,17 @@ optimal_params <- find_optimal_cap(
 optimal_params
 #> --- Bean Optimization Results ---
 #> 
-#> Recommendation for 'Closest to Target':
-#>   - Best Cap: 454
-#>   - Retained Points: 8000
+#> Target: Retain >= 1508 occurrence points.
 #> 
-#> Recommendation for 'Closest Above Target':
-#>   - Best Cap: 454
-#>   - Retained Points: 8000
+#> Recommendation for 'Closest to Target':
+#>   - Best Cap: 20
+#>   - Retained Points: 1508 (Difference of 0)
+#> 
+#> Recommendation for 'Closest Above Target' (Recommended for use):
+#>   - Best Cap: 20
+#>   - Retained Points: 1508
+#> 
+#> ---------------------------------
 
 # Visualize the search process to understand the trade-offs
 # The plot is also saved as a PNG in the output directory.
@@ -241,50 +278,87 @@ plot(optimal_params)
 #The plot and the output list show that to get closest to our target of 80%.
 ```
 
-### Step 4: Apply Thinning
+### Step 5: Apply Thinning
+
+Now that we have an objective `grid_resolution` and an optimal
+`max_per_cell`, we can apply the thinning. We offer two methods:
+stochastic and deterministic.
 
 #### Method A: Stochastic Thinning with `thin_env_density`
 
-Based on the exploration in Step 2, you can now make an informed
-decision and apply the final thinning. For this protocol, we will
-proceed with the `best_cap_above_target` to ensure we meet our minimum
-data requirement.
+This method randomly samples up to `max_per_cell` points from each
+occupied grid cell. It’s the most common approach.
 
 ``` r
-# --- Choose a cap and apply thinning ---
-# This logic ensures that even if one recommendation is NA, the code will not fail.
-
-# Default to a safe value
+# Use the recommended cap from the previous step
 chosen_cap <- optimal_params$best_cap_above_target
-# Proceeding with cap 
-chosen_cap
-#> [1] 454
 
-thinned_data <- thin_env_density(
-  data = occ_data,
+# Apply the stochastic thinning
+thinned_stochastic <- thin_env_density(
+  data = origin_dat_prepared,
   env_vars = c("BIO1", "BIO12"),
   grid_resolution = grid_res, 
   max_per_cell = chosen_cap
 )
 
-thinned_data
+# Print the summary of the thinning results
+thinned_stochastic
 #> --- Bean Stochastic Thinning Results ---
 #> 
-#> Thinned 10000 original points to 8000 points.
-#> This represents a retention of 80.0% of the data.
+#> Thinned 1588 original points to 1508 points.
+#> This represents a retention of 95.0% of the data.
+#> 
+#> --------------------------------------
+head(thinned_stochastic$thinned_data)
+#>                  species         x        y      BIO1      BIO12
+#> 1 Peromyscus maniculatus -120.6832 47.29426 -1.455530 -0.9057344
+#> 2 Peromyscus maniculatus -114.1017 46.62778 -1.477093 -1.0114399
+#> 3 Peromyscus maniculatus -114.9348 47.46088 -1.433967 -0.9938223
+#> 4 Peromyscus maniculatus -114.1434 46.71109 -1.412404 -1.0158443
+#> 5 Peromyscus maniculatus -113.4352 46.91936 -1.498656 -1.0202487
+#> 6 Peromyscus maniculatus -112.0189 46.58612 -1.369278 -1.0819103
 ```
 
-### Visualize the Thinning Process with Grids
+#### Method B: Deterministic Thinning with `thin_env_center`
 
-To see exactly what the function is doing, we can draw the environmental
-grid over our plots.
+This method provides a simpler, non-random alternative. It returns a
+single new point at the exact center of every occupied grid cell,
+regardless of how many points were originally in it.
 
 ``` r
-# --- Calculate Grid Line Positions ---
-# The grid lines correspond to the 'grid_resolution' parameter.
+# Apply the deterministic thinning
+thinned_deterministic <- thin_env_center(
+  data = origin_dat_prepared,
+  env_vars = c("BIO1", "BIO12"),
+  grid_resolution = grid_res
+)
 
+# Print the summary of the thinning results
+thinned_deterministic
+#> --- Bean Deterministic Thinning Results ---
+#> 
+#> Thinned 1588 original points to 371 unique grid cell centers.
+#> 
+#> -----------------------------------------
+head(thinned_deterministic$thinned_points)
+#>          BIO1      BIO12
+#> 1 -0.22641165 -0.9117102
+#> 2  1.73582265 -0.4360353
+#> 3  0.07547055  0.5945936
+#> 4  0.07547055 -0.2774770
+#> 5  0.37735275 -0.8324311
+#> 6  2.03770485 -0.1189187
+```
+
+### Step 6: Visualize the Thinning Results
+
+To understand the effect of thinning, we can visualize the original and
+thinned points on the environmental grid.
+
+``` r
+# --- Calculate Grid Line Positions for Plotting ---
 # For the x-axis (BIO1)
-x_range <- range(occ_data$BIO1, na.rm = TRUE)
+x_range <- range(origin_dat_prepared$BIO1, na.rm = TRUE)
 x_breaks <- seq(
   from = floor(x_range[1] / grid_res[1]) * grid_res[1],
   to = ceiling(x_range[2] / grid_res[1]) * grid_res[1],
@@ -292,7 +366,7 @@ x_breaks <- seq(
 )
 
 # For the y-axis (BIO12)
-y_range <- range(occ_data$BIO12, na.rm = TRUE)
+y_range <- range(origin_dat_prepared$BIO12, na.rm = TRUE)
 y_breaks <- seq(
   from = floor(y_range[1] / grid_res[2]) * grid_res[2],
   to = ceiling(y_range[2] / grid_res[2]) * grid_res[2],
@@ -300,110 +374,41 @@ y_breaks <- seq(
 )
 ```
 
-Now, let’s create the plots with the grid overlay.
-
-#### Original Data with Grid
-
-This plot shows the initial clustering of points within the
-environmental grid cells.
-
-``` r
-ggplot(occ_data, aes(x = BIO1, y = BIO12)) +
-  geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
-  geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
-  geom_point(color = "#D55E00", alpha = 0.6, size = 1.5) +
-  labs(
-    title = "Original Points with Environmental Grid",
-    subtitle = paste(nrow(occ_data), "total points"),
-    x = "Mean Annual Temperature (BIO1)",
-    y = "Annual Precipitation (BIO12)"
-  ) +
-  theme_bw() +
-  theme(panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank())
-```
-
-<img src="man/figures/README-plot-original-grid-1.png" width="100%" />
-
-#### Thinned Data with Grid
-
-This plot shows the result: a maximum of 454 point(s) per cell.
-
-``` r
-ggplot(thinned_data$thinned_data, aes(x = BIO1, y = BIO12)) +
-  geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
-  geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
-  geom_point(color = "#0072B2", alpha = 0.6, size = 1.5) +
-  labs(
-    title = "Thinned Occurrence Points on Environmental Grid",
-    subtitle = paste(nrow(thinned_data), "points remaining (max", chosen_cap, "per cell)"),
-    x = "Mean Annual Temperature (BIO1)",
-    y = "Annual Precipitation (BIO12)"
-  ) +
-  theme_bw() +
-  theme(panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank())
-```
-
-<img src="man/figures/README-plot-thinned-grid-1.png" width="100%" />
-
-#### Combined Comparison with Grid
+#### Combined Comparison Plot
 
 ``` r
 ggplot() +
-  # 1. Plot the original data as a background layer
-  geom_point(data = occ_data, aes(x = BIO1, y = BIO12), 
-             color = "#D55E00", alpha = 0.6, size = 2) +
+  # Plot the original data as a background layer
+  geom_point(data = origin_dat_prepared, aes(x = BIO1, y = BIO12), 
+             color = "#D55E00", alpha = 0.4, size = 2) +
   
-  # 2. Add the grid lines
+  # Add the grid lines
   geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
   geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
   
-  # 3. Plot the thinned data on top in a prominent color
-  geom_point(data = thinned_data$thinned_data, aes(x = BIO1, y = BIO12), 
-             color = "#0072B2", alpha = 0.7, size = 1) +
+  # Plot the stochastically thinned data on top
+  geom_point(data = thinned_stochastic$thinned_data, aes(x = BIO1, y = BIO12), 
+             color = "#0072B2", alpha = 0.7, size = 1.2) +
   
-  # 4. Add informative labels
+  # Add informative labels
   labs(
-    title = "Thinned Points Overlaid on Original Data",
-    subtitle = paste(nrow(thinned_data$thinned_data), "points remaining (blue) from", nrow(occ_data), "original points (orange)"),
-    x = "Mean Annual Temperature (BIO1)",
-    y = "Annual Precipitation (BIO12)"
+    title = "Stochastic Thinning: Thinned Points Overlaid on Original Data",
+    subtitle = paste(nrow(thinned_stochastic$thinned_data), "points remaining (blue) from", nrow(origin_dat_prepared), "original points (orange)"),
+    x = "Mean Annual Temperature (BIO1, scaled)",
+    y = "Annual Precipitation (BIO12, scaled)"
   ) +
   theme_bw() +
-  theme(panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank())
+  theme(panel.grid = element_blank())
 ```
 
 <img src="man/figures/README-plot-combined-comparison-grid-1.png" width="100%" />
-
-#### Method B: Deterministic Thinning with `thin_env_center`
-
-This method is simpler as it does not require choosing a cap. It returns
-one point for every occupied grid cell.
-
-``` r
-thinned_data_center <- thin_env_center(
-  data = occ_data,
-  env_vars = c("BIO1", "BIO12"),
-  grid_resolution = grid_res
-)
-
-thinned_data_center
-#> --- Bean Deterministic Thinning Results ---
-#> 
-#> Thinned 10000 original points to 289 unique grid cell centers.
-```
 
 #### Create the Thinned Center Data with Grid
 
 ``` r
 ggplot() +
   # 1. Plot the original data points as a faded background
-  geom_point(data = occ_data, 
+  geom_point(data = origin_dat_prepared, 
              aes(x = BIO1, y = BIO12), 
              color = "grey40", alpha = 0.5, size = 1.5) + 
   # 2. Add the grid lines
@@ -411,16 +416,16 @@ ggplot() +
   geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
   
   # 3. Plot the new grid cell centers on top
-  geom_point(data = thinned_data_center$thinned_points, 
+  geom_point(data = thinned_deterministic$thinned_points, 
              aes(x = BIO1, y = BIO12), 
-             color = "#D55E00", size = 2, shape = 3, stroke = 1) +
+             color = "#D55E00", size = 1.5, shape = 3, stroke = 1) +
   
   # 4. Add informative labels
   labs(
     title = "Deterministic Thinning to Grid Cell Centers",
-    subtitle = paste(nrow(thinned_data_center$thinned_points), 
+    subtitle = paste(nrow(thinned_deterministic$thinned_points), 
                      "unique cell centers (orange crosses) from", 
-                     nrow(thinned_data_center$original_points), 
+                     nrow(thinned_deterministic$original_points), 
                      "original points (grey)"),
     x = "Mean Annual Temperature (BIO1)",
     y = "Annual Precipitation (BIO12)"
@@ -431,104 +436,92 @@ ggplot() +
     panel.background = element_blank())
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
+<img src="man/figures/README-plot-thinned-center-grid-1.png" width="100%" />
 
-### Step 5: Delineate and Visualize the Niche Ellipse
+### Step 7: Delineate and Visualize the Niche Ellipse
 
-The final step is to take the cleaned, thinned occurrence points and
-formalize the environmental niche by fitting a bivariate ellipse. The
-`fit_ellipsoid()` function delineates this niche boundary.
+After thinning, we can formalize the environmental niche by fitting a
+bivariate ellipse around the points. The `fit_ellipsoid()` function
+delineates this boundary.
 
-### Thinned Density Ellipsoid
+### Stochastic Thinned Ellipsoid
 
 ``` r
 # Fit an ellipse that contains 95% of the thinned data
-niche_ellipse <- fit_ellipsoid(data = thinned_data$thinned_data, 
-                               var1 = "BIO1", 
-                               var2 = "BIO12", 
-                               method = "covmat", 
-                               level = 95)
+stochastic_ellipse <- fit_ellipsoid(data = thinned_stochastic$thinned_data, 
+                                    env_vars = c("BIO1", "BIO12"), 
+                                    method = "covmat", 
+                                    level = 95)
 # The returned object contains all the details
 # We can use the custom print() method for a clean summary
-niche_ellipse
+stochastic_ellipse
 #> --- Bean Environmental Niche Ellipse ---
 #> 
-#> Fitted to 8000 data points at a 95.00% confidence level.
-#> 7495 out of 8000 points (93.7%) fall within the ellipse boundary.
+#> Method: 'covmat'.
+#> Fitted to 1508 data points at a 95.00% percentage of data.
+#> 1448 out of 1508 points (96.0%) fall within the ellipse boundary.
 #> 
-#> Niche Centroid (Mean Vector):
+#> Niche Centroid:
 #>       BIO1      BIO12 
-#> -0.6284533 -0.3699975
+#> -0.1258300 -0.2452734
 
 # And we can use the custom plot() method for a powerful visualization
-plot(niche_ellipse)
+plot(stochastic_ellipse)
 ```
 
 <img src="man/figures/README-fit-ellipse-part1-1.png" width="100%" />
 
-### Thinned Center Ellipsoid
+### Deterministic Thinned Ellipsoid
 
 ``` r
 # Fit an ellipse that contains 95% of the thinned data
-center_niche_ellipse <- fit_ellipsoid(data = thinned_data_center$thinned_points,
-                                      var1 = "BIO1", 
-                                      var2 = "BIO12", 
-                                      method = "covmat", 
-                                      level = 95)
+deterministic_ellipse <- fit_ellipsoid(data = thinned_deterministic$thinned_points,
+                                       env_vars = c("BIO1", "BIO12"), 
+                                       method = "covmat", 
+                                       level = 95)
 # The returned object contains all the details
 # We can use the custom print() method for a clean summary
-center_niche_ellipse
+deterministic_ellipse
 #> --- Bean Environmental Niche Ellipse ---
 #> 
-#> Fitted to 289 data points at a 95.00% confidence level.
-#> 283 out of 289 points (97.9%) fall within the ellipse boundary.
+#> Method: 'covmat'.
+#> Fitted to 371 data points at a 95.00% percentage of data.
+#> 363 out of 371 points (97.8%) fall within the ellipse boundary.
 #> 
-#> Niche Centroid (Mean Vector):
-#>       BIO1      BIO12 
-#> -0.1781544 -0.2234346
+#> Niche Centroid:
+#>        BIO1       BIO12 
+#> -0.08238699 -0.32555737
 
 # And we can use the custom plot() method for a powerful visualization
-plot(center_niche_ellipse)
+plot(deterministic_ellipse)
 ```
 
 <img src="man/figures/README-fit-ellipse-part2-1.png" width="100%" />
 
-### Step 6: Evaluate Model Performance
+### Step 8: Evaluate Model Performance
 
-This is the most important step: did the thinning actually improve our
-model? We will build and evaluate two sets of Maxent models—one with the
-original (but cleaned) data and one with the `bean`-thinned data—and
-then statistically compare their performance using a t-test.
-
-``` r
-# --- 1. Prepare Environmental and Background Data ---
-# Load the climate rasters from the package's 'inst/extdata' directory
-bio1_file <- system.file("extdata", 
-                         "BIO1.tif", 
-                         package = "bean")
-bio12_file <- system.file("extdata",  
-                          "BIO12.tif",
-                          package = "bean")
-env_rasters <- scale(raster::stack(bio1_file, bio12_file))
-plot(env_rasters)
-```
-
-<img src="man/figures/README-model-evaluation-1-1.png" width="100%" />
+Finally, we test whether thinning improved our model. We will build and
+evaluate two sets of Maxent models—one with the original (but cleaned)
+data and one with the `bean`-thinned data—and then statistically compare
+their performance.
 
 ``` r
+# Create background points by sampling from the study area
+# Note: We use the unscaled rasters here for sampling background points.
+set.seed(81)
 
 # Create background points by sampling from the study area
-background_points <- randomPoints(env_rasters, 1000)
+background_points <- randomPoints(scale(raster::stack(env_rasters)), 1000)
+colnames(background_points) <- c("x", "y")
 ```
 
 ``` r
-# --- 2. Run Evaluation on ORIGINAL Data ---
+# --- Run Evaluation on ORIGINAL Data ---
 # Note: In a real analysis, use a higher n_repeats (e.g., 50 or 100).
-# We use a small number here so the example runs quickly.
-auc_original <- test_model_auc(
-  presence_data = occ_data, # Use original, unscaled data for modeling
-  background_data = as.data.frame(background_points),
-  env_rasters = env_rasters,
+auc_original <- test_env_thinning(
+  presence_data = origin_dat_prepared, # Use the cleaned, but unthinned data
+  background_data = background_points,
+  env_rasters = scale(env_rasters),
   longitude = "x",
   latitude = "y", 
   k = 5, 
@@ -538,7 +531,7 @@ auc_original <- test_model_auc(
                   "product=false",
                   "threshold=false", 
                   "hinge=false", 
-                  "doclamp=true")
+                  "doclamp=false")
 )
 #> Starting 20 repetitions of 5-fold cross-validation...
 #>   - Repetition 1 of 20...
@@ -570,21 +563,20 @@ auc_original
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.708  0.005      0.708   0.692   0.724
+#> 1    0.713  0.011      0.713   0.687   0.739
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
-
 plot(auc_original)
 ```
 
 <img src="man/figures/README-model-evaluation-2-1.png" width="100%" />
 
 ``` r
-# --- 3. Run Evaluation on THINNED Data ---
-auc_thinned <- test_model_auc(
-  presence_data = as.data.frame(niche_ellipse$points_in_ellipse), # Use the thinned data frame
-  background_data = as.data.frame(background_points),
-  env_rasters = env_rasters,
+# --- Run Evaluation on THINNED Data ---
+auc_thinned <- test_env_thinning(
+  presence_data = stochastic_ellipse$points_in_ellipse, # Use the thinned data
+  background_data = background_points,
+  env_rasters = scale(env_rasters),
   longitude = "x",
   latitude = "y", 
   k = 5, 
@@ -594,7 +586,7 @@ auc_thinned <- test_model_auc(
                   "product=false",
                   "threshold=false", 
                   "hinge=false", 
-                  "doclamp=true")
+                  "doclamp=false")
 )
 #> Starting 20 repetitions of 5-fold cross-validation...
 #>   - Repetition 1 of 20...
@@ -626,7 +618,7 @@ auc_thinned
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.713  0.006      0.713   0.695    0.73
+#> 1    0.734  0.012      0.735   0.701   0.763
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -636,23 +628,23 @@ plot(auc_thinned)
 <img src="man/figures/README-model-evaluation-3-1.png" width="100%" />
 
 ``` r
-# --- 4. Statistically Compare the Results ---
-# Perform a two-sample t-test
+# --- Statistically Compare the Results ---
+# Perform a two-sample t-test to see if the difference in AUC is significant
 auc_ttest <- t.test(auc_original$all_auc_scores, auc_thinned$all_auc_scores)
 auc_ttest
 #> 
 #>  Welch Two Sample t-test
 #> 
 #> data:  auc_original$all_auc_scores and auc_thinned$all_auc_scores
-#> t = -6.0302, df = 192.08, p-value = 8.245e-09
+#> t = -13.011, df = 197.54, p-value < 2.2e-16
 #> alternative hypothesis: true difference in means is not equal to 0
 #> 95 percent confidence interval:
-#>  -0.006647788 -0.003370829
+#>  -0.02415648 -0.01779739
 #> sample estimates:
 #> mean of x mean of y 
-#> 0.7079109 0.7129202
+#> 0.7128503 0.7338273
 
-# --- 5. Visualize the Comparison ---
+# --- Visualize the Comparison ---
 # Combine results into a data frame for plotting
 results_df <- data.frame(
   AUC = c(auc_original$all_auc_scores, auc_thinned$all_auc_scores),
@@ -663,7 +655,7 @@ results_df <- data.frame(
   )
 )
 
-# Create the final boxplot
+# Create the final comparison boxplot
 ggplot(results_df, aes(x = DataType, y = AUC, fill = DataType)) +
   geom_boxplot(alpha = 0.7, width=0.5) +
   labs(
@@ -679,7 +671,7 @@ ggplot(results_df, aes(x = DataType, y = AUC, fill = DataType)) +
         plot.subtitle = element_text(hjust = 0.5)) +
   annotate("text", x = 1.5, y = min(results_df$AUC) * 0.99,
            label = paste("T-test p-value =", format.pval(auc_ttest$p.value, digits = 3)),
-           hjust = 0.5, vjust = 0, fontface = "italic", size=4)
+           hjust = 0.5, vjust = 0, fontface = "italic", size = 4)
 ```
 
 <img src="man/figures/README-model-evaluation-4-1.png" width="100%" />
