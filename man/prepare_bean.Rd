@@ -4,7 +4,7 @@
 \alias{prepare_bean}
 \title{Prepare data for environmental thinning}
 \usage{
-prepare_bean(data, env_rasters, longitude, latitude)
+prepare_bean(data, env_rasters, longitude, latitude, scale = TRUE)
 }
 \arguments{
 \item{data}{A data.frame of species occurrences records, including columns
@@ -16,6 +16,10 @@ object of environmental variables.}
 \item{longitude}{(character) The name of the longitude column in \code{data}.}
 
 \item{latitude}{(character) The name of the latitude column in \code{data}.}
+
+\item{scale}{(logical) If "TRUE" (default), the environmental variables in
+\code{env_rasters} will be scaled before extraction. Set to "FALSE" if your
+rasters are already on a comparable scale. See Details}
 }
 \value{
 A data.frame containing the cleaned and scaled occurrence data, with
@@ -28,7 +32,7 @@ This function serves as a pre-processing step to clean and prepare species
 occurrence data. It performs three key actions:
 1. Removes records with missing longitude or latitude values.
 2. Extracts environmental data from raster layers that are already scaled
-   for each occurrence point. See Details
+   for each occurrence point.
 3. Removes records that fall outside the raster extent or have missing
    environmental data.
 The final output is a clean data frame where the environmental variables
@@ -70,7 +74,8 @@ prepared_data <- prepare_bean(
   data = data,
   env_rasters = env_rasters,
   longitude = "x",
-  latitude = "y"
+  latitude = "y",
+  scale = TRUE
 )
 
 # 3. View the clean, scaled data

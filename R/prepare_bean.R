@@ -5,7 +5,7 @@
 #' occurrence data. It performs three key actions:
 #' 1. Removes records with missing longitude or latitude values.
 #' 2. Extracts environmental data from raster layers that are already scaled
-#'    for each occurrence point. See Details
+#'    for each occurrence point.
 #' 3. Removes records that fall outside the raster extent or have missing
 #'    environmental data.
 #' The final output is a clean data frame where the environmental variables
@@ -17,6 +17,9 @@
 #'   object of environmental variables.
 #' @param longitude (character) The name of the longitude column in \code{data}.
 #' @param latitude (character) The name of the latitude column in \code{data}.
+#' @param scale (logical) If "TRUE" (default), the environmental variables in
+#'   \code{env_rasters} will be scaled before extraction. Set to "FALSE" if your
+#'   rasters are already on a comparable scale. See Details
 #'
 #' @return A data.frame containing the cleaned and scaled occurrence data, with
 #'   the following columns:
@@ -70,17 +73,17 @@
 #'   data = data,
 #'   env_rasters = env_rasters,
 #'   longitude = "x",
-#'   latitude = "y"
+#'   latitude = "y",
+#'   scale = TRUE
 #' )
 #'
 #' # 3. View the clean, scaled data
 #' head(prepared_data)
 #' summary(prepared_data)
 #' }
-prepare_bean <- function(data, env_rasters, longitude, latitude) {
+prepare_bean <- function(data, env_rasters, longitude, latitude, scale = TRUE) {
   # --- 1. Validate inputs and standardize raster format ---
   if (inherits(env_rasters, "RasterStack")) {
-    # Convert raster::RasterStack to terra::SpatRaster for modern processing
     env_rasters <- terra::rast(env_rasters)
   } else if (!inherits(env_rasters, "SpatRaster")) {
     stop("`env_rasters` must be a SpatRaster from 'terra' or a RasterStack from 'raster'.")
@@ -100,14 +103,19 @@ prepare_bean <- function(data, env_rasters, longitude, latitude) {
     message(sprintf("%d records removed due to missing coordinates.", n_start - n_after_coord_clean))
   }
 
-  # --- 3. Scale rasters first ---
-  # Using terra::scale ensures the output is a SpatRaster, not a matrix.
-  env_rasters_scaled <- terra::scale(env_rasters)
+  # --- 3. Conditionally scale rasters ---
+  if (scale) {
+    message("Scaling environmental rasters...")
+    env_rasters_to_extract <- terra::scale(env_rasters)
+  } else {
+    message("Skipping raster scaling.")
+    env_rasters_to_extract <- env_rasters
+  }
 
-  # --- 4. Extract scaled environmental data ---
+  # --- 4. Extract environmental data ---
   message("Extracting environmental data for occurrence points...")
   env_data_extracted <- terra::extract(
-    env_rasters_scaled,
+    env_rasters_to_extract,
     occ_clean_coords[, coord_vars]
   )
 

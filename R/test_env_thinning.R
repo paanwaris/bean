@@ -74,10 +74,11 @@
 #' @importFrom raster stack
 #' @examples
 #' \dontrun{
-#' # This is a long-running example and requires Maxent to be installed.
+#' # This is a long-running example and requires the "dismo" package to be installed.
 #'
 #' # 1. Load the package's example data
 #' library(raster)
+#' library(dismo)
 #' occ_file <- system.file("extdata", "Peromyscus_maniculatus_prepared.csv", package = "bean")
 #' occ_data <- read.csv(occ_file)
 #'
@@ -116,7 +117,7 @@ test_env_thinning <- function(presence_data, background_data, env_rasters,
                               longitude, latitude, k = 4, n_repeats = 10,
                               maxent_args = c("linear=true", "quadratic=false", "product=false",
                                               "threshold=false", "hinge=false", "doclamp=true")) {
-  # --- Input Validation ---
+  # --- Input Validation and Standardization ---
   if (inherits(env_rasters, "SpatRaster")) {
     env_rasters <- raster::stack(env_rasters)
   }
@@ -132,27 +133,45 @@ test_env_thinning <- function(presence_data, background_data, env_rasters,
   for (rep in 1:n_repeats) {
     cat(sprintf("  - Repetition %d of %d...\n", rep, n_repeats))
 
-    # Create random folds for each repetition
-    # Assumes user has set a seed externally for reproducibility
     folds <- dismo::kfold(presence_coords, k = k)
-
     auc_scores_for_this_rep <- numeric(k)
 
     for (i in 1:k) {
       train_p <- presence_coords[folds != i, ]
       test_p  <- presence_coords[folds == i, ]
 
-      mx_model <- dismo::maxent(
-        x = env_rasters,
-        p = train_p,
-        a = background_coords,
-        args = maxent_args
-      )
+      # --- NEW ROBUST SAFETY CHECK ---
+      # Extract environmental data for the training fold
+      train_env_data <- raster::extract(env_rasters, train_p)
 
-      model_eval <- dismo::evaluate(p = test_p, a = background_coords, model = mx_model, x = env_rasters)
-      auc_scores_for_this_rep[i] <- model_eval@auc
+      # Check for zero variance in any environmental variable
+      # This handles cases with one (vector) or multiple (matrix) raster layers
+      if (is.vector(train_env_data)) {
+        variances <- stats::var(train_env_data, na.rm = TRUE)
+      } else {
+        variances <- apply(train_env_data, 2, stats::var, na.rm = TRUE)
+      }
+
+      if (any(is.na(variances)) || any(variances == 0)) {
+        message(sprintf("    Skipping fold %d in rep %d due to zero variance in training data.", i, rep))
+        auc_scores_for_this_rep[i] <- NA # Record as NA and skip to the next fold
+        next
+      }
+      # --- END SAFETY CHECK ---
+
+      # Suppress Maxent's verbose output for cleaner calibration logs
+      suppressMessages({
+        mx_model <- dismo::maxent(
+          x = env_rasters,
+          p = train_p,
+          a = background_coords,
+          args = maxent_args
+        )
+
+        model_eval <- dismo::evaluate(p = test_p, a = background_coords, model = mx_model, x = env_rasters)
+        auc_scores_for_this_rep[i] <- model_eval@auc
+      })
     }
-
     all_auc_scores[[rep]] <- auc_scores_for_this_rep
   }
 
@@ -162,11 +181,11 @@ test_env_thinning <- function(presence_data, background_data, env_rasters,
   auc_vector <- unlist(all_auc_scores)
 
   summary_stats <- data.frame(
-    Mean_AUC = mean(auc_vector),
-    SD_AUC = sd(auc_vector),
-    Median_AUC = median(auc_vector),
-    Min_AUC = min(auc_vector),
-    Max_AUC = max(auc_vector)
+    Mean_AUC = mean(auc_vector, na.rm = TRUE),
+    SD_AUC = sd(auc_vector, na.rm = TRUE),
+    Median_AUC = median(auc_vector, na.rm = TRUE),
+    Min_AUC = min(auc_vector, na.rm = TRUE),
+    Max_AUC = max(auc_vector, na.rm = TRUE)
   )
 
   results <- list(

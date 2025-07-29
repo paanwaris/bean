@@ -1,9 +1,9 @@
 Package: bean
 Type: Package
 Title: Data Thinning of Species Occurrences in Environmental Space
-Version: 0.1.1
+Version: 0.1.2
 Maintainer: Paanwaris Paansri <paanwaris@vt.edu>
-Description: Provides a suite of tools to mitigate sampling bias in species occurrence records by thinning data in the environmental space (E-space). This process could help increase accuracy and precision in species distribution modeling (SDM) and ecological niche modeling (ENM). The package offers a data-driven protocol to determine thinning parameters. Thinning methods (stochastic and deterministic) help reduce oversampled conditions and outlier observations. The name 'bean' reflects the core principle of the method: ensuring that each “pod” (a grid cell in E-space) contains only a specified number of “beans” (occurrence points).
+Description: Provides a suite of tools to mitigate sampling bias in species occurrence records by thinning data in the environmental space (E-space). This process could help increase accuracy and precision in species distribution modeling (SDM, or ecological niche modeling, ENM). The package offers a data-driven protocol to determine thinning parameters. Thinning methods (stochastic and deterministic) help reduce oversampled conditions and outlier observations. The name 'bean' reflects the core principle of the method: ensuring that each “pod” (a grid cell in E-space) contains only a specified number of “beans” (occurrence points).
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -11,7 +11,7 @@ URL: https://github.com/paanwaris/bean
 BugReports: https://github.com/paanwaris/bean/issues
 RoxygenNote: 7.3.2
 Suggests: 
-Imports: raster, terra, testthat, dismo, dplyr, ggplot2, tidyr, magrittr, rlang, stats, MASS, rJava, covr, scales
+Imports: covr, dismo, dplyr, ggplot2, MASS, magrittr, multcompView, raster, rJava, rlang, scales, stats, terra, testthat, tidyr
 Depends: R (>= 3.5)
 Authors@R: c(
 	person("Paanwaris", "Paansri", role = c("cre", "aut"),  

@@ -88,10 +88,11 @@ For reproducible results, run "set.seed()" before calling this function.
 }
 \examples{
 \dontrun{
-# This is a long-running example and requires Maxent to be installed.
+# This is a long-running example and requires the "dismo" package to be installed.
 
 # 1. Load the package's example data
 library(raster)
+library(dismo)
 occ_file <- system.file("extdata", "Peromyscus_maniculatus_prepared.csv", package = "bean")
 occ_data <- read.csv(occ_file)
 

@@ -4,7 +4,7 @@
 \alias{fit_ellipsoid}
 \title{Outlier removal}
 \usage{
-fit_ellipsoid(data, env_vars, method = "covmat", level = 95)
+fit_ellipsoid(data, env_vars, method = "covmat", level = 0.95)
 }
 \arguments{
 \item{data}{A data.frame containing species occurrence coordinates and the environmental variables.}
@@ -12,12 +12,12 @@ fit_ellipsoid(data, env_vars, method = "covmat", level = 95)
 \item{env_vars}{A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.}
 
 \item{method}{(character) The method for calculating the centroid and
-covariance matrix. Options are "covmat" (standard covariance) and "mve"
+covariance matrix. Options are "covmat" (for a standard covariance matrix) and "mve"
 (Minimum Volume Ellipsoid, robust to outliers). Default = "covmat". See Details}
 
-\item{level}{(numeric) A single value between 0 and 100 representing the
-percentage of data points the ellipse is intended to encompass.
-Default is 95.}
+\item{level}{(numeric) A single value between 0 and 1 representing the
+proportion of data points the ellipse is intended to encompass.
+Default is 0.95.}
 }
 \value{
 An object of class \code{bean_ellipsoid}, which is a list containing:
@@ -58,7 +58,7 @@ matrix (shape and orientation) of the data cloud are calculated.
 
  - "mve": This option uses the Minimum Volume Ellipsoid (MVE) estimator,
     a robust statistical method designed to resist the influence of outliers
-    (Van Aelst & Rousseeuw, 2009). Instead of using all data points, the MVE algorithm finds the
+    (Rousseeuw et al., 1984, 1985). Instead of using all data points, the MVE algorithm finds the
     ellipsoid with the smallest possible volume that contains a specified
     subset of the data (at least h = (n_points + n_variables + 1)/2 points)
     (Cobos et al., 2024). By focusing on the most concentrated "core" of the data,
@@ -70,7 +70,7 @@ matrix (shape and orientation) of the data cloud are calculated.
 
 The \code{level} parameter specifies the confidence level for the ellipse,
 representing the percentage of the data that the ellipse is intended to
-encompass(Cobos et al., 2024). It determines the size of the ellipse by defining a
+encompass (Cobos et al., 2024). It determines the size of the ellipse by defining a
 statistical boundary based on Mahalanobis distances from the centroid.
 
 Assuming the data follows a multivariate normal distribution, the boundary of
@@ -99,7 +99,7 @@ fit <- fit_ellipsoid(
   data = env_data,
   env_vars = c("BIO1", "BIO12"),
   method = "covmat",
-  level = 95
+  level = 0.95
 )
 
 # 3. Print the summary and plot the results
@@ -113,4 +113,8 @@ Rousseeuw, P. J., & Leroy, A. M. (2003). Robust regression and outlier detection
 Van Aelst, S., & Rousseeuw, P. (2009). Minimum volume ellipsoid. Wiley Interdisciplinary Reviews: Computational Statistics, 1(1), 71-82.
 
 Cobos, M.E., Osorio-Olvera, L., Soberón, J., Peterson, A.T., Barve, V. & Barve, N. (2024) ellipsenm: ecological niche’s characterizations using ellipsoids. <https://github.com/marlonecobos/ellipsenm>
+
+Rousseeuw, P. J. (1984). Least median of squares regression. Journal of the American statistical association, 79(388), 871-880.
+
+Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown point. Mathematical statistics and applications, 8(283-297), 37.
 }

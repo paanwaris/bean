@@ -5,9 +5,9 @@ library(rJava)
 
 # --- Setup: Mock Data and Functions ---
 # Create mock data that is simple and predictable
-mock_presence <- data.frame(lon = 1:10, lat = 1:10)
-mock_background <- data.frame(lon = 11:20, lat = 11:20)
-mock_raster <- raster::stack(raster(matrix(1:100, 10, 10)))
+mock_presence <- data.frame(lon = seq(0, 0.5,0.005), lat = seq(0, 0.5,0.005))
+mock_background <- data.frame(lon = seq(0.51, 0.99,0.005), lat = seq(0.51, 0.99, 0.005))
+mock_raster <- raster::stack(raster(matrix(1:1000, 100, 100)))
 
 # --- Test Suite ---
 

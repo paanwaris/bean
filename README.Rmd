@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
 
 ## Ecological Motivation
 
-The `bean` package provides a tool to address a fundamental challenge in species distribution modeling (SDM) and ecological niche modeling (ENM): **sampling bias**. Occurrence records for species are rarely collected through a systematic, stratified process. Instead, they often cluster in easily accessible areas (like roads and cities) or in well-studied research sites. This spatial bias can translate into an **environmental bias**, where the model incorrectly learns that the species is associated with the environmental conditions of those heavily sampled areas, rather than its true ecological requirements.
+The `bean` package provides a tool to address a fundamental challenge in species distribution modeling (SDM, or ecological niche modeling, ENM): **sampling bias**. Occurrence records for species are rarely collected through a systematic, stratified process. Instead, they often cluster in easily accessible areas (like roads and cities) or in well-studied research sites. This spatial bias can translate into an **environmental bias**, where the model incorrectly learns that the species is associated with the environmental conditions of those heavily sampled areas, rather than its true ecological requirements.
 
 `bean` tackles this problem by thinning occurrence data in **environmental space**. The goal is to create a more uniform distribution of points across the species' observed environmental niche, reducing the influence of densely clustered records. This allows for the construction of a more accurate **fundamental niche** volume, which can then be projected into geographic space to create a less biased prediction of area with environmental suitability.
 
@@ -85,7 +85,7 @@ bio12_file <- system.file("extdata", "BIO12.tif", package = "bean")
 env_rasters <- terra::rast(c(bio1_file, bio12_file))
 
 # Plot the environmental layers to check their extent and values
-plot(env_rasters)
+plot(env_rasters, mar = c(1, 1, 2, 4))
 ```
 
 ### Step 2: Prepare Data for Environmental Thinning
@@ -103,7 +103,8 @@ origin_dat_prepared <- prepare_bean(
   data = occ_data_raw,
   env_rasters = env_rasters,
   longitude = "x",
-  latitude = "y"
+  latitude = "y",
+  scale = TRUE
 )
 
 # View the structure and summary of the clean, scaled data
@@ -116,7 +117,7 @@ summary(origin_dat_prepared)
 
 The most critical parameter in environmental gridding is the `grid_resolution`. Instead of guessing this value, we can derive it objectively from the data by analyzing the **distribution of pairwise environmental distances**.
 
-The logic is to calculate the Euclidean distance between all pairs of points in the (scaled) environmental space. A small quantile of this distribution (e.g., the 10th percentile) represents a typical distance between "close" points. Using this value as the grid resolution is statistically justified because it adapts the cell size to the inherent scale of clustering within the dataset.
+The logic is to calculate the Euclidean distance between all pairs of points in the (scaled) environmental space. The quantile of pairwise distances to use for the resolution. A smaller quantile value (e.g., 0.05-0.25) is generally recommended for gentle thinning. However, for widespread generalists, a higher quantile (e.g., > 0.75) may improve model performance by more aggressively reducing large-scale bias
 
 The `find_env_resolution()` function automates this process.
 
@@ -124,11 +125,11 @@ The `find_env_resolution()` function automates this process.
 # Set a seed for reproducibility of the resampling in the correlogram
 set.seed(81)  
 
-# A smaller value (e.g., 0.05 or 0.1) is recommended to retain most of the original points and it represents the spacing between closely clustered points.
+# Let's set a higher quantile value at 0.90
 resolution_results <- find_env_resolution(
   data = origin_dat_prepared,
   env_vars = c("BIO1", "BIO12"),
-  quantile = 0.1
+  quantile = 0.90
 )
 
 # The function returns a suggested resolution and the full distance distribution
@@ -219,85 +220,29 @@ head(thinned_deterministic$thinned_points)
 
 ### Step 6: Visualize the Thinning Results
 
-To understand the effect of thinning, we can visualize the original and thinned points on the environmental grid.
+The `plot_bean()` function provides a powerful way to visualize the effect of thinning by overlaying the thinned points on the original data within the environmental grid.
 
-```{r calculate-grid-lines}
-# --- Calculate Grid Line Positions for Plotting ---
-# For the x-axis (BIO1)
-x_range <- range(origin_dat_prepared$BIO1, na.rm = TRUE)
-x_breaks <- seq(
-  from = floor(x_range[1] / grid_res[1]) * grid_res[1],
-  to = ceiling(x_range[2] / grid_res[1]) * grid_res[1],
-  by = grid_res[1]
+```{r plot-thinning-results, fig.width=10, fig.height=5}
+# Visualize the stochastic thinning results
+plot_stochastic <- plot_bean(
+  original_data = origin_dat_prepared,
+  thinned_object = thinned_stochastic,
+  grid_resolution = grid_res,
+  env_vars = c("BIO1", "BIO12")
 )
 
-# For the y-axis (BIO12)
-y_range <- range(origin_dat_prepared$BIO12, na.rm = TRUE)
-y_breaks <- seq(
-  from = floor(y_range[1] / grid_res[2]) * grid_res[2],
-  to = ceiling(y_range[2] / grid_res[2]) * grid_res[2],
-  by = grid_res[2]
+# Visualize the deterministic thinning results
+plot_deterministic <- plot_bean(
+  original_data = origin_dat_prepared,
+  thinned_object = thinned_deterministic,
+  grid_resolution = grid_res,
+  env_vars = c("BIO1", "BIO12")
 )
-```
 
-#### Combined Comparison Plot
-
-```{r plot-combined-comparison-grid, fig.width=8, fig.height=6}
-ggplot() +
-  # Plot the original data as a background layer
-  geom_point(data = origin_dat_prepared, aes(x = BIO1, y = BIO12), 
-             color = "#D55E00", alpha = 0.4, size = 2) +
-  
-  # Add the grid lines
-  geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
-  geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
-  
-  # Plot the stochastically thinned data on top
-  geom_point(data = thinned_stochastic$thinned_data, aes(x = BIO1, y = BIO12), 
-             color = "#0072B2", alpha = 0.7, size = 1.2) +
-  
-  # Add informative labels
-  labs(
-    title = "Stochastic Thinning: Thinned Points Overlaid on Original Data",
-    subtitle = paste(nrow(thinned_stochastic$thinned_data), "points remaining (blue) from", nrow(origin_dat_prepared), "original points (orange)"),
-    x = "Mean Annual Temperature (BIO1, scaled)",
-    y = "Annual Precipitation (BIO12, scaled)"
-  ) +
-  theme_bw() +
-  theme(panel.grid = element_blank())
-```
-
-#### Create the Thinned Center Data with Grid
-
-```{r plot-thinned-center-grid, fig.width=8, fig.height=6}
-ggplot() +
-  # 1. Plot the original data points as a faded background
-  geom_point(data = origin_dat_prepared, 
-             aes(x = BIO1, y = BIO12), 
-             color = "grey40", alpha = 0.5, size = 1.5) + 
-  # 2. Add the grid lines
-  geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
-  geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dashed", linewidth = 0.5) +
-  
-  # 3. Plot the new grid cell centers on top
-  geom_point(data = thinned_deterministic$thinned_points, 
-             aes(x = BIO1, y = BIO12), 
-             color = "#D55E00", size = 1.5, shape = 3, stroke = 1) +
-  
-  # 4. Add informative labels
-  labs(
-    title = "Deterministic Thinning to Grid Cell Centers",
-    subtitle = paste(nrow(thinned_deterministic$thinned_points), 
-                     "unique cell centers (orange crosses) from", 
-                     nrow(thinned_deterministic$original_points), 
-                     "original points (grey)"),
-    x = "Mean Annual Temperature (BIO1)",
-    y = "Annual Precipitation (BIO12)"
-  ) +
-  theme_bw() +
-  theme(panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank())
+# Display plots side-by-side (requires cowplot or similar package)
+# cowplot::plot_grid(plot_stochastic, plot_deterministic)
+plot_stochastic
+plot_deterministic
 ```
 
 ### Step 7: Delineate and Visualize the Niche Ellipse
@@ -311,7 +256,7 @@ After thinning, we can formalize the environmental niche by fitting a bivariate 
 stochastic_ellipse <- fit_ellipsoid(data = thinned_stochastic$thinned_data, 
                                     env_vars = c("BIO1", "BIO12"), 
                                     method = "covmat", 
-                                    level = 95)
+                                    level = 0.95)
 # The returned object contains all the details
 # We can use the custom print() method for a clean summary
 stochastic_ellipse
@@ -327,7 +272,7 @@ plot(stochastic_ellipse)
 deterministic_ellipse <- fit_ellipsoid(data = thinned_deterministic$thinned_points,
                                        env_vars = c("BIO1", "BIO12"), 
                                        method = "covmat", 
-                                       level = 95)
+                                       level = 0.95)
 # The returned object contains all the details
 # We can use the custom print() method for a clean summary
 deterministic_ellipse
@@ -335,7 +280,6 @@ deterministic_ellipse
 # And we can use the custom plot() method for a powerful visualization
 plot(deterministic_ellipse)
 ```
-
 
 ### Step 8: Evaluate Model Performance
 
@@ -350,7 +294,6 @@ set.seed(81)
 background_points <- randomPoints(scale(raster::stack(env_rasters)), 1000)
 colnames(background_points) <- c("x", "y")
 ```
-
 
 ```{r model-evaluation-2, warning = FALSE, message = FALSE}
 # --- Run Evaluation on ORIGINAL Data ---
@@ -433,6 +376,56 @@ ggplot(results_df, aes(x = DataType, y = AUC, fill = DataType)) +
   annotate("text", x = 1.5, y = min(results_df$AUC) * 0.99,
            label = paste("T-test p-value =", format.pval(auc_ttest$p.value, digits = 3)),
            hjust = 0.5, vjust = 0, fontface = "italic", size = 4)
+```
+
+### Step 7: Automated Calibration with `calibrate_bean`
+
+The manual steps above are excellent for understanding the process, but the `calibrate_bean()` function automates the entire workflow. It is the "final boss" of the package, testing multiple combinations of thinning parameters (`quantile`, `method`, `cap`) and identifying the single best set based on final model performance (AUC). It also provides statistical comparisons against baseline models.
+
+```{r calibrate-bean-1, warning=FALSE, message=FALSE, echo=FALSE}
+# Create background points for model evaluation
+set.seed(81)
+background_df <- as.data.frame(
+  dismo::randomPoints(raster::stack(env_rasters), 1000)
+)
+colnames(background_df) <- c("x", "y")
+
+# Calibrate all key parameters
+# Note: In a real analysis, use higher thinning_reps and n_repeats.
+# These are set low so the example runs quickly.
+final_calibration <- calibrate_bean(
+  data = origin_dat_prepared,
+  env_vars = c("BIO1", "BIO12"),
+  background_data = background_df,
+  env_rasters = scale(env_rasters),
+  longitude = "x",
+  latitude = "y",
+  quantile_range = seq(0.05, 0.95, 0.05), # Test three quantiles
+  method_range = c("covmat", "mve"),      # Test both ellipsoid methods
+  target_percent = 0.95,
+  level = 0.95,
+  thinning_reps = 3, # Use a small number for the example
+  k = 5,
+  n_repeats = 20,      # Use minimal settings for a runnable example
+  maxent_args = c("linear=true", 
+                  "quadratic=true", 
+                  "product=false",
+                  "threshold=false", 
+                  "hinge=false", 
+                  "doclamp=false"
+))
+```
+
+```{r calibrate-bean-2, warning=FALSE, message=FALSE}
+# Print the summary table to see the best combination of parameters
+final_calibration
+
+# Plot the results to visualize the performance trade-offs
+plot(final_calibration)
+
+# You can now access the final, best-thinned data directly for your final model
+final_data <- final_calibration$best_points_in_ellipse
+head(final_data)
 ```
 
 ### The End ❤️

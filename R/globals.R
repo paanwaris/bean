@@ -17,6 +17,14 @@ utils::globalVariables(c('env_cell_id',
                          'env_cell_id',
                          'scale',
                          'unscaled_x',
-                         'unscaled_y'
+                         'unscaled_y',
+                         'combination',
+                         'mean_auc',
+                         'method',
+                         'p adj',
+                         'p_value',
+                         'sd_auc',
+                         'significance',
+                         'p_value_vs_original'
 
 ))

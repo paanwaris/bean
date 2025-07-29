@@ -9,11 +9,11 @@
 #' @param data A data.frame containing species occurrence coordinates and the environmental variables.
 #' @param env_vars A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.
 #' @param method (character) The method for calculating the centroid and
-#'   covariance matrix. Options are "covmat" (standard covariance) and "mve"
+#'   covariance matrix. Options are "covmat" (for a standard covariance matrix) and "mve"
 #'   (Minimum Volume Ellipsoid, robust to outliers). Default = "covmat". See Details
-#' @param level (numeric) A single value between 0 and 100 representing the
-#'   percentage of data points the ellipse is intended to encompass.
-#'   Default is 95.
+#' @param level (numeric) A single value between 0 and 1 representing the
+#'   proportion of data points the ellipse is intended to encompass.
+#'   Default is 0.95.
 #' @return An object of class \code{bean_ellipsoid}, which is a list containing:
 #'   \item{niche_ellipse}{A data.frame of points defining the perimeter of the calculated ellipse.}
 #'   \item{centroid}{A named vector representing the center of the ellipse.}
@@ -44,7 +44,7 @@
 #'
 #'  - "mve": This option uses the Minimum Volume Ellipsoid (MVE) estimator,
 #'     a robust statistical method designed to resist the influence of outliers
-#'     (Van Aelst & Rousseeuw, 2009). Instead of using all data points, the MVE algorithm finds the
+#'     (Rousseeuw et al., 1984, 1985). Instead of using all data points, the MVE algorithm finds the
 #'     ellipsoid with the smallest possible volume that contains a specified
 #'     subset of the data (at least h = (n_points + n_variables + 1)/2 points)
 #'     (Cobos et al., 2024). By focusing on the most concentrated "core" of the data,
@@ -77,6 +77,10 @@
 #' Van Aelst, S., & Rousseeuw, P. (2009). Minimum volume ellipsoid. Wiley Interdisciplinary Reviews: Computational Statistics, 1(1), 71-82.
 #'
 #' Cobos, M.E., Osorio-Olvera, L., Soberón, J., Peterson, A.T., Barve, V. & Barve, N. (2024) ellipsenm: ecological niche’s characterizations using ellipsoids. <https://github.com/marlonecobos/ellipsenm>
+#'
+#' Rousseeuw, P. J. (1984). Least median of squares regression. Journal of the American statistical association, 79(388), 871-880.
+#'
+#' Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown point. Mathematical statistics and applications, 8(283-297), 37.
 #' @export
 #' @importFrom stats cov var qchisq mahalanobis
 #' @importFrom MASS cov.mve
@@ -95,25 +99,25 @@
 #'   data = env_data,
 #'   env_vars = c("BIO1", "BIO12"),
 #'   method = "covmat",
-#'   level = 95
+#'   level = 0.95
 #' )
 #'
 #' # 3. Print the summary and plot the results
 #' print(fit)
 #' plot(fit)
 #' }
-fit_ellipsoid <- function(data, env_vars, method = "covmat", level = 95) {
+fit_ellipsoid <- function(data, env_vars, method = "covmat", level = 0.95) {
   # --- Helper function to find the number of points for MVE ---
-  ndata_quantile <- function(n_data, level) {
-    n <- floor(n_data * level)
+  ndata_quantile <- function(n_data, level_prop) {
+    n <- floor(n_data * level_prop)
     return(min(n, n_data))
   }
 
   # --- Input Validation ---
   method <- match.arg(method, c("covmat", "mve"))
 
-  if (!is.numeric(level) || length(level) != 1 || level <= 0 || level >= 100) {
-    stop("`level` must be a single number greater than 0 and less than 100.")
+  if (!is.numeric(level) || length(level) != 1 || level <= 0 || level >= 1) {
+    stop("`level` must be a single number greater than 0 and less than 1.")
   }
   if (length(env_vars) != 2 || !is.character(env_vars)) {
     stop("`env_vars` must be a character vector of length two.")
@@ -131,17 +135,16 @@ fit_ellipsoid <- function(data, env_vars, method = "covmat", level = 95) {
 
   # Data is assumed to be pre-scaled
   env_data_matrix <- as.matrix(clean_data[, env_vars])
-  level_prop <- level / 100
 
   # --- Centroid, Covariance, and Point Inclusion ---
   if (method == "covmat") {
     centroid <- colMeans(env_data_matrix)
     cov_mat <- stats::cov(env_data_matrix)
     mahal_dist_sq <- stats::mahalanobis(env_data_matrix, center = centroid, cov = cov_mat)
-    threshold <- stats::qchisq(level_prop, df = 2)
+    threshold <- stats::qchisq(level, df = 2)
     inside_indices <- which(mahal_dist_sq <= threshold)
   } else if (method == "mve") {
-    n_quant <- ndata_quantile(nrow(env_data_matrix), level_prop)
+    n_quant <- ndata_quantile(nrow(env_data_matrix), level)
     mve_res <- MASS::cov.mve(env_data_matrix, quantile.used = n_quant)
     centroid <- mve_res$center
     cov_mat <- mve_res$cov
@@ -150,7 +153,7 @@ fit_ellipsoid <- function(data, env_vars, method = "covmat", level = 95) {
 
   # --- Ellipse Polygon Generation ---
   n_points <- 100
-  radius_plot <- sqrt(stats::qchisq(level_prop, df = 2))
+  radius_plot <- sqrt(stats::qchisq(level, df = 2))
   eigen_plot <- eigen(cov_mat)
   transformation_matrix <- eigen_plot$vectors %*% diag(sqrt(eigen_plot$values))
   angles <- seq(0, 2 * pi, length.out = n_points)
@@ -180,8 +183,8 @@ fit_ellipsoid <- function(data, env_vars, method = "covmat", level = 95) {
 print.bean_ellipsoid <- function(x, ...) {
   cat("--- Bean Environmental Niche Ellipse ---\n\n")
   cat(sprintf("Method: '%s'.\n", x$parameters$method))
-  cat(sprintf("Fitted to %d data points at a %.2f%% percentage of data.\n",
-              nrow(x$all_points_used), x$parameters$level))
+  cat(sprintf("Fitted to %d data points at a %.2f%% level.\n",
+              nrow(x$all_points_used), x$parameters$level * 100))
   cat(sprintf("%d out of %d points (%.1f%%) fall within the ellipse boundary.\n\n",
               nrow(x$points_in_ellipse), nrow(x$all_points_used),
               100 * nrow(x$points_in_ellipse) / nrow(x$all_points_used)))
@@ -218,7 +221,7 @@ plot.bean_ellipsoid <- function(x, ...) {
     ggplot2::scale_color_manual(name = "Point Status", values = c("Inside" = "darkgreen", "Outside" = "salmon")) +
     ggplot2::labs(
       title = "Fitted Environmental Niche Ellipse",
-      subtitle = sprintf("Ellipse boundary defined by the '%s' method at %g%% level", x$parameters$method, x$parameters$level),
+      subtitle = sprintf("Ellipse boundary defined by the '%s' method at %g%% level", x$parameters$method, x$parameters$level * 100),
       x = env_vars[1],
       y = env_vars[2]
     ) +

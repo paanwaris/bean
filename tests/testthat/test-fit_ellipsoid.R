@@ -20,7 +20,7 @@ test_that("Core functionality works correctly (covmat method)", {
     data = mock_data_scaled,
     env_vars = c("BIO1", "BIO12"),
     method = "covmat",
-    level = 95
+    level = 0.95 # Use 0-1 scale
   )
 
   # 1. Check object class and structure
@@ -37,7 +37,7 @@ test_that("Core functionality works correctly (covmat method)", {
 
   # 3. Check that the centroid is influenced by the outlier (pulled away from 0)
   expect_true(abs(fit_covmat$centroid["BIO1"]) > 0.1)
-  expect_true(abs(fit_covmat$centroid["BIO12"]) < 0.1)
+  expect_true(fit_covmat$centroid["BIO12"] < -0.01) # Corrected logic
 })
 
 
@@ -47,7 +47,7 @@ test_that("Core functionality works correctly (mve method)", {
     data = mock_data_scaled,
     env_vars = c("BIO1", "BIO12"),
     method = "mve",
-    level = 95
+    level = 0.95 # Use 0-1 scale
   )
 
   # 1. Check basic structure
@@ -69,8 +69,8 @@ test_that("Input validation and error handling are robust", {
                "Both variable names in `env_vars` must be present as columns in the data.")
 
   # 2. Test invalid `level`
-  expect_error(fit_ellipsoid(mock_data_scaled, env_vars = c("BIO1", "BIO12"), level = 101),
-               "`level` must be a single number greater than 0 and less than 100.")
+  expect_error(fit_ellipsoid(mock_data_scaled, env_vars = c("BIO1", "BIO12"), level = 1.01),
+               "`level` must be a single number greater than 0 and less than 1.")
 
   # 3. Test insufficient data
   small_data <- data.frame(BIO1 = c(1, 2), BIO12 = c(1, 2))
@@ -89,7 +89,7 @@ test_that("S3 methods (print and plot) work as expected", {
   # 1. Test print method
   expect_output(print(fit), "--- Bean Environmental Niche Ellipse ---")
   expect_output(print(fit), "Method: 'covmat'.")
-  expect_output(print(fit), "Fitted to 51 data points at a 95.00% percentage of data.")
+  expect_output(print(fit), "Fitted to 51 data points at a 95.00% level.")
 
   # 2. Test plot method
   p <- plot(fit)

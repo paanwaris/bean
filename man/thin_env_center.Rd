@@ -12,7 +12,7 @@ thin_env_center(data, env_vars, grid_resolution)
 \item{env_vars}{A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.}
 
 \item{grid_resolution}{A numeric vector of length one or two specifying the
-resolution(s) for the grid axes. If length one, it is used for both axes. See the Details section of \code{\link{find_env_resolution}} for a full explanation}
+resolution(s) for the grid axes. If length one, it is used for both axes. See the Details section of \code{\link{find_optimal_cap}} for a full explanation}
 }
 \value{
 An object of class \code{bean_thinned_center}. which is a list containing:
@@ -51,5 +51,5 @@ print(thinned_center_obj)
 }
 }
 \seealso{
-\code{\link{find_env_resolution}}
+\code{\link{find_optimal_cap}}
 }

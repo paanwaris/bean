@@ -12,8 +12,9 @@ find_env_resolution(data, env_vars, quantile = 0.1)
 \item{env_vars}{A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.}
 
 \item{quantile}{(numeric) The quantile of pairwise distances to use for the
-precision. A smaller value (e.g., 0.05 or 0.1) is recommended to retain most of the original points and it represents the spacing between closely clustered points.
-Default = 0.1 (10th percentile). See Details.}
+resolution. A smaller quantile value (e.g., 0.05-0.25) is generally recommended for gentle
+thinning. However, for widespread generalists, a higher quantile (e.g., > 0.75) may improve
+model performance by more aggressively reducing large-scale bias. Default = 0.1.}
 }
 \value{
 An object of class \code{bean_resolution}, which is a list containing:
@@ -39,23 +40,36 @@ Selecting an appropriate grid resolution for environmental thinning is crucial
 for reducing sampling bias without discarding excessive data. Rather than
 relying on an arbitrary, user-defined value, this function employs a
 data-driven heuristic to determine a characteristic scale from the data
-itself based on environmental filtering (Varela et al., 2014).
+itself based on environmental filtering (Varela et al., 2014). For each environmental variable,
+it calculates all pairwise distances between occurrence points. The quantile of this
+distribution is then used as the grid resolution. This approach adapts the cell size to the
+inherent data structure and focuses on distributional properties rather than just the mean (Cade & Noon, 2003).
 
-For each environmental variable, the function calculates all pairwise
-distances between the occurrence points. This creates a distribution that
-reflects the internal spacing and clustering of the data in that one
-dimension. By selecting a low quantile of this distribution (e.g.,
-"quantile = 0.1" for the 10th percentile is recommended), we identify a distance that is
-representative of the spacing between closely clustered points.
-This approach is conceptually powerful because it focuses on the
-distributional edges to identify limiting factors or characteristic scales,
-rather than being limited to an analysis of the mean (Cade & Noon, 2003).
+### Selecting a Quantile
 
-Using the grid resolution from the quantile approach is a robust strategy because it
-adapts the cell size to the inherent data structure. If points are tightly
-clustered in one dimension (e.g., a species has a narrow thermal tolerance),
-the resulting resolution will be fine. If points are spread out, the
-resolution will be coarser.
+The choice of (\code{quantile}) allows you to control the aggressiveness of the
+thinning. It creates a spectrum from gentle, fine-scale thinning (low quantiles)
+to more aggressive, large-scale bias reduction (high quantiles). The optimal
+value often depends on the species' ecology and the nature of the sampling bias.
+
+- Low Quantiles (e.g., 0.05-0.25): A low quantile selects a *small
+  distance, creating a fine grid. This performs a gentle thinning that removes
+  fine-scale clustering while preserving the overall data structure. This is
+  often a suitable starting point, especially for species with more specialized
+  niches.
+
+- High Quantiles (e.g., > 0.75): The primary issue is often large-scale, regional sampling bias. In
+  these cases, a high quantile can improve model performance by selecting a
+  large distance. This creates a coarse grid that aggressively
+  de-clusters the data, forcing the model to learn the broad, fundamental
+  tolerances of the species.
+}
+\note{
+The quantile-based approach has the advantage of adapting the thinning
+resolution to the data's inherent structure. Because there is no universal
+best value, the recommended approach is to use the \code{\link{calibrate_bean}}
+function to test a range of quantiles and let the model's final performance
+guide the selection.
 }
 \examples{
 \dontrun{
@@ -83,4 +97,7 @@ plot(resolutions)
 Cade, B. S., & Noon, B. R. (2003). A gentle introduction to quantile regression for ecologists. Frontiers in Ecology and the Environment, 1(8), 412–420.
 
 Varela, S., Anderson, R. P., García-Valdés, R., & Fernández-González, F. (2014). Environmental filters reduce the effects of sampling bias and improve predictions of ecological niche models. Ecography, 37(11), 1084–1091.
+}
+\seealso{
+\code{\link{calibrate_bean}}
 }
