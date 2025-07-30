@@ -17,32 +17,40 @@
 #'   object of environmental variables.
 #' @param longitude (character) The name of the longitude column in \code{data}.
 #' @param latitude (character) The name of the latitude column in \code{data}.
-#' @param scale (logical) If "TRUE" (default), the environmental variables in
-#'   \code{env_rasters} will be scaled before extraction. Set to "FALSE" if your
-#'   rasters are already on a comparable scale. See Details
+#' @param transform (character) The transformation to apply to the environmental
+#'   rasters before extracting data. Options are "scale" (default), "pca",
+#'   or "none". See Details.
 #'
 #' @return A data.frame containing the cleaned and scaled occurrence data, with
 #'   the following columns:
 #'   \item{Original Columns}{All columns from the input \code{data} are preserved for the valid records.}
 #'   \item{Environmental Variables}{New columns, named after the layers in \code{env_rasters}, containing the extracted and scaled environmental data.}
 #' @details
-#' ### The Importance of Scaling Environmental Variables (\code{scale})
 #'
-#' Environmental variables used in ecological modeling, such as temperature and
-#' precipitation, often have vastly different units (e.g., °C vs. mm) and
-#' numerical ranges. When using methods based on distance calculations—such as
-#' the Euclidean and Mahalanobis distance these differences in scale can unintentionally bias the analysis. Variables with
-#' larger numerical ranges will dominate the distance metric, while those with
-#' smaller ranges will have a negligible influence (Qiao et al., 2016).
+#' ### Environmental Variable Transformation
 #'
-#' Standardization is the standard procedure to address this issue. By setting
-#' "scale = TRUE", the function transforms each variable to have a mean of 0 and
-#' a standard deviation of 1 (i.e., it calculates z-scores) (Baddeley et al., 2016). This process makes
-#' the variables equal variance. As a result,
-#' each variable contributes equally to the analysis, ensuring that the
-#' resulting resolutions are based on the relative distribution of data points
-#' within each environmental dimension, not their arbitrary original units
-#' (Beaugrand, 2024; Kléparski et al., 2021).
+#' The \code{transform} argument allows for different pre-processing of the
+#' environmental raster layers to address issues like differing units and
+#' multicollinearity.
+#'
+#' - "scale" (Default):** This is the standard approach to handle variables
+#'   with different units (e.g., °C vs. mm). It transforms each raster layer to
+#'   have a mean of 0 and a standard deviation of 1 (Baddeley et al., 2016). This process makes
+#'   the variables equal variance. As a result,
+#'   each variable contributes equally to the analysis, ensuring that the
+#'   resulting resolutions are based on the relative distribution of data points
+#'   within each environmental dimension, not their arbitrary original units
+#'   (Beaugrand, 2024; Kléparski et al., 2021).
+#'
+#' - "pca": This option performs a Principal Component Analysis (PCA) on
+#'   the environmental rasters. This is a powerful technique for dealing with
+#'   multicollinearity (highly correlated variables). It transforms the original
+#'   rasters into a new set of uncorrelated layers (Principal Components) (Qiao et al., 2016). The
+#'   function then extracts the PC scores for each occurrence point.
+#'
+#' - "none": This option extracts the raw environmental values from the
+#'   rasters without any transformation. This is suitable if your rasters are
+#'   already scaled or if you have a specific reason to use the raw values.
 #'
 #' @references
 #' Baddeley, A., Rubak, E. and Turner, R. (2016). Spatial point patterns: methodology and applications with R. CRC press.
@@ -81,7 +89,7 @@
 #' head(prepared_data)
 #' summary(prepared_data)
 #' }
-prepare_bean <- function(data, env_rasters, longitude, latitude, scale = TRUE) {
+prepare_bean <- function(data, env_rasters, longitude, latitude, transform = "scale") {
   # --- 1. Validate inputs and standardize raster format ---
   if (inherits(env_rasters, "RasterStack")) {
     env_rasters <- terra::rast(env_rasters)
@@ -103,13 +111,32 @@ prepare_bean <- function(data, env_rasters, longitude, latitude, scale = TRUE) {
     message(sprintf("%d records removed due to missing coordinates.", n_start - n_after_coord_clean))
   }
 
-  # --- 3. Conditionally scale rasters ---
-  if (scale) {
+  # --- 3. Transform rasters based on the chosen method ---
+  transformation_details <- list(method = transform)
+
+  if (transform == "scale") {
     message("Scaling environmental rasters...")
     env_rasters_to_extract <- terra::scale(env_rasters)
-  } else {
-    message("Skipping raster scaling.")
+    transformation_details$scale_center <- terra::global(env_rasters, "mean", na.rm = TRUE)
+    transformation_details$scale_sd <- terra::global(env_rasters, "sd", na.rm = TRUE)
+
+  } else if (transform == "pca") {
+    message("Performing PCA on environmental rasters...")
+
+    # Use terra's built-in prcomp function for a more direct approach.
+    # It handles scaling internally and returns both the model and the PC rasters.
+    # Note: This can be memory-intensive for very large rasters.
+    pca_model <- terra::prcomp(env_rasters, scale = TRUE)
+
+    # Project rasters onto PCs
+    env_rasters_to_extract <- terra::predict(env_rasters, pca_model)
+    names(env_rasters_to_extract) <- paste0("PC", 1:terra::nlyr(env_rasters_to_extract))
+
+  } else if (transform == "none") {
+    message("Skipping raster transformation.")
     env_rasters_to_extract <- env_rasters
+  } else {
+    stop("Invalid `transform` argument. Choose 'scale', 'pca', or 'none'.")
   }
 
   # --- 4. Extract environmental data ---
@@ -138,3 +165,4 @@ prepare_bean <- function(data, env_rasters, longitude, latitude, scale = TRUE) {
 
   return(occ_final)
 }
+

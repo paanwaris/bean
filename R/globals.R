@@ -25,6 +25,8 @@ utils::globalVariables(c('env_cell_id',
                          'p_value',
                          'sd_auc',
                          'significance',
-                         'p_value_vs_original'
+                         'p_value_vs_original',
+                         'transform',
+                         'group'
 
 ))

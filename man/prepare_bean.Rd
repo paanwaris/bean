@@ -4,7 +4,7 @@
 \alias{prepare_bean}
 \title{Prepare data for environmental thinning}
 \usage{
-prepare_bean(data, env_rasters, longitude, latitude, scale = TRUE)
+prepare_bean(data, env_rasters, longitude, latitude, transform = "scale")
 }
 \arguments{
 \item{data}{A data.frame of species occurrences records, including columns
@@ -17,9 +17,9 @@ object of environmental variables.}
 
 \item{latitude}{(character) The name of the latitude column in \code{data}.}
 
-\item{scale}{(logical) If "TRUE" (default), the environmental variables in
-\code{env_rasters} will be scaled before extraction. Set to "FALSE" if your
-rasters are already on a comparable scale. See Details}
+\item{transform}{(character) The transformation to apply to the environmental
+rasters before extracting data. Options are "scale" (default), "pca",
+or "none". See Details.}
 }
 \value{
 A data.frame containing the cleaned and scaled occurrence data, with
@@ -39,23 +39,30 @@ The final output is a clean data frame where the environmental variables
 have a mean of 0 and a standard deviation of 1.
 }
 \details{
-### The Importance of Scaling Environmental Variables (\code{scale})
+### Environmental Variable Transformation
 
-Environmental variables used in ecological modeling, such as temperature and
-precipitation, often have vastly different units (e.g., °C vs. mm) and
-numerical ranges. When using methods based on distance calculations—such as
-the Euclidean and Mahalanobis distance these differences in scale can unintentionally bias the analysis. Variables with
-larger numerical ranges will dominate the distance metric, while those with
-smaller ranges will have a negligible influence (Qiao et al., 2016).
+The \code{transform} argument allows for different pre-processing of the
+environmental raster layers to address issues like differing units and
+multicollinearity.
 
-Standardization is the standard procedure to address this issue. By setting
-"scale = TRUE", the function transforms each variable to have a mean of 0 and
-a standard deviation of 1 (i.e., it calculates z-scores) (Baddeley et al., 2016). This process makes
-the variables equal variance. As a result,
-each variable contributes equally to the analysis, ensuring that the
-resulting resolutions are based on the relative distribution of data points
-within each environmental dimension, not their arbitrary original units
-(Beaugrand, 2024; Kléparski et al., 2021).
+- "scale" (Default):** This is the standard approach to handle variables
+  with different units (e.g., °C vs. mm). It transforms each raster layer to
+  have a mean of 0 and a standard deviation of 1 (Baddeley et al., 2016). This process makes
+  the variables equal variance. As a result,
+  each variable contributes equally to the analysis, ensuring that the
+  resulting resolutions are based on the relative distribution of data points
+  within each environmental dimension, not their arbitrary original units
+  (Beaugrand, 2024; Kléparski et al., 2021).
+
+- "pca": This option performs a Principal Component Analysis (PCA) on
+  the environmental rasters. This is a powerful technique for dealing with
+  multicollinearity (highly correlated variables). It transforms the original
+  rasters into a new set of uncorrelated layers (Principal Components) (Qiao et al., 2016). The
+  function then extracts the PC scores for each occurrence point.
+
+- "none": This option extracts the raw environmental values from the
+  rasters without any transformation. This is suitable if your rasters are
+  already scaled or if you have a specific reason to use the raw values.
 }
 \examples{
 \dontrun{
