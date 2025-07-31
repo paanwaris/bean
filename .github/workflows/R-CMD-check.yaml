@@ -38,6 +38,40 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglu1-mesa-dev xvfb
+
+      - name: Start Xvfb
+        if: runner.os == 'Linux'
+        run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true
+
+      - name: Register Java with R
+        if: runner.os != 'Windows'
+        run: sudo R CMD javareconf
+        shell: bash
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - name: Check R package
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+        env:
+          DISPLAY: ':99'
+
       - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-pandoc@v2
