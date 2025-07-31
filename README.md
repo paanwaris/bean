@@ -416,7 +416,6 @@ stochastic_ellipse
 # And we can use the custom plot() method for a powerful visualization
 plot(stochastic_ellipse)
 ```
-<img src="man/figures/README-fit-ellipse-part1-1.png" width="100%" />
 
 ### Deterministic Thinned Ellipsoid
 
@@ -442,7 +441,6 @@ deterministic_ellipse
 # And we can use the custom plot() method for a powerful visualization
 plot(deterministic_ellipse)
 ```
-<img src="man/figures/README-fit-ellipse-part2-1.png" width="100%" />
 
 ### Step 8: Evaluate Model Performance
 
