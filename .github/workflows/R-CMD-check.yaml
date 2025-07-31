@@ -21,8 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release'}
-          - {os: windows-latest, r: 'release'}
+          - {os: macos-latest,     r: 'release'}
+          - {os: windows-latest,   r: 'release'}
           - {os: ubuntu-latest,    r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest,    r: 'release'}
           - {os: ubuntu-latest,    r: 'oldrel-1'}
@@ -38,12 +38,18 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      # ADDITION 1: Install system dependencies for rgl on Linux
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libglu1-mesa-dev xvfb
 
+      # ADDITION 2: Start virtual display (Xvfb) on Linux
       - name: Start Xvfb
         if: runner.os == 'Linux'
         run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
@@ -64,6 +70,7 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      # ADDITION 3: Set DISPLAY environment variable for the check step on Linux
       - name: Check R package
         uses: r-lib/actions/check-r-package@v2
         with:
@@ -71,28 +78,3 @@ jobs:
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
         env:
           DISPLAY: ':99'
-
-      - uses: actions/checkout@v4
-
-      - uses: r-lib/actions/setup-pandoc@v2
-
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: ${{ matrix.config.r }}
-          http-user-agent: ${{ matrix.config.http-user-agent }}
-          use-public-rspm: true
-
-      - name: Register Java with R
-        if: runner.os != 'Windows'
-        run: sudo R CMD javareconf
-        shell: bash
-
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          extra-packages: any::rcmdcheck
-          needs: check
-
-      - uses: r-lib/actions/check-r-package@v2
-        with:
-          upload-snapshots: true
-          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
