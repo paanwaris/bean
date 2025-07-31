@@ -286,7 +286,7 @@ Now that we have an objective `grid_resolution` and an optimal
 `max_per_cell`, we can apply the thinning. We offer two methods:
 stochastic and deterministic.
 
-#### Method A: Stochastic Thinning with `thin_env_density`
+#### Method A: Stochastic Thinning with `thin_env_nd`
 
 This method randomly samples up to `max_per_cell` points from each
 occupied grid cell. It’s the most common approach.
@@ -354,7 +354,7 @@ head(thinned_deterministic$thinned_points)
 
 ### Step 6: Visualize the Thinning Results
 
-The `plot_bean()` function provides a powerful way to visualize the
+The `plot_bean_nd()` function provides a powerful way to visualize the
 effect of thinning by overlaying the thinned points on the original data
 within the environmental grid.
 
@@ -398,30 +398,23 @@ delineates this boundary.
 # Fit an ellipse that contains 95% of the thinned data
 stochastic_ellipse <- fit_ellipsoid(data = thinned_stochastic$thinned_data, 
                                     env_vars = c("PC1", "PC2", "PC3"), 
-                                    method = "covmat", 
+                                    method = "mve", 
                                     level = 0.95)
 # The returned object contains all the details
 # We can use the custom print() method for a clean summary
 stochastic_ellipse
 #> --- Bean Environmental Niche Ellipsoid ---
 #> 
-#> Method: 'covmat'.
+#> Method: 'mve'.
 #> Fitted in 3 dimensions to 1511 data points at a 95.00% level.
-#> 1462 out of 1511 points (96.8%) fall within the ellipsoid boundary.
+#> 1435 out of 1511 points (95.0%) fall within the ellipsoid boundary.
 #> 
 #> Niche Centroid:
 #>        PC1        PC2        PC3 
-#>  0.3597778  0.7756807 -1.7337123
+#>  0.3256219  0.7884274 -1.7091471
 
 # And we can use the custom plot() method for a powerful visualization
 plot(stochastic_ellipse)
-rgl::snapshot3d(knitr::fig_path(".png"))
-#> Warning in rgl::snapshot3d(knitr::fig_path(".png")): webshot = TRUE requires
-#> the webshot2 package and Chrome browser; using rgl.snapshot() instead
-rgl::rgl.close()
-#> Warning in rgl::rgl.close(): 'rgl::rgl.close' is deprecated.
-#> Use 'close3d' instead.
-#> See help("Deprecated")
 ```
 
 ### Deterministic Thinned Ellipsoid
@@ -447,13 +440,6 @@ deterministic_ellipse
 
 # And we can use the custom plot() method for a powerful visualization
 plot(deterministic_ellipse)
-rgl::snapshot3d(knitr::fig_path(".png"))
-#> Warning in rgl::snapshot3d(knitr::fig_path(".png")): webshot = TRUE requires
-#> the webshot2 package and Chrome browser; using rgl.snapshot() instead
-rgl::rgl.close()
-#> Warning in rgl::rgl.close(): 'rgl::rgl.close' is deprecated.
-#> Use 'close3d' instead.
-#> See help("Deprecated")
 ```
 
 ### Step 8: Evaluate Model Performance
@@ -576,10 +562,9 @@ auc_thinned
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.801  0.011      0.801   0.777   0.828
+#> 1    0.812   0.01      0.811   0.789    0.84
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
-
 plot(auc_thinned)
 ```
 
@@ -594,13 +579,13 @@ auc_ttest
 #>  Welch Two Sample t-test
 #> 
 #> data:  auc_original$all_auc_scores and auc_thinned$all_auc_scores
-#> t = 0.72728, df = 195.87, p-value = 0.4679
+#> t = -6.4159, df = 196.99, p-value = 1.019e-09
 #> alternative hypothesis: true difference in means is not equal to 0
 #> 95 percent confidence interval:
-#>  -0.001926445  0.004177385
+#>  -0.011867047 -0.006286957
 #> sample estimates:
 #> mean of x mean of y 
-#> 0.8025970 0.8014716
+#>  0.802597  0.811674
 
 # --- Visualize the Comparison ---
 # Combine results into a data frame for plotting

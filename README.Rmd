@@ -11,10 +11,14 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "100%",
+  echo = TRUE
 )
-knitr::opts_chunk$set(echo = TRUE)
-options(rgl.useNULL = TRUE)
+
+# Ensure rgl runs headlessly in non-interactive sessions
+if (!interactive()) {
+  options(rgl.useNULL = TRUE)
+}
 ```
 
 # bean 🫛
@@ -184,7 +188,7 @@ plot(optimal_params)
 
 Now that we have an objective `grid_resolution` and an optimal `max_per_cell`, we can apply the thinning. We offer two methods: stochastic and deterministic.
 
-#### Method A: Stochastic Thinning with `thin_env_density`
+#### Method A: Stochastic Thinning with `thin_env_nd`
 
 This method randomly samples up to `max_per_cell` points from each occupied grid cell. It's the most common approach.
 
@@ -224,7 +228,7 @@ head(thinned_deterministic$thinned_points)
 
 ### Step 6: Visualize the Thinning Results
 
-The `plot_bean()` function provides a powerful way to visualize the effect of thinning by overlaying the thinned points on the original data within the environmental grid.
+The `plot_bean_nd()` function provides a powerful way to visualize the effect of thinning by overlaying the thinned points on the original data within the environmental grid.
 
 ```{r plot-thinning-results, fig.width=10, fig.height=8}
 # Visualize the stochastic thinning results
@@ -253,11 +257,11 @@ After thinning, we can formalize the environmental niche by fitting a bivariate 
 
 ### Stochastic Thinned Ellipsoid 
 
-```{r fit-ellipse-part1, rgl=TRUE, fig.width=10, fig.height=8}
+```{r fit-ellipse-part1, rgl=TRUE, fig.cap="3D Stochastic Ellipsoid"}
 # Fit an ellipse that contains 95% of the thinned data
 stochastic_ellipse <- fit_ellipsoid(data = thinned_stochastic$thinned_data, 
                                     env_vars = c("PC1", "PC2", "PC3"), 
-                                    method = "covmat", 
+                                    method = "mve", 
                                     level = 0.95)
 # The returned object contains all the details
 # We can use the custom print() method for a clean summary
@@ -269,7 +273,7 @@ plot(stochastic_ellipse)
 
 ### Deterministic Thinned Ellipsoid 
 
-```{r fit-ellipse-part2, rgl=TRUE, fig.width=10, fig.height=8}
+```{r fit-ellipse-part2, rgl=TRUE, fig.cap="3D Deterministic Ellipsoid"}
 # Fit an ellipse that contains 95% of the thinned data
 deterministic_ellipse <- fit_ellipsoid(data = thinned_deterministic$thinned_points,
                                        env_vars = c("PC1", "PC2", "PC3"), 
@@ -339,7 +343,6 @@ auc_thinned <- test_env_thinning(
 )
 
 auc_thinned
-
 plot(auc_thinned)
 ```
 
@@ -418,7 +421,7 @@ generalist_calibration <- calibrate_bean(
                   "doclamp=false"
 ))
 ```
-```{r calibrate-bean-2, warning=FALSE, message=FALSE, fig.width=10, fig.height=8}
+```{r calibrate-bean-2, warning=FALSE, message=FALSE, fig.width=14, fig.height=8}
 # Print the summary table to see the best combination of parameters
 generalist_calibration
 
@@ -473,7 +476,7 @@ specialist_calibration <- calibrate_bean(
                   "doclamp=false"
 ))
 ```
-```{r calibrate-bean-4, warning=FALSE, message=FALSE, fig.width=10, fig.height=8}
+```{r calibrate-bean-4, warning=FALSE, message=FALSE, fig.width=14, fig.height=8}
 # Print the summary table to see the best combination of parameters
 specialist_calibration
 
