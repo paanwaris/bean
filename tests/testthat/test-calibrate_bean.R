@@ -17,7 +17,7 @@ mock_env_rasters <- raster::stack(raster(matrix(1:100, 10, 10)))
 # These mocks return predictable objects to isolate the test to calibrate_bean's logic.
 find_env_resolution <- function(...) list(suggested_resolution = c(BIO1 = 0.1, BIO12 = 0.1))
 find_optimal_cap <- function(...) list(best_cap_above_target = 5)
-thin_env_density <- function(data, ...) list(thinned_data = data[1:80, ]) # Return a subset
+thin_env_nd <- function(data, ...) list(thinned_data = data[1:80, ]) # Return a subset
 fit_ellipsoid <- function(data, ...) list(points_in_ellipse = data[1:75, ], points_outside_ellipse = data[76:80, ])
 
 # 3. Mock the most complex dependency: test_env_thinning
@@ -45,7 +45,7 @@ test_that("Core functionality and structure are correct", {
   local_mocked_bindings(
     find_env_resolution = find_env_resolution,
     find_optimal_cap = find_optimal_cap,
-    thin_env_density = thin_env_density,
+    thin_env_nd = thin_env_nd,
     fit_ellipsoid = fit_ellipsoid,
     test_env_thinning = test_env_thinning
   )
@@ -96,7 +96,7 @@ test_that("Statistical comparison and baseline are handled correctly", {
 
   local_mocked_bindings(
     find_env_resolution = find_env_resolution, find_optimal_cap = find_optimal_cap,
-    thin_env_density = thin_env_density, fit_ellipsoid = fit_ellipsoid,
+    thin_env_nd = thin_env_nd, fit_ellipsoid = fit_ellipsoid,
     test_env_thinning = test_env_thinning_worse
   )
 
@@ -123,7 +123,7 @@ test_that("S3 methods (print and plot) work as expected", {
   local_mocked_bindings(
     find_env_resolution = find_env_resolution,
     find_optimal_cap = find_optimal_cap,
-    thin_env_density = thin_env_density,
+    thin_env_nd = thin_env_nd,
     fit_ellipsoid = fit_ellipsoid,
     test_env_thinning = test_env_thinning
   )

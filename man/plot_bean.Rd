@@ -2,67 +2,42 @@
 % Please edit documentation in R/plot_bean.R
 \name{plot_bean}
 \alias{plot_bean}
-\title{Visualize environmental thinning results}
+\title{Visualize n-dimensional environmental thinning results}
 \usage{
-plot_bean(original_data, thinned_object, env_vars, grid_resolution)
+plot_bean(original_data, thinned_object, env_vars)
 }
 \arguments{
-\item{original_data}{A data.frame containing species occurrences and pre-scaled
-environmental variables, typically the output of \code{\link{prepare_bean}}.}
+\item{original_data}{A data.frame of the prepared, unthinned occurrence points.}
 
-\item{thinned_object}{The output object from either \code{\link{thin_env_density}} or
-\code{\link{thin_env_center}}. The function will automatically detect the thinning type.}
+\item{thinned_object}{The output object from `thin_env_nd()` or `thin_env_center()`.}
 
-\item{env_vars}{A character vector of length two specifying the names of the
-environmental variables to plot on the x and y axes.}
-
-\item{grid_resolution}{A numeric vector of length two specifying the grid
-resolution used for thinning. This is required to draw the grid correctly.}
+\item{env_vars}{A character vector of the environmental variables to plot.}
 }
 \value{
-A ggplot object.
+A `GGally::ggpairs` plot object.
 }
 \description{
-This function creates a comparison plot showing the original,
-unthinned occurrence points overlaid with the results of an environmental
-thinning process. It draws the environmental grid to visualize how points
-were either sampled (stochastic) or consolidated to cell centers (deterministic).
+This function creates a pairs plot to visualize the results of
+  n-dimensional environmental thinning. It can accept thinned objects from either
+  density-based thinning (`thin_env_nd`) or deterministic centroid thinning
+  (`thin_env_center`).
 }
 \examples{
 \dontrun{
-# Assume 'prepared_data' and 'grid_res' are available from previous steps.
+# Assume 'prepared_data' is ready.
 
-# --- Example 1: Visualizing Stochastic Thinning ---
-set.seed(123)
-thinned_stochastic <- thin_env_density(
+# --- Example: Plotting Density-Based Thinning ---
+thinned_density_obj <- thin_env_nd(
   data = prepared_data,
-  env_vars = c("BIO1", "BIO12"),
-  grid_resolution = grid_res,
+  env_vars = c("PC1", "PC2", "PC3"),
+  grid_resolution = 0.5,
   max_per_cell = 1
 )
 
 plot_bean(
   original_data = prepared_data,
-  thinned_object = thinned_stochastic,
-  grid_resolution = grid_res,
-  env_vars = c("BIO1", "BIO12")
-)
-
-# --- Example 2: Visualizing Deterministic Thinning ---
-thinned_deterministic <- thin_env_center(
-  data = prepared_data,
-  env_vars = c("BIO1", "BIO12"),
-  grid_resolution = grid_res
-)
-
-plot_bean(
-  original_data = prepared_data,
-  thinned_object = thinned_deterministic,
-  grid_resolution = grid_res,
-  env_vars = c("BIO1", "BIO12")
+  thinned_object = thinned_density_obj,
+  env_vars = c("PC1", "PC2", "PC3")
 )
 }
-}
-\seealso{
-\code{\link{prepare_bean}}, \code{\link{thin_env_density}}, \code{\link{thin_env_center}}
 }

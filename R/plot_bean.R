@@ -1,127 +1,103 @@
-#' Visualize environmental thinning results
+#' Visualize n-dimensional environmental thinning results
 #'
-#' @description This function creates a comparison plot showing the original,
-#' unthinned occurrence points overlaid with the results of an environmental
-#' thinning process. It draws the environmental grid to visualize how points
-#' were either sampled (stochastic) or consolidated to cell centers (deterministic).
+#' @description This function creates a pairs plot to visualize the results of
+#'   n-dimensional environmental thinning. It can accept thinned objects from either
+#'   density-based thinning (`thin_env_nd`) or deterministic centroid thinning
+#'   (`thin_env_center`).
 #'
-#' @param original_data A data.frame containing species occurrences and pre-scaled
-#'   environmental variables, typically the output of \code{\link{prepare_bean}}.
-#' @param thinned_object The output object from either \code{\link{thin_env_density}} or
-#'   \code{\link{thin_env_center}}. The function will automatically detect the thinning type.
-#' @param grid_resolution A numeric vector of length two specifying the grid
-#'   resolution used for thinning. This is required to draw the grid correctly.
-#' @param env_vars A character vector of length two specifying the names of the
-#'   environmental variables to plot on the x and y axes.
-#' @seealso \code{\link{prepare_bean}}, \code{\link{thin_env_density}}, \code{\link{thin_env_center}}
-#' @return A ggplot object.
+#' @param original_data A data.frame of the prepared, unthinned occurrence points.
+#' @param thinned_object The output object from `thin_env_nd()` or `thin_env_center()`.
+#' @param env_vars A character vector of the environmental variables to plot.
+#'
+#' @return A `GGally::ggpairs` plot object.
 #' @export
-#' @importFrom ggplot2 ggplot aes geom_point geom_vline geom_hline labs theme_bw theme element_blank
+#' @importFrom stats setNames
+#' @importFrom dplyr bind_rows mutate
+#' @importFrom GGally ggpairs wrap
+#' @importFrom ggplot2 ggplot aes theme_bw scale_color_manual scale_alpha_manual scale_shape_manual geom_vline geom_hline
 #' @examples
 #' \dontrun{
-#' # Assume 'prepared_data' and 'grid_res' are available from previous steps.
+#' # Assume 'prepared_data' is ready.
 #'
-#' # --- Example 1: Visualizing Stochastic Thinning ---
-#' set.seed(123)
-#' thinned_stochastic <- thin_env_density(
+#' # --- Example: Plotting Density-Based Thinning ---
+#' thinned_density_obj <- thin_env_nd(
 #'   data = prepared_data,
-#'   env_vars = c("BIO1", "BIO12"),
-#'   grid_resolution = grid_res,
+#'   env_vars = c("PC1", "PC2", "PC3"),
+#'   grid_resolution = 0.5,
 #'   max_per_cell = 1
 #' )
 #'
 #' plot_bean(
 #'   original_data = prepared_data,
-#'   thinned_object = thinned_stochastic,
-#'   grid_resolution = grid_res,
-#'   env_vars = c("BIO1", "BIO12")
-#' )
-#'
-#' # --- Example 2: Visualizing Deterministic Thinning ---
-#' thinned_deterministic <- thin_env_center(
-#'   data = prepared_data,
-#'   env_vars = c("BIO1", "BIO12"),
-#'   grid_resolution = grid_res
-#' )
-#'
-#' plot_bean(
-#'   original_data = prepared_data,
-#'   thinned_object = thinned_deterministic,
-#'   grid_resolution = grid_res,
-#'   env_vars = c("BIO1", "BIO12")
+#'   thinned_object = thinned_density_obj,
+#'   env_vars = c("PC1", "PC2", "PC3")
 #' )
 #' }
-plot_bean <- function(original_data, thinned_object, env_vars, grid_resolution) {
-
-  # --- 1. Input Validation ---
-  if (!inherits(thinned_object, c("bean_thinned_density", "bean_thinned_center"))) {
-    stop("`thinned_object` must be an `bean_thinned_density` or `bean_thinned_center` object.")
-  }
-  if (length(grid_resolution) != 2) {
-    stop("`grid_resolution` must be a numeric vector of length 2.")
-  }
-  if (!all(env_vars %in% names(original_data))) {
-    stop("One or both `env_vars` not found in `original_data`.")
-  }
-
-  # --- 2. Calculate Grid Line Positions ---
-  x_range <- range(original_data[[env_vars[1]]], na.rm = TRUE)
-  x_breaks <- seq(
-    from = floor(x_range[1] / grid_resolution[1]) * grid_resolution[1],
-    to = ceiling(x_range[2] / grid_resolution[1]) * grid_resolution[1],
-    by = grid_resolution[1]
-  )
-
-  y_range <- range(original_data[[env_vars[2]]], na.rm = TRUE)
-  y_breaks <- seq(
-    from = floor(y_range[1] / grid_resolution[2]) * grid_resolution[2],
-    to = ceiling(y_range[2] / grid_resolution[2]) * grid_resolution[2],
-    by = grid_resolution[2]
-  )
-
-  # --- 3. Create the Base Plot ---
-  # This includes the original points and the grid lines
-  base_plot <- ggplot2::ggplot() +
-    ggplot2::geom_point(
-      data = original_data,
-      ggplot2::aes(x = .data[[env_vars[1]]], y = .data[[env_vars[2]]]),
-      color = "grey60", alpha = 0.5, size = 2
-    ) +
-    ggplot2::geom_vline(xintercept = x_breaks, color = "grey80", linetype = "dashed", linewidth = 0.5) +
-    ggplot2::geom_hline(yintercept = y_breaks, color = "grey80", linetype = "dashed", linewidth = 0.5) +
-    ggplot2::theme_bw() +
-    ggplot2::theme(panel.grid = ggplot2::element_blank())
-
-  # --- 4. Add Layers Based on Thinning Type ---
+plot_bean <- function(original_data, thinned_object, env_vars) {
+  # --- 1. Identify Thinning Type and Prepare Data ---
   if (inherits(thinned_object, "bean_thinned_density")) {
-    # --- Stochastic Plot ---
-    final_plot <- base_plot +
-      ggplot2::geom_point(
-        data = thinned_object$thinned_data,
-        ggplot2::aes(x = .data[[env_vars[1]]], y = .data[[env_vars[2]]]),
-        color = "#0072B2", alpha = 0.8, size = 1
-      ) +
-      ggplot2::labs(
-        title = "Stochastic Thinning Comparison",
-        subtitle = paste(thinned_object$n_thinned, "points remaining (blue) from", thinned_object$n_original, "original points (grey)"),
-        x = paste(env_vars[1], "(scaled)"),
-        y = paste(env_vars[2], "(scaled)")
-      )
+    thinned_df <- thinned_object$thinned_data
+    plot_title <- "N-Dimensional Density Thinning"
+  } else if (inherits(thinned_object, "bean_thinned_center")) {
+    thinned_df <- thinned_object$thinned_points
+    plot_title <- "N-Dimensional Centroid Thinning"
   } else {
-    # --- Deterministic Plot ---
-    final_plot <- base_plot +
-      ggplot2::geom_point(
-        data = thinned_object$thinned_points,
-        ggplot2::aes(x = .data[[env_vars[1]]], y = .data[[env_vars[2]]]),
-        color = "#D55E00", size = 2, shape = 3, stroke = 1
-      ) +
-      ggplot2::labs(
-        title = "Deterministic Thinning to Grid Cell Centers",
-        subtitle = paste(thinned_object$n_thinned, "unique cell centers (orange crosses) from", thinned_object$n_original, "original points (grey)"),
-        x = paste(env_vars[1], "(scaled)"),
-        y = paste(env_vars[2], "(scaled)")
-      )
+    stop("`thinned_object` must be an output from thin_env_nd() or thin_env_center()")
   }
 
-  return(final_plot)
+  if (!all(env_vars %in% names(original_data)) || !all(env_vars %in% names(thinned_df))) {
+    stop("One or more `env_vars` not found in `original_data` or the thinned data")
+  }
+
+  # --- 2. Combine Data for Plotting ---
+  plot_data <- dplyr::bind_rows(
+    dplyr::mutate(original_data, Status = "Original"),
+    dplyr::mutate(thinned_df, Status = "Thinned")
+  )
+  plot_data$Status <- factor(plot_data$Status, levels = c("Original", "Thinned"))
+
+  # --- 3. Create the Base Pairs Plot ---
+  pairs_plot <- GGally::ggpairs(
+    plot_data,
+    columns = env_vars,
+    # CHANGE 1: Map 'shape' to Status instead of 'size'
+    mapping = ggplot2::aes(color = Status, alpha = Status, shape = Status),
+    title = plot_title,
+    # CHANGE 2: Use a single, fixed size for all points
+    upper = list(continuous = GGally::wrap("points")),
+    lower = list(continuous = GGally::wrap("points")),
+    diag = list(continuous = GGally::wrap("densityDiag", alpha = 0.5))
+  )
+
+  # --- 4. Add Grid Lines and Scales to Each Panel ---
+  resolutions_named <- stats::setNames(thinned_object$parameters$grid_resolution, env_vars)
+
+  num_vars <- length(env_vars)
+  for (i in 1:num_vars) {
+    for (j in 1:num_vars) {
+      if (i != j) {
+        y_var <- env_vars[i]
+        x_var <- env_vars[j]
+        y_res <- resolutions_named[y_var]
+        x_res <- resolutions_named[x_var]
+
+        x_range <- range(original_data[[x_var]], na.rm = TRUE)
+        y_range <- range(original_data[[y_var]], na.rm = TRUE)
+
+        x_breaks <- seq(floor(x_range[1] / x_res) * x_res, ceiling(x_range[2] / x_res) * x_res, by = x_res)
+        y_breaks <- seq(floor(y_range[1] / y_res) * y_res, ceiling(y_range[2] / y_res) * y_res, by = y_res)
+
+        pairs_plot[i, j] <- pairs_plot[i, j] +
+          ggplot2::geom_vline(xintercept = x_breaks, color = "grey70", linetype = "dotted", linewidth = 0.5) +
+          ggplot2::geom_hline(yintercept = y_breaks, color = "grey70", linetype = "dotted", linewidth = 0.5) +
+          ggplot2::scale_color_manual(values = c("Original" = "#ef476f", "Thinned" = "#0072B2")) +
+          ggplot2::scale_alpha_manual(values = c("Original" = 0.2, "Thinned" = 0.6)) +
+          ggplot2::scale_shape_manual(values = c("Original" = 19, "Thinned" = 1)) # Hollow vs. Solid circle
+      }
+    }
+  }
+
+  pairs_plot <- pairs_plot + ggplot2::theme_bw(base_size = 14)
+
+  return(pairs_plot)
 }
