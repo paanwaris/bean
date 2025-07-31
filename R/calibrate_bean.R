@@ -156,7 +156,7 @@ calibrate_bean <- function(data, env_vars, background_data, env_rasters,
     all_rep_auc_scores <- c()
     for (rep in 1:thinning_reps) {
       cat(sprintf("    - Thinning Repetition %d/%d...\n", rep, thinning_reps))
-      thinned_obj <- thin_env_density(data = data, env_vars = env_vars, grid_resolution = current_res, max_per_cell = current_cap)
+      thinned_obj <- thin_env_nd(data = data, env_vars = env_vars, grid_resolution = current_res, max_per_cell = current_cap)
       ellipse_obj <- fit_ellipsoid(data = thinned_obj$thinned_data, env_vars = env_vars, method = m, level = level)
 
       final_points <- ellipse_obj$points_in_ellipse
@@ -172,26 +172,38 @@ calibrate_bean <- function(data, env_vars, background_data, env_rasters,
       }
 
       eval_obj <- test_env_thinning(
-        presence_data = final_points,
+        presence_data = as.data.frame(final_points),
         background_data = background_data, env_rasters = env_rasters,
         longitude = longitude, latitude = latitude,
         k = k, n_repeats = n_repeats, maxent_args = maxent_args
       )
       all_rep_auc_scores <- c(all_rep_auc_scores, eval_obj$all_auc_scores)
     }
-    all_auc_data[[combo_name]] <- all_rep_auc_scores
+
+    # Handle cases where all reps failed for a combination
+    if (length(all_rep_auc_scores) > 0) {
+      all_auc_data[[combo_name]] <- all_rep_auc_scores
+    } else {
+      all_auc_data[[combo_name]] <- NA
+    }
   }
 
   # --- 3. Perform Statistical Analysis ---
   cat("\n--- Performing Statistical Comparison ---\n")
-  auc_df <- utils::stack(all_auc_data)
-  colnames(auc_df) <- c("auc", "combination")
+
+  # Robustly create data frame for analysis, ignoring failed combinations
+  auc_df <- dplyr::bind_rows(lapply(names(all_auc_data), function(name) {
+    if (is.numeric(all_auc_data[[name]])) {
+      return(dplyr::tibble(auc = all_auc_data[[name]], combination = name))
+    }
+    return(NULL)
+  }))
 
   calibration_summary <- auc_df %>%
     dplyr::group_by(combination) %>%
     dplyr::summarise(mean_auc = mean(auc, na.rm = TRUE), sd_auc = sd(auc, na.rm = TRUE), .groups = "drop")
 
-  if (length(unique(auc_df$combination[!is.na(auc_df$auc)])) < 2) {
+  if (length(unique(auc_df$combination)) < 2) {
     message("Fewer than two valid groups to compare; skipping statistical tests.")
     calibration_summary$p_value_vs_original <- NA
     calibration_summary$significance <- NA
@@ -234,7 +246,7 @@ calibrate_bean <- function(data, env_vars, background_data, env_rasters,
   cat("\n--- Generating final data products for the best parameter combination ---\n")
   final_res_obj <- find_env_resolution(data = data, env_vars = env_vars, quantile = best_q)
   final_cap_obj <- find_optimal_cap(data = data, env_vars = env_vars, grid_resolution = final_res_obj$suggested_resolution, target_percent = target_percent)
-  final_thinned_obj <- thin_env_density(data = data, env_vars = env_vars, grid_resolution = final_res_obj$suggested_resolution, max_per_cell = final_cap_obj$best_cap_above_target)
+  final_thinned_obj <- thin_env_nd(data = data, env_vars = env_vars, grid_resolution = final_res_obj$suggested_resolution, max_per_cell = final_cap_obj$best_cap_above_target)
   final_ellipse_obj <- fit_ellipsoid(data = final_thinned_obj$thinned_data, env_vars = env_vars, method = best_m, level = level)
 
   results <- list(
@@ -254,7 +266,6 @@ calibrate_bean <- function(data, env_vars, background_data, env_rasters,
   class(results) <- "bean_calibration"
   return(results)
 }
-
 
 #' @export
 #' @keywords internal
@@ -278,10 +289,13 @@ print.bean_calibration <- function(x, ...) {
   cat(sprintf("Optimal Ellipse Method: '%s'\n", best$method))
   cat("Resulting Grid Resolution:\n")
 
-  if (length(best$resolution) >= 2) {
-    cat(sprintf("  - %s: %.4f\n", names(best$resolution)[1], best$resolution[1]))
-    cat(sprintf("  - %s: %.4f\n", names(best$resolution)[2], best$resolution[2]))
+  # FIX: Loop through all resolutions instead of printing only the first two
+  if (!is.null(best$resolution) && length(best$resolution) > 0) {
+    for (i in seq_along(best$resolution)) {
+      cat(sprintf("  - %s: %.4f\n", names(best$resolution)[i], best$resolution[i]))
+    }
   }
+
   cat(sprintf("Resulting Thinning Cap: %d\n", best$cap))
 
   cat("---\n")

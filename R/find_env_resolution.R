@@ -90,42 +90,51 @@
 #' }
 find_env_resolution <- function(data, env_vars, quantile = 0.1) {
   # --- Input Validation and Data Cleaning ---
+  if (length(env_vars) < 2) {
+    stop("`env_vars` must contain at least two variable names")
+  }
   if (!all(env_vars %in% names(data))) {
-    stop("One or both specified env_vars not found in the data frame.")
+    stop("One or more `env_vars` not found in the data frame")
   }
 
-  env_var1_sym <- rlang::sym(env_vars[1])
-  env_var2_sym <- rlang::sym(env_vars[2])
-
-  clean_data <- data %>%
-    dplyr::filter(is.finite(!!env_var1_sym) & is.finite(!!env_var2_sym))
+  clean_data <- data[stats::complete.cases(data[, env_vars]), ]
 
   if (nrow(clean_data) < 3) {
-    stop("At least 3 complete observations are needed to calculate resolution.")
+    stop("At least 3 complete observations are needed to calculate resolution")
   }
 
-  # Data is assumed to be pre-scaled, so we select the columns directly
-  env_data <- clean_data[, env_vars]
+  # Data is assumed to be pre-scaled
+  env_data <- clean_data[, env_vars, drop = FALSE]
 
   # --- Calculate Resolutions for Each Axis ---
   cat("Calculating pairwise distances for each environmental axis...\n")
 
-  dist1 <- stats::dist(env_data[, 1])
-  res1 <- stats::quantile(dist1, probs = quantile, na.rm = TRUE)
-
-  dist2 <- stats::dist(env_data[, 2])
-  res2 <- stats::quantile(dist2, probs = quantile, na.rm = TRUE)
-
-  suggested_res <- c(res1, res2)
-  names(suggested_res) <- env_vars
+  # Use lapply to iterate over each environmental variable
+  resolution_list <- lapply(env_vars, function(var) {
+    distances <- stats::dist(env_data[[var]])
+    resolution <- stats::quantile(distances, probs = quantile, na.rm = TRUE)
+    return(list(
+      resolution = resolution,
+      distances = as.numeric(distances)
+    ))
+  })
 
   # --- Construct S3 Object ---
-  dist_df1 <- data.frame(variable = env_vars[1], distances = as.numeric(dist1))
-  dist_df2 <- data.frame(variable = env_vars[2], distances = as.numeric(dist2))
+  suggested_res <- sapply(resolution_list, `[[`, "resolution")
+  names(suggested_res) <- env_vars
+
+  distance_df_list <- lapply(seq_along(env_vars), function(i) {
+    data.frame(
+      variable = env_vars[i],
+      distances = resolution_list[[i]]$distances
+    )
+  })
+
+  distance_distributions <- do.call(rbind, distance_df_list)
 
   results <- list(
     suggested_resolution = suggested_res,
-    distance_distributions = rbind(dist_df1, dist_df2),
+    distance_distributions = distance_distributions,
     parameters = list(quantile = quantile)
   )
 
@@ -138,9 +147,13 @@ find_env_resolution <- function(data, env_vars, quantile = 0.1) {
 print.bean_resolution <- function(x, ...) {
   cat("--- Bean Environmental Resolution Analysis ---\n\n")
   cat(sprintf("Suggested Grid Resolutions (at the %.0f%% quantile):\n", x$parameters$quantile * 100))
-  cat(sprintf("  - %s: %f\n", names(x$suggested_resolution)[1], x$suggested_resolution[1]))
-  cat(sprintf("  - %s: %f\n\n", names(x$suggested_resolution)[2], x$suggested_resolution[2]))
-  cat("To see the full distance distributions, run plot(your_results_object).\n")
+
+  # Loop through all resolutions to print them
+  for (i in seq_along(x$suggested_resolution)) {
+    cat(sprintf("  - %s: %f\n", names(x$suggested_resolution)[i], x$suggested_resolution[i]))
+  }
+
+  cat("\nTo see the full distance distributions, run plot(your_results_object).\n")
 }
 
 #' @export
@@ -148,13 +161,17 @@ print.bean_resolution <- function(x, ...) {
 #' @importFrom ggplot2 ggplot aes geom_histogram geom_vline labs theme_bw facet_wrap
 plot.bean_resolution <- function(x, ...) {
   plot_data <- x$distance_distributions
-  res_data <- data.frame(variable = names(x$suggested_resolution),
-                         resolution = x$suggested_resolution)
+  res_data <- data.frame(
+    variable = names(x$suggested_resolution),
+    resolution = x$suggested_resolution
+  )
 
   res_plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = distances)) +
     ggplot2::geom_histogram(bins = 50, fill = "grey80", color = "black") +
-    ggplot2::geom_vline(data = res_data, ggplot2::aes(xintercept = resolution),
-                        linetype = "dashed", color = "blue", linewidth = 1) +
+    ggplot2::geom_vline(
+      data = res_data, ggplot2::aes(xintercept = resolution),
+      linetype = "dashed", color = "blue", linewidth = 1
+    ) +
     ggplot2::facet_wrap(~variable, scales = "free") +
     ggplot2::labs(
       title = "Distribution of Pairwise Environmental Distances per Axis",

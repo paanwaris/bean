@@ -8,8 +8,7 @@ library(dplyr)
 # - Cell "1_2" contains 3 points.
 mock_data_scaled <- data.frame(
   BIO1 = c(0.1, 0.2, 1.1, 1.2, 1.3),
-  BIO12 = c(0.1, 0.2, 2.1, 2.2, 2.3),
-  species = "A"
+  BIO12 = c(0.1, 0.2, 2.1, 2.2, 2.3)
 )
 
 # --- Test Suite ---
@@ -50,17 +49,17 @@ test_that("Input validation and error handling are robust", {
   # 1. Test invalid `env_vars`
   expect_error(
     thin_env_center(mock_data_scaled, env_vars = "", grid_resolution = 1),
-    "One or both specified env_vars not found in the data frame."
+    "One or more `env_vars` not found in the data frame"
   )
   expect_error(
-    thin_env_center(mock_data_scaled, env_vars = c("BAD", "BIO12"), grid_resolution = 1),
-    "One or both specified env_vars not found in the data frame."
+    thin_env_center(mock_data_scaled, env_vars = "BAD", grid_resolution = 1),
+    "One or more `env_vars` not found in the data frame"
   )
 
   # 2. Test invalid `grid_resolution`
   expect_error(
     thin_env_center(mock_data_scaled, env_vars = c("BIO1", "BIO12"), grid_resolution = c(1, 2, 3)),
-    "grid_resolution must be a numeric vector of length 1 or 2."
+    sprintf("`grid_resolution` must have length 1 or %d", length(mock_data_scaled))
   )
 
   # 3. Test with empty data frame

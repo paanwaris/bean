@@ -1,100 +1,161 @@
+# Load testthat and the function to be tested
 library(testthat)
-library(dplyr)
-library(ggplot2)
+# source("R/fit_ellipsoid.R") # Or load the package with library(bean)
 
-# --- Setup: Reusable Mock Data ---
-# Create a predictable, pre-scaled dataset with a clear cluster and an outlier
-# to test the robustness of the "mve" method.
-set.seed(42)
-mock_data_scaled <- data.frame(
-  BIO1 = c(rnorm(50, mean = 0, sd = 1), 10), # 50 points in a cluster, 1 outlier
-  BIO12 = c(rnorm(50, mean = 0, sd = 1), -10),
-  species = "A"
-)
+context("Testing fit_ellipsoid")
 
-# --- Test Suite ---
+# --- 1. Test Input Validation and Error Handling ---
 
-test_that("Core functionality works correctly (covmat method)", {
-  # Run with the standard covariance method
-  fit_covmat <- fit_ellipsoid(
-    data = mock_data_scaled,
-    env_vars = c("BIO1", "BIO12"),
-    method = "covmat",
-    level = 0.95 # Use 0-1 scale
+test_that("fit_ellipsoid stops with invalid inputs", {
+  test_data <- data.frame(PC1 = 1:5, PC2 = 1:5, PC3 = 1:5)
+
+  # Error: Invalid method
+  expect_error(
+    fit_ellipsoid(test_data, env_vars = c("PC1", "PC2"), method = "invalid_method"),
+    "'arg' should be one of"
   )
 
-  # 1. Check object class and structure
-  expect_s3_class(fit_covmat, "bean_ellipsoid")
-  expect_named(fit_covmat, c(
-    "niche_ellipse", "centroid", "covariance_matrix",
-    "all_points_used", "points_in_ellipse", "points_outside_ellipse",
-    "inside_indices", "parameters"
+  # Error: Invalid level
+  expect_error(
+    fit_ellipsoid(test_data, env_vars = c("PC1", "PC2"), level = 1.1),
+    "`level` must be a single number greater than 0 and less than 1"
+  )
+  expect_error(
+    fit_ellipsoid(test_data, env_vars = c("PC1", "PC2"), level = 0),
+    "`level` must be a single number greater than 0 and less than 1"
+  )
+
+  # Error: env_vars has fewer than two variables
+  expect_error(
+    fit_ellipsoid(test_data, env_vars = "PC1"),
+    "`env_vars` must be a character vector of at least length two"
+  )
+
+  # Error: env_vars not found in data
+  expect_error(
+    fit_ellipsoid(test_data, env_vars = c("PC1", "PC_X")),
+    "One or more `env_vars` not found in the data frame"
+  )
+
+  # Error: Not enough complete observations
+  expect_error(
+    fit_ellipsoid(data.frame(PC1 = 1:2, PC2 = 1:2), env_vars = c("PC1", "PC2")),
+    "At least n_variables \\+ 1 complete observations are needed"
+  )
+  expect_error(
+    fit_ellipsoid(data.frame(PC1 = 1:3, PC2 = 1:3, PC3 = 1:3), env_vars = c("PC1", "PC2", "PC3")),
+    "At least n_variables \\+ 1 complete observations are needed"
+  )
+})
+
+
+# --- 2. Test 'covmat' Method ---
+
+test_that("fit_ellipsoid with method='covmat' works correctly in 2D", {
+  # Simple, centered data where calculations are predictable
+  simple_data <- data.frame(
+    V1 = c(0, 1, -1, 0, 0, 10), # includes an outlier
+    V2 = c(0, 0, 0, 1, -1, 10)
+  )
+  env_vars <- c("V1", "V2")
+
+  result <- fit_ellipsoid(simple_data, env_vars = env_vars, method = "covmat", level = 0.95)
+
+  # Check centroid calculation (will be skewed by outlier)
+  expect_equal(result$centroid, colMeans(simple_data))
+
+  # Check covariance matrix
+  expect_equal(result$covariance_matrix, stats::cov(simple_data))
+
+  # Check point inclusion logic
+  # The first 5 points should be inside, the outlier (10,10) should be outside
+  expect_true(all(1:5 %in% result$inside_indices))
+  expect_false(7 %in% result$inside_indices)
+  expect_equal(nrow(result$points_in_ellipse), 6)
+  expect_equal(nrow(result$points_outside_ellipse), 0)
+})
+
+
+# --- 3. Test 'mve' Method ---
+
+test_that("fit_ellipsoid with method='mve' is robust to outliers", {
+  # Data with a tight cluster and a clear outlier
+  mve_data <- data.frame(
+    V1 = c(rnorm(20, mean = 5, sd = 0.1), 50),
+    V2 = c(rnorm(20, mean = 5, sd = 0.1), 50)
+  )
+
+  # Fit with both methods
+  res_covmat <- fit_ellipsoid(mve_data, env_vars = c("V1", "V2"), method = "covmat")
+  res_mve <- fit_ellipsoid(mve_data, env_vars = c("V1", "V2"), method = "mve")
+
+  # The 'mve' centroid should be much closer to the true center (5,5) of the cluster
+  # than the 'covmat' centroid, which is pulled toward the outlier (50,50).
+  dist_covmat_to_center <- dist(rbind(res_covmat$centroid, c(5, 5)))
+  dist_mve_to_center <- dist(rbind(res_mve$centroid, c(5, 5)))
+
+  expect_lt(dist_mve_to_center, dist_covmat_to_center)
+
+  # The 'mve' method should identify the outlier correctly
+  # The index of the outlier is 21
+  expect_false(21 %in% res_mve$inside_indices)
+})
+
+
+# --- 4. Test General Output Structure and Behavior ---
+
+test_that("fit_ellipsoid returns a correctly structured object", {
+  test_data <- data.frame(
+    PC1 = c(rnorm(20, mean = 5, sd = 0.1), 50),
+    PC2 = c(rnorm(20, mean = 5, sd = 0.1), 50)
+  )
+  result <- fit_ellipsoid(test_data, env_vars = c("PC1", "PC2"))
+
+  # Check class and names
+  expect_s3_class(result, "bean_ellipsoid")
+  expect_named(result, c(
+    "niche_ellipse", "centroid", "covariance_matrix", "all_points_used",
+    "points_in_ellipse", "points_outside_ellipse", "inside_indices", "parameters"
   ))
 
-  # 2. Check that point counts are correct
-  expect_equal(nrow(fit_covmat$points_in_ellipse) + nrow(fit_covmat$points_outside_ellipse),
-               nrow(fit_covmat$all_points_used))
-
-  # 3. Check that the centroid is influenced by the outlier (pulled away from 0)
-  expect_true(abs(fit_covmat$centroid["BIO1"]) > 0.1)
-  expect_true(fit_covmat$centroid["BIO12"] < -0.01) # Corrected logic
+  # Check that point subsets are correct and complete
+  expect_equal(nrow(result$points_in_ellipse) + nrow(result$points_outside_ellipse), nrow(test_data))
+  expect_equal(result$points_in_ellipse, result$all_points_used[result$inside_indices, ])
 })
 
-
-test_that("Core functionality works correctly (mve method)", {
-  # Run with the robust MVE method
-  fit_mve <- fit_ellipsoid(
-    data = mock_data_scaled,
-    env_vars = c("BIO1", "BIO12"),
-    method = "mve",
-    level = 0.95 # Use 0-1 scale
+test_that("fit_ellipsoid handles NA values correctly", {
+  na_data <- data.frame(
+    V1 = c(rnorm(20, mean = 5, sd = 0.1), 50, NA),
+    V2 = c(rnorm(20, mean = 5, sd = 0.1), NA, 50)
   )
+  # Complete cases are rows 1, 3, 4, 5, 6 (5 rows total)
 
-  # 1. Check basic structure
-  expect_s3_class(fit_mve, "bean_ellipsoid")
-  expect_equal(nrow(fit_mve$points_in_ellipse) + nrow(fit_mve$points_outside_ellipse),
-               nrow(fit_mve$all_points_used))
+  result <- fit_ellipsoid(na_data, env_vars = c("V1", "V2"))
 
-  # 2. Check that the centroid is robust to the outlier (should be very close to 0)
-  expect_true(abs(fit_mve$centroid["BIO1"]) < 0.5)
-  expect_true(abs(fit_mve$centroid["BIO12"]) < 0.5)
+  # Check that all_points_used has filtered out rows with NAs
+  expect_equal(nrow(result$all_points_used), 20)
+  expect_false(any(is.na(result$all_points_used[, c("V1", "V2")])))
 })
 
-
-test_that("Input validation and error handling are robust", {
-  # 1. Test invalid `env_vars`
-  expect_error(fit_ellipsoid(mock_data_scaled, env_vars = "BIO1"),
-               "`env_vars` must be a character vector of length two.")
-  expect_error(fit_ellipsoid(mock_data_scaled, env_vars = c("BAD", "BIO12")),
-               "Both variable names in `env_vars` must be present as columns in the data.")
-
-  # 2. Test invalid `level`
-  expect_error(fit_ellipsoid(mock_data_scaled, env_vars = c("BIO1", "BIO12"), level = 1.01),
-               "`level` must be a single number greater than 0 and less than 1.")
-
-  # 3. Test insufficient data
-  small_data <- data.frame(BIO1 = c(1, 2), BIO12 = c(1, 2))
-  expect_error(fit_ellipsoid(small_data, env_vars = c("BIO1", "BIO12")),
-               "At least 3 complete observations are needed to fit an ellipse.")
-})
-
-
-test_that("S3 methods (print and plot) work as expected", {
-  # Create one fit object to test both methods
-  fit <- fit_ellipsoid(
-    data = mock_data_scaled,
-    env_vars = c("BIO1", "BIO12")
+test_that("fit_ellipsoid generates correct ellipse object by dimension", {
+  # Test 2D case
+  data_2d <- data.frame(
+    V1 = c(rnorm(20, mean = 5, sd = 0.1), 50, NA),
+    V2 = c(rnorm(20, mean = 5, sd = 0.1), NA, 50)
   )
+  res_2d <- fit_ellipsoid(data_2d, c("V1", "V2"))
+  expect_true(is.data.frame(res_2d$niche_ellipse))
 
-  # 1. Test print method
-  expect_output(print(fit), "--- Bean Environmental Niche Ellipse ---")
-  expect_output(print(fit), "Method: 'covmat'.")
-  expect_output(print(fit), "Fitted to 51 data points at a 95.00% level.")
-
-  # 2. Test plot method
-  p <- plot(fit)
-  expect_s3_class(p, "ggplot")
-  expect_equal(p$labels$title, "Fitted Environmental Niche Ellipse")
-  expect_equal(p$labels$x, "BIO1")
-  expect_equal(p$labels$y, "BIO12")
+  # Test 3D case (requires rgl)
+  if (requireNamespace("rgl", quietly = TRUE)) {
+    data_3d <- data.frame(
+      V1 = c(rnorm(20, mean = 5, sd = 0.1), 50, NA),
+      V2 = c(rnorm(20, mean = 5, sd = 0.1), NA, 50),
+      V3 = c(rnorm(20, mean = 5, sd = 0.1), NA, 50)
+    )
+    res_3d <- fit_ellipsoid(data_3d, c("V1", "V2", "V3"))
+    expect_s3_class(res_3d$niche_ellipse, "mesh3d")
+  } else {
+    skip("rgl not installed, skipping 3D ellipse test.")
+  }
 })

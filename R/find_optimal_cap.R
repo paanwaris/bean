@@ -74,22 +74,18 @@
 #' }
 find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent = 0.95) {
   # --- Input Validation ---
+  if (length(env_vars) < 2) {
+    stop("`env_vars` must contain at least two variable names")
+  }
+  if (length(env_vars) != length(grid_resolution)) {
+    stop("Length of `grid_resolution` must match the length of `env_vars`")
+  }
   if (!all(env_vars %in% names(data))) {
-    stop("One or both specified env_vars not found in the data frame.")
+    stop("One or more `env_vars` not found in the data frame")
   }
-  if (length(grid_resolution) == 1) {
-    grid_resolution <- c(grid_resolution, grid_resolution)
-  } else if (length(grid_resolution) != 2) {
-    stop("grid_resolution must be a numeric vector of length 1 or 2.")
-  }
-
-  env_var1_sym <- rlang::sym(env_vars[1])
-  env_var2_sym <- rlang::sym(env_vars[2])
 
   # --- Data Cleaning ---
-  # Data is assumed to be pre-cleaned by prepare_data(), but we filter just in case.
-  clean_data <- data %>%
-    dplyr::filter(is.finite(!!env_var1_sym) & is.finite(!!env_var2_sym))
+  clean_data <- data[stats::complete.cases(data[, env_vars]), ]
 
   if (nrow(clean_data) == 0) {
     stop("No complete observations to run optimization.")
@@ -98,17 +94,12 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent = 0
   # --- Begin Optimization ---
   target_point_count <- floor(nrow(clean_data) * target_percent)
 
-  max_density <- clean_data %>%
-    dplyr::mutate(
-      env_cell_id = paste(
-        floor(!!env_var1_sym / grid_resolution[1]),
-        floor(!!env_var2_sym / grid_resolution[2]),
-        sep = "_"
-      )
-    ) %>%
-    dplyr::count(env_cell_id) %>%
-    dplyr::pull(n) %>%
-    max(na.rm = TRUE)
+  # Dynamic N-Dimensional Grid Cell ID Creation
+  env_data <- clean_data[, env_vars, drop = FALSE]
+  gridded_vals <- t(t(env_data) / grid_resolution)
+  cell_ids <- apply(floor(gridded_vals), 1, paste, collapse = "_")
+
+  max_density <- table(cell_ids) %>% max()
 
   if (!is.finite(max_density) || max_density < 1) {
     message("Could not determine a valid maximum density. No thinning will be performed.")
@@ -122,8 +113,8 @@ find_optimal_cap <- function(data, env_vars, grid_resolution, target_percent = 0
   pb <- utils::txtProgressBar(min = 0, max = max_density, style = 3)
 
   for (cap in cap_candidates) {
-    # Assuming thin_env_density has also been updated to remove the 'scale' argument
-    thinned_data <- thin_env_density(
+    # Use the n-dimensional thinning function
+    thinned_data <- thin_env_nd(
       data = clean_data,
       env_vars = env_vars,
       grid_resolution = grid_resolution,

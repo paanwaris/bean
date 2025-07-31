@@ -40,56 +40,62 @@
 #' }
 thin_env_center <- function(data, env_vars, grid_resolution) {
   # --- Input Validation ---
-  if (!all(env_vars %in% names(data))) {
-    stop("One or both specified env_vars not found in the data frame.")
+  n_dims <- length(env_vars)
+  if (n_dims < 1) {
+    stop("At least one environmental variable must be provided in `env_vars`")
   }
-  if (length(grid_resolution) == 1) {
-    grid_resolution <- c(grid_resolution, grid_resolution)
-  } else if (length(grid_resolution) != 2) {
-    stop("grid_resolution must be a numeric vector of length 1 or 2.")
+  if (!all(env_vars %in% names(data))) {
+    stop("One or more `env_vars` not found in the data frame")
   }
 
-  env_var1_sym <- rlang::sym(env_vars[1])
-  env_var2_sym <- rlang::sym(env_vars[2])
+  # Validate and expand grid_resolution
+  if (length(grid_resolution) == 1) {
+    grid_resolution <- rep(grid_resolution, n_dims)
+  } else if (length(grid_resolution) != n_dims) {
+    stop(sprintf("`grid_resolution` must have length 1 or %d", n_dims))
+  }
 
   # --- Data Cleaning ---
   clean_data <- data %>%
-    dplyr::filter(is.finite(!!env_var1_sym) & is.finite(!!env_var2_sym))
+    # Keep only rows with complete, finite values for all selected env_vars
+    dplyr::filter(dplyr::if_all(dplyr::all_of(env_vars), is.finite))
 
-  if (nrow(clean_data) == 0) {
+  n_original <- nrow(clean_data)
+
+  if (n_original == 0) {
     message("No complete observations to process.")
-    empty_df <- data.frame(matrix(ncol = 2, nrow = 0))
+    empty_df <- data.frame(matrix(ncol = n_dims, nrow = 0))
     colnames(empty_df) <- env_vars
     results <- list(
       thinned_points = empty_df,
       n_original = 0,
       n_thinned = 0,
-      parameters = list()
+      parameters = list(grid_resolution = grid_resolution)
     )
     class(results) <- "bean_thinned_center"
     return(results)
   }
 
-  # Data is assumed to be pre-scaled
-  data_to_process <- clean_data
+  # --- Calculate Centroids in N-Dimensions ---
 
-  # --- Calculate Centroids ---
-  centroids_df <- data_to_process %>%
-    dplyr::mutate(
-      center_x = floor(!!env_var1_sym / grid_resolution[1]) * grid_resolution[1] + (grid_resolution[1] / 2),
-      center_y = floor(!!env_var2_sym / grid_resolution[2]) * grid_resolution[2] + (grid_resolution[2] / 2)
-    ) %>%
-    dplyr::distinct(.data$center_x, .data$center_y)
+  # Create a named vector for easy lookup of resolution within across()
+  resolutions_named <- setNames(grid_resolution, env_vars)
 
-  # Set final column names
-  colnames(centroids_df) <- env_vars
+  centroids_df <- clean_data %>%
+    # For each environmental variable, calculate its cell center
+    dplyr::mutate(dplyr::across(
+      dplyr::all_of(env_vars),
+      ~ floor(.x / resolutions_named[dplyr::cur_column()]) * resolutions_named[dplyr::cur_column()] + (resolutions_named[dplyr::cur_column()] / 2)
+    )) %>%
+    # Keep only the unique combinations of cell centers
+    dplyr::distinct(dplyr::across(dplyr::all_of(env_vars)))
 
   # --- Construct S3 Object ---
   results <- list(
-    thinned_points = centroids_df,
-    n_original = nrow(clean_data),
+    thinned_points = as.data.frame(centroids_df),
+    n_original = n_original,
     n_thinned = nrow(centroids_df),
-    parameters = list()
+    parameters = list(grid_resolution = grid_resolution)
   )
   class(results) <- "bean_thinned_center"
   return(results)

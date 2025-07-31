@@ -11,7 +11,7 @@ URL: https://github.com/paanwaris/bean
 BugReports: https://github.com/paanwaris/bean/issues
 RoxygenNote: 7.3.2
 Suggests: 
-Imports: covr, dismo, dplyr, ggplot2, MASS, magrittr, multcompView, raster, rJava, rlang, scales, stats, terra, testthat, tidyr
+Imports: covr, dismo, dplyr, GGally, ggplot2, MASS, magrittr, multcompView, raster, rgl, rJava, rlang, scales, stats, terra, testthat, tidyr
 Depends: R (>= 3.5)
 Authors@R: c(
 	person("Paanwaris", "Paansri", role = c("cre", "aut"),  

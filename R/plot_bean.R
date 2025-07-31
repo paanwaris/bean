@@ -85,7 +85,7 @@ plot_bean <- function(original_data, thinned_object, env_vars, grid_resolution) 
     ggplot2::geom_point(
       data = original_data,
       ggplot2::aes(x = .data[[env_vars[1]]], y = .data[[env_vars[2]]]),
-      color = "grey60", alpha = 0.5, size = 1.5
+      color = "grey60", alpha = 0.5, size = 2
     ) +
     ggplot2::geom_vline(xintercept = x_breaks, color = "grey80", linetype = "dashed", linewidth = 0.5) +
     ggplot2::geom_hline(yintercept = y_breaks, color = "grey80", linetype = "dashed", linewidth = 0.5) +
@@ -99,7 +99,7 @@ plot_bean <- function(original_data, thinned_object, env_vars, grid_resolution) 
       ggplot2::geom_point(
         data = thinned_object$thinned_data,
         ggplot2::aes(x = .data[[env_vars[1]]], y = .data[[env_vars[2]]]),
-        color = "#0072B2", alpha = 0.8, size = 1.2
+        color = "#0072B2", alpha = 0.8, size = 1
       ) +
       ggplot2::labs(
         title = "Stochastic Thinning Comparison",
