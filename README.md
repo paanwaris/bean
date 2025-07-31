@@ -354,20 +354,20 @@ head(thinned_deterministic$thinned_points)
 
 ### Step 6: Visualize the Thinning Results
 
-The `plot_bean_nd()` function provides a powerful way to visualize the
+The `plot_bean()` function provides a powerful way to visualize the
 effect of thinning by overlaying the thinned points on the original data
 within the environmental grid.
 
 ``` r
 # Visualize the stochastic thinning results
-plot_stochastic <- plot_bean_nd(
+plot_stochastic <- plot_bean(
   original_data = origin_dat_prepared,
   thinned_object = thinned_stochastic,
   env_vars = c("PC1", "PC2", "PC3")
 )
 
 # Visualize the deterministic thinning results
-plot_deterministic <- plot_bean_nd(
+plot_deterministic <- plot_bean(
   original_data = origin_dat_prepared,
   thinned_object = thinned_deterministic,
   env_vars = c("PC1", "PC2", "PC3")
