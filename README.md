@@ -64,8 +64,10 @@ manipulation, visualization, and modeling.
 library(bean)
 library(dplyr)
 library(ggplot2)
+library(GGally)
 library(terra)
 library(raster)
+library(rgl)
 library(dismo)
 ```
 
@@ -185,11 +187,11 @@ The `find_env_resolution()` function automates this process.
 # Set a seed for reproducibility of the resampling in the correlogram
 set.seed(81)  
 
-# Let's set a higher quantile value at 0.90
+# Let's set a low quantile value at 0.25
 resolution_results <- find_env_resolution(
   data = origin_dat_prepared,
-  env_vars = c("PC1", "PC2"),
-  quantile = 0.90
+  env_vars = c("PC1", "PC2", "PC3"),
+  quantile = 0.25
 )
 #> Calculating pairwise distances for each environmental axis...
 
@@ -197,9 +199,10 @@ resolution_results <- find_env_resolution(
 resolution_results
 #> --- Bean Environmental Resolution Analysis ---
 #> 
-#> Suggested Grid Resolutions (at the 90% quantile):
-#>   - PC1: 5.635577
-#>   - PC2: 5.337637
+#> Suggested Grid Resolutions (at the 25% quantile):
+#>   - PC1: 1.104589
+#>   - PC2: 0.991350
+#>   - PC3: 0.729171
 #> 
 #> To see the full distance distributions, run plot(your_results_object).
 
@@ -241,15 +244,16 @@ target. This is often the safer, more conservative choice if you want to
 avoid losing too much data.
 
 ``` r
+set.seed(81)
 # Let's target retaining 95% of the data as recommended
 optimal_params <- find_optimal_cap(
   data = origin_dat_prepared,
-  env_vars = c("PC1", "PC2"),
-  grid_resolution = 0.1,
+  env_vars = c("PC1", "PC2", "PC3"),
+  grid_resolution = grid_res,
   target_percent = 0.95
 )
 #> Searching for optimal cap...
-#>   |                                                                              |                                                                      |   0%  |                                                                              |=====                                                                 |   8%  |                                                                              |===========                                                           |  15%  |                                                                              |================                                                      |  23%  |                                                                              |======================                                                |  31%  |                                                                              |===========================                                           |  38%  |                                                                              |================================                                      |  46%  |                                                                              |======================================                                |  54%  |                                                                              |===========================================                           |  62%  |                                                                              |================================================                      |  69%  |                                                                              |======================================================                |  77%  |                                                                              |===========================================================           |  85%  |                                                                              |=================================================================     |  92%  |                                                                              |======================================================================| 100%
+#>   |                                                                              |                                                                      |   0%  |                                                                              |=                                                                     |   2%  |                                                                              |==                                                                    |   4%  |                                                                              |====                                                                  |   5%  |                                                                              |=====                                                                 |   7%  |                                                                              |======                                                                |   9%  |                                                                              |=======                                                               |  11%  |                                                                              |=========                                                             |  12%  |                                                                              |==========                                                            |  14%  |                                                                              |===========                                                           |  16%  |                                                                              |============                                                          |  18%  |                                                                              |==============                                                        |  19%  |                                                                              |===============                                                       |  21%  |                                                                              |================                                                      |  23%  |                                                                              |=================                                                     |  25%  |                                                                              |==================                                                    |  26%  |                                                                              |====================                                                  |  28%  |                                                                              |=====================                                                 |  30%  |                                                                              |======================                                                |  32%  |                                                                              |=======================                                               |  33%  |                                                                              |=========================                                             |  35%  |                                                                              |==========================                                            |  37%  |                                                                              |===========================                                           |  39%  |                                                                              |============================                                          |  40%  |                                                                              |=============================                                         |  42%  |                                                                              |===============================                                       |  44%  |                                                                              |================================                                      |  46%  |                                                                              |=================================                                     |  47%  |                                                                              |==================================                                    |  49%  |                                                                              |====================================                                  |  51%  |                                                                              |=====================================                                 |  53%  |                                                                              |======================================                                |  54%  |                                                                              |=======================================                               |  56%  |                                                                              |=========================================                             |  58%  |                                                                              |==========================================                            |  60%  |                                                                              |===========================================                           |  61%  |                                                                              |============================================                          |  63%  |                                                                              |=============================================                         |  65%  |                                                                              |===============================================                       |  67%  |                                                                              |================================================                      |  68%  |                                                                              |=================================================                     |  70%  |                                                                              |==================================================                    |  72%  |                                                                              |====================================================                  |  74%  |                                                                              |=====================================================                 |  75%  |                                                                              |======================================================                |  77%  |                                                                              |=======================================================               |  79%  |                                                                              |========================================================              |  81%  |                                                                              |==========================================================            |  82%  |                                                                              |===========================================================           |  84%  |                                                                              |============================================================          |  86%  |                                                                              |=============================================================         |  88%  |                                                                              |===============================================================       |  89%  |                                                                              |================================================================      |  91%  |                                                                              |=================================================================     |  93%  |                                                                              |==================================================================    |  95%  |                                                                              |====================================================================  |  96%  |                                                                              |===================================================================== |  98%  |                                                                              |======================================================================| 100%
 
 # The function automatically saves results to the output directory.
 # We can also inspect the returned list object.
@@ -260,12 +264,12 @@ optimal_params
 #> Target: Retain >= 1508 occurrence points.
 #> 
 #> Recommendation for 'Closest to Target':
-#>   - Best Cap: 6
-#>   - Retained Points: 1522 (Difference of 14)
+#>   - Best Cap: 35
+#>   - Retained Points: 1505 (Difference of 3)
 #> 
 #> Recommendation for 'Closest Above Target' (Recommended for use):
-#>   - Best Cap: 6
-#>   - Retained Points: 1522
+#>   - Best Cap: 36
+#>   - Retained Points: 1511
 #> 
 #> ---------------------------------
 
@@ -275,10 +279,6 @@ plot(optimal_params)
 ```
 
 <img src="man/figures/README-find-and-thin-part1-1.png" width="100%" />
-
-``` r
-#The plot and the output list show that to get closest to our target of 80%.
-```
 
 ### Step 5: Apply Thinning
 
@@ -296,9 +296,9 @@ occupied grid cell. It’s the most common approach.
 chosen_cap <- optimal_params$best_cap_above_target
 
 # Apply the stochastic thinning
-thinned_stochastic <- thin_env_density(
+thinned_stochastic <- thin_env_nd(
   data = origin_dat_prepared,
-  env_vars = c("PC1", "PC2"),
+  env_vars = c("PC1", "PC2", "PC3"),
   grid_resolution = grid_res, 
   max_per_cell = chosen_cap
 )
@@ -307,18 +307,18 @@ thinned_stochastic <- thin_env_density(
 thinned_stochastic
 #> --- Bean Stochastic Thinning Results ---
 #> 
-#> Thinned 1588 original points to 31 points.
-#> This represents a retention of 2.0% of the data.
+#> Thinned 1588 original points to 1511 points.
+#> This represents a retention of 95.2% of the data.
 #> 
 #> --------------------------------------
 head(thinned_stochastic$thinned_data)
-#>                  species         x        y        PC1       PC2        PC3
-#> 1 Peromyscus maniculatus -73.02987 42.42062 -1.5380454 -2.327994 -0.8726306
-#> 2 Peromyscus maniculatus -72.44670 44.33675 -2.8062124 -2.560556 -0.7468526
-#> 3 Peromyscus maniculatus -93.60744 41.50421 -1.0340203 -1.853637  1.1728551
-#> 4 Peromyscus maniculatus -84.11010 46.25288 -1.6638094 -2.792764 -2.1373260
-#> 5 Peromyscus maniculatus -85.52637 44.33675 -1.1875987 -2.297914 -1.3456343
-#> 6 Peromyscus maniculatus -80.61108 40.17125 -0.2816871 -1.295985 -0.4289961
+#>                  species          x        y        PC1        PC2        PC3
+#> 1 Peromyscus maniculatus -121.55794 48.41894 -0.9511238 -0.2456333 -3.3023946
+#> 2 Peromyscus maniculatus  -98.31445 40.25456 -0.5898814 -0.5639865  2.1838503
+#> 3 Peromyscus maniculatus  -84.48499 42.75386 -1.0902008 -1.6003426 -0.4679837
+#> 4 Peromyscus maniculatus  -83.15203 42.08738 -0.3505672 -1.6335624 -0.5083243
+#> 5 Peromyscus maniculatus  -83.98513 42.46228 -1.0073074 -1.5535607 -0.4518706
+#> 6 Peromyscus maniculatus  -83.02707 42.54559 -1.0414460 -1.7014141 -0.4436147
 ```
 
 #### Method B: Deterministic Thinning with `thin_env_center`
@@ -331,7 +331,7 @@ regardless of how many points were originally in it.
 # Apply the deterministic thinning
 thinned_deterministic <- thin_env_center(
   data = origin_dat_prepared,
-  env_vars = c("PC1", "PC2"),
+  env_vars = c("PC1", "PC2", "PC3"),
   grid_resolution = grid_res
 )
 
@@ -339,17 +339,17 @@ thinned_deterministic <- thin_env_center(
 thinned_deterministic
 #> --- Bean Deterministic Thinning Results ---
 #> 
-#> Thinned 1588 original points to 6 unique grid cell centers.
+#> Thinned 1588 original points to 257 unique grid cell centers.
 #> 
 #> -----------------------------------------
 head(thinned_deterministic$thinned_points)
-#>         PC1       PC2
-#> 1 -2.817788  2.668818
-#> 2  2.817788  2.668818
-#> 3  2.817788 -2.668818
-#> 4 -2.817788 -2.668818
-#> 5  8.453365  2.668818
-#> 6  8.453365 -2.668818
+#>          PC1        PC2        PC3
+#> 1 -1.6568831  1.4870256 -1.0937566
+#> 2  2.7614719  5.4524273 -1.0937566
+#> 3  0.5522944 -0.4956752 -0.3645855
+#> 4  1.6568831  2.4783760 -2.5520988
+#> 5 -0.5522944  2.4783760 -0.3645855
+#> 6  3.8660606  4.4610769 -1.8229277
 ```
 
 ### Step 6: Visualize the Thinning Results
@@ -360,19 +360,17 @@ within the environmental grid.
 
 ``` r
 # Visualize the stochastic thinning results
-plot_stochastic <- plot_bean(
+plot_stochastic <- plot_bean_nd(
   original_data = origin_dat_prepared,
   thinned_object = thinned_stochastic,
-  grid_resolution = grid_res,
-  env_vars = c("PC1", "PC2")
+  env_vars = c("PC1", "PC2", "PC3")
 )
 
 # Visualize the deterministic thinning results
-plot_deterministic <- plot_bean(
+plot_deterministic <- plot_bean_nd(
   original_data = origin_dat_prepared,
   thinned_object = thinned_deterministic,
-  grid_resolution = grid_res,
-  env_vars = c("PC1", "PC2")
+  env_vars = c("PC1", "PC2", "PC3")
 )
 
 # Display plots side-by-side (requires cowplot or similar package)
@@ -399,54 +397,64 @@ delineates this boundary.
 ``` r
 # Fit an ellipse that contains 95% of the thinned data
 stochastic_ellipse <- fit_ellipsoid(data = thinned_stochastic$thinned_data, 
-                                    env_vars = c("PC1", "PC2"), 
+                                    env_vars = c("PC1", "PC2", "PC3"), 
                                     method = "covmat", 
                                     level = 0.95)
 # The returned object contains all the details
 # We can use the custom print() method for a clean summary
 stochastic_ellipse
-#> --- Bean Environmental Niche Ellipse ---
+#> --- Bean Environmental Niche Ellipsoid ---
 #> 
 #> Method: 'covmat'.
-#> Fitted to 31 data points at a 95.00% level.
-#> 31 out of 31 points (100.0%) fall within the ellipse boundary.
+#> Fitted in 3 dimensions to 1511 data points at a 95.00% level.
+#> 1462 out of 1511 points (96.8%) fall within the ellipsoid boundary.
 #> 
 #> Niche Centroid:
-#>       PC1       PC2 
-#> 1.3882147 0.4502107
+#>        PC1        PC2        PC3 
+#>  0.3597778  0.7756807 -1.7337123
 
 # And we can use the custom plot() method for a powerful visualization
 plot(stochastic_ellipse)
+rgl::snapshot3d(knitr::fig_path(".png"))
+#> Warning in rgl::snapshot3d(knitr::fig_path(".png")): webshot = TRUE requires
+#> the webshot2 package and Chrome browser; using rgl.snapshot() instead
+rgl::rgl.close()
+#> Warning in rgl::rgl.close(): 'rgl::rgl.close' is deprecated.
+#> Use 'close3d' instead.
+#> See help("Deprecated")
 ```
-
-<img src="man/figures/README-fit-ellipse-part1-1.png" width="100%" />
 
 ### Deterministic Thinned Ellipsoid
 
 ``` r
 # Fit an ellipse that contains 95% of the thinned data
 deterministic_ellipse <- fit_ellipsoid(data = thinned_deterministic$thinned_points,
-                                       env_vars = c("PC1", "PC2"), 
+                                       env_vars = c("PC1", "PC2", "PC3"), 
                                        method = "covmat", 
                                        level = 0.95)
 # The returned object contains all the details
 # We can use the custom print() method for a clean summary
 deterministic_ellipse
-#> --- Bean Environmental Niche Ellipse ---
+#> --- Bean Environmental Niche Ellipsoid ---
 #> 
 #> Method: 'covmat'.
-#> Fitted to 6 data points at a 95.00% level.
-#> 6 out of 6 points (100.0%) fall within the ellipse boundary.
+#> Fitted in 3 dimensions to 257 data points at a 95.00% level.
+#> 253 out of 257 points (98.4%) fall within the ellipsoid boundary.
 #> 
 #> Niche Centroid:
-#>      PC1      PC2 
-#> 2.817788 0.000000
+#>        PC1        PC2        PC3 
+#>  0.6167645  0.8929869 -1.7491594
 
 # And we can use the custom plot() method for a powerful visualization
 plot(deterministic_ellipse)
+rgl::snapshot3d(knitr::fig_path(".png"))
+#> Warning in rgl::snapshot3d(knitr::fig_path(".png")): webshot = TRUE requires
+#> the webshot2 package and Chrome browser; using rgl.snapshot() instead
+rgl::rgl.close()
+#> Warning in rgl::rgl.close(): 'rgl::rgl.close' is deprecated.
+#> Use 'close3d' instead.
+#> See help("Deprecated")
 ```
-
-<img src="man/figures/README-fit-ellipse-part2-1.png" width="100%" />
 
 ### Step 8: Evaluate Model Performance
 
@@ -458,10 +466,10 @@ their performance.
 ``` r
 # Create background points by sampling from the study area
 # Note: We use the unscaled rasters here for sampling background points.
-set.seed(81)
+set.seed(123)
 
 # Create background points by sampling from the study area
-background_points <- randomPoints(scale(raster::stack(env_pca)), 1000)
+background_points <- randomPoints(raster::stack(env_pca), 1000)
 colnames(background_points) <- c("x", "y")
 ```
 
@@ -513,7 +521,7 @@ auc_original
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1    0.798   0.01      0.798   0.761   0.826
+#> 1    0.803   0.01      0.803   0.779   0.827
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 plot(auc_original)
@@ -568,7 +576,7 @@ auc_thinned
 #> 
 #> Summary of AUC Scores:
 #>   Mean_AUC SD_AUC Median_AUC Min_AUC Max_AUC
-#> 1     0.76  0.095      0.763   0.507   0.979
+#> 1    0.801  0.011      0.801   0.777   0.828
 #> 
 #> To see the distribution of AUC scores, run plot(your_results_object).
 
@@ -586,13 +594,13 @@ auc_ttest
 #>  Welch Two Sample t-test
 #> 
 #> data:  auc_original$all_auc_scores and auc_thinned$all_auc_scores
-#> t = 3.9162, df = 101.3, p-value = 0.0001633
+#> t = 0.72728, df = 195.87, p-value = 0.4679
 #> alternative hypothesis: true difference in means is not equal to 0
 #> 95 percent confidence interval:
-#>  0.0185014 0.0564823
+#>  -0.001926445  0.004177385
 #> sample estimates:
 #> mean of x mean of y 
-#> 0.7979880 0.7604962
+#> 0.8025970 0.8014716
 
 # --- Visualize the Comparison ---
 # Combine results into a data frame for plotting
@@ -607,7 +615,7 @@ results_df <- data.frame(
 
 # Create the final comparison boxplot
 ggplot(results_df, aes(x = DataType, y = AUC, fill = DataType)) +
-  geom_boxplot(alpha = 0.7, width=0.5) +
+  geom_boxplot(alpha = 0.7, width = 0.5) +
   labs(
     title = "Comparison of Model Performance (AUC)",
     subtitle = "Comparing models built with original vs. bean-thinned data",
@@ -644,57 +652,58 @@ generalist_calibration
 #> 
 #> Search Summary (sorted by performance):
 #> # A tibble: 41 × 6
-#>    combination     mean_auc sd_auc p_value_vs_original significance group       
-#>    <chr>              <dbl>  <dbl> <chr>               <chr>        <chr>       
-#>  1 q0.05_mve          0.804  0.01  0.3049              ns           b           
-#>  2 Original_mve       0.804  0.009 0.8354              ns           abd         
-#>  3 q0.40_mve          0.802  0.012 0.9570              ns           ab          
-#>  4 q0.50_mve          0.802  0.011 0.9677              ns           ab          
-#>  5 q0.55_mve          0.802  0.01  0.9890              ns           abd         
-#>  6 q0.65_mve          0.802  0.011 0.9896              ns           abd         
-#>  7 q0.10_mve          0.801  0.011 0.9976              ns           abcd        
-#>  8 q0.35_covmat       0.801  0.009 0.9996              ns           abcdh       
-#>  9 q0.60_mve          0.801  0.011 0.9999              ns           abcdh       
-#> 10 q0.25_mve          0.801  0.01  1.0000              ns           abcdhj      
-#> 11 q0.20_mve          0.8    0.013 1.0000              ns           abcdhj      
-#> 12 q0.35_mve          0.8    0.013 1.0000              ns           abcdhjk     
-#> 13 q0.20_covmat       0.799  0.01  1.0000              ns           abcdhijk    
-#> 14 q0.05_covmat       0.799  0.011 1.0000              ns           acdehijk    
-#> 15 q0.65_covmat       0.799  0.01  1.0000              ns           acdehijk    
-#> 16 q0.30_mve          0.798  0.011 1.0000              ns           acdehijk    
-#> 17 q0.70_mve          0.798  0.011 1.0000              ns           acdehijk    
-#> 18 Original_covmat    0.798  0.01  1.0000              ns           abcdefghijkl
-#> 19 Original           0.798  0.011 NA                  NA           abcdefghijk…
-#> 20 q0.10_covmat       0.798  0.01  1.0000              ns           acdehijk    
-#> 21 q0.40_covmat       0.798  0.01  1.0000              ns           acdehijk    
-#> 22 q0.55_covmat       0.798  0.01  1.0000              ns           acdehijk    
-#> 23 q0.60_covmat       0.797  0.011 1.0000              ns           acdefhijk   
-#> 24 q0.25_covmat       0.797  0.01  1.0000              ns           cdefhijk    
-#> 25 q0.70_covmat       0.797  0.01  1.0000              ns           cefhijk     
-#> 26 q0.15_covmat       0.797  0.011 1.0000              ns           cefhijk     
-#> 27 q0.45_covmat       0.796  0.01  1.0000              ns           efhijkl     
-#> 28 q0.45_mve          0.796  0.011 1.0000              ns           efhijkl     
-#> 29 q0.50_covmat       0.796  0.011 1.0000              ns           efgijklm    
-#> 30 q0.75_covmat       0.795  0.011 0.9999              ns           efgiklmn    
-#> 31 q0.90_mve          0.795  0.011 0.9998              ns           efgilmn     
-#> 32 q0.80_mve          0.794  0.013 0.9962              ns           efglmn      
-#> 33 q0.30_covmat       0.794  0.01  0.9957              ns           efglmn      
-#> 34 q0.75_mve          0.794  0.01  0.9807              ns           efglmn      
-#> 35 q0.85_mve          0.793  0.011 0.4691              ns           fglmn       
-#> 36 q0.95_mve          0.792  0.01  0.1392              ns           glmn        
-#> 37 q0.15_mve          0.791  0.009 0.0768              ns           gmn         
-#> 38 q0.80_covmat       0.791  0.012 0.0642              ns           mn          
-#> 39 q0.90_covmat       0.791  0.011 0.0425              *            n           
-#> 40 q0.95_covmat       0.791  0.01  0.0275              *            n           
-#> 41 q0.85_covmat       0.79   0.01  0.0085              **           n           
+#>    combination     mean_auc sd_auc p_value_vs_original significance group     
+#>    <chr>              <dbl>  <dbl> <chr>               <chr>        <chr>     
+#>  1 q0.25_mve          0.81   0.013 0.011               *            d         
+#>  2 q0.85_mve          0.81   0.01  0.028               *            df        
+#>  3 q0.65_mve          0.809  0.01  0.036               *            df        
+#>  4 Original_mve       0.808  0.01  0.755               ns           abdefg    
+#>  5 q0.45_mve          0.808  0.011 0.330               ns           adf       
+#>  6 q0.10_mve          0.807  0.011 0.716               ns           adf       
+#>  7 q0.80_mve          0.807  0.013 0.837               ns           adfg      
+#>  8 q0.40_mve          0.806  0.011 0.959               ns           adefg     
+#>  9 q0.05_mve          0.806  0.013 0.971               ns           abdefg    
+#> 10 q0.45_covmat       0.805  0.01  1.000               ns           abcdefg   
+#> 11 q0.10_covmat       0.805  0.011 1.000               ns           abcefg    
+#> 12 q0.05_covmat       0.805  0.01  1.000               ns           abcefg    
+#> 13 q0.40_covmat       0.805  0.01  1.000               ns           abcefg    
+#> 14 q0.70_covmat       0.805  0.01  1.000               ns           abcefg    
+#> 15 q0.15_mve          0.805  0.013 1.000               ns           abcefg    
+#> 16 q0.80_covmat       0.804  0.01  1.000               ns           abceg     
+#> 17 Original_covmat    0.804  0.012 1.000               ns           abcdefgh  
+#> 18 q0.75_covmat       0.804  0.01  1.000               ns           abceg     
+#> 19 q0.60_mve          0.804  0.014 1.000               ns           abceg     
+#> 20 q0.35_covmat       0.804  0.009 1.000               ns           abcegh    
+#> 21 q0.55_covmat       0.804  0.01  1.000               ns           abcegh    
+#> 22 q0.35_mve          0.804  0.01  1.000               ns           abcegh    
+#> 23 q0.75_mve          0.804  0.012 1.000               ns           abcegh    
+#> 24 q0.65_covmat       0.804  0.01  1.000               ns           abcegh    
+#> 25 q0.20_mve          0.803  0.012 1.000               ns           abcegh    
+#> 26 q0.60_covmat       0.803  0.01  1.000               ns           abcegh    
+#> 27 Original           0.802  0.01  NA                  NA           abceghijkl
+#> 28 q0.50_covmat       0.802  0.01  1.000               ns           bcegh     
+#> 29 q0.85_covmat       0.802  0.01  1.000               ns           bcehj     
+#> 30 q0.15_covmat       0.802  0.009 1.000               ns           bchij     
+#> 31 q0.55_mve          0.802  0.01  1.000               ns           bchij     
+#> 32 q0.25_covmat       0.801  0.011 1.000               ns           chij      
+#> 33 q0.70_mve          0.801  0.011 1.000               ns           chijk     
+#> 34 q0.30_covmat       0.801  0.009 1.000               ns           chijkl    
+#> 35 q0.20_covmat       0.799  0.01  0.999               ns           hijkl     
+#> 36 q0.95_mve          0.797  0.013 0.632               ns           ijkl      
+#> 37 q0.90_mve          0.797  0.012 0.577               ns           ijkl      
+#> 38 q0.50_mve          0.797  0.011 0.391               ns           ikl       
+#> 39 q0.30_mve          0.797  0.011 0.269               ns           kl        
+#> 40 q0.90_covmat       0.796  0.011 0.143               ns           l         
+#> 41 q0.95_covmat       0.796  0.009 0.092               ns           l         
 #> 
 #> --- Best Combination ---
-#> Optimal Quantile: 0.050
+#> Optimal Quantile: 0.250
 #> Optimal Ellipse Method: 'mve'
 #> Resulting Grid Resolution:
-#>   - PC1: 0.2020
-#>   - PC2: 0.1748
-#> Resulting Thinning Cap: 9
+#>   - PC1: 1.1046
+#>   - PC2: 0.9914
+#>   - PC3: 0.7292
+#> Resulting Thinning Cap: 36
 #> ---
 #> Significance stars (*) indicate p-value from a pairwise comparison against the 'Original' baseline model.
 #> Signif. codes: '***' p < 0.001,  '**' p < 0.01,  '*' p < 0.05,  'ns' p >= 0.05
@@ -711,13 +720,13 @@ plot(generalist_calibration)
 # You can now access the final, best-thinned data directly for your final model
 generalist_data <- generalist_calibration$best_points_in_ellipse
 head(generalist_data)
-#>                  species         x        y       PC1       PC2        PC3
-#> 1 Peromyscus maniculatus -69.53085 44.42006 -1.904111 -1.892901 -1.1684538
-#> 2 Peromyscus maniculatus -73.23814 43.67027 -1.849580 -2.072949 -1.2571576
-#> 3 Peromyscus maniculatus -69.65581 44.54503 -1.994636 -2.004637 -1.3451039
-#> 4 Peromyscus maniculatus -69.65581 44.54503 -1.994636 -2.004637 -1.3451039
-#> 5 Peromyscus maniculatus -89.19201 43.21207 -2.002375 -2.189141  0.6783397
-#> 6 Peromyscus maniculatus -72.53001 43.12876 -1.935360 -2.343008 -1.1830547
+#>                  species          x        y        PC1        PC2        PC3
+#> 1 Peromyscus maniculatus -121.55794 48.41894 -0.9511238 -0.2456333 -3.3023946
+#> 2 Peromyscus maniculatus  -98.31445 40.25456 -0.5898814 -0.5639865  2.1838503
+#> 3 Peromyscus maniculatus  -83.98513 42.46228 -1.0073074 -1.5535607 -0.4518706
+#> 4 Peromyscus maniculatus  -85.40140 42.04573 -0.4857600 -1.2387778 -0.2311740
+#> 5 Peromyscus maniculatus  -83.98513 42.46228 -1.0073074 -1.5535607 -0.4518706
+#> 6 Peromyscus maniculatus  -83.02707 42.54559 -1.0414460 -1.7014141 -0.4436147
 ```
 
 ## Specialist Model Calibration
@@ -729,49 +738,49 @@ specialist_calibration
 #> 
 #> Search Summary (sorted by performance):
 #> # A tibble: 41 × 6
-#>    combination     mean_auc sd_auc p_value_vs_original significance group
-#>    <chr>              <dbl>  <dbl> <chr>               <chr>        <chr>
-#>  1 Original_covmat    0.988  0.003 < 2e-16             ***          a    
-#>  2 q0.95_covmat       0.988  0.003 < 2e-16             ***          a    
-#>  3 q0.80_covmat       0.987  0.003 < 2e-16             ***          a    
-#>  4 q0.25_covmat       0.987  0.003 < 2e-16             ***          a    
-#>  5 q0.20_covmat       0.987  0.003 < 2e-16             ***          a    
-#>  6 q0.15_covmat       0.987  0.003 < 2e-16             ***          a    
-#>  7 q0.10_covmat       0.987  0.003 < 2e-16             ***          a    
-#>  8 q0.45_covmat       0.987  0.003 < 2e-16             ***          a    
-#>  9 q0.05_covmat       0.987  0.004 < 2e-16             ***          a    
-#> 10 q0.65_covmat       0.987  0.003 < 2e-16             ***          a    
-#> 11 q0.90_covmat       0.987  0.003 < 2e-16             ***          a    
-#> 12 q0.85_covmat       0.987  0.003 < 2e-16             ***          a    
-#> 13 q0.55_covmat       0.987  0.003 < 2e-16             ***          a    
-#> 14 q0.35_covmat       0.987  0.004 < 2e-16             ***          a    
-#> 15 q0.60_covmat       0.987  0.003 < 2e-16             ***          a    
-#> 16 q0.30_covmat       0.987  0.003 < 2e-16             ***          a    
-#> 17 q0.70_covmat       0.987  0.004 < 2e-16             ***          a    
-#> 18 q0.75_covmat       0.987  0.004 < 2e-16             ***          a    
-#> 19 q0.40_covmat       0.987  0.003 < 2e-16             ***          a    
-#> 20 q0.50_covmat       0.987  0.003 < 2e-16             ***          a    
-#> 21 q0.95_mve          0.983  0.004 < 2e-16             ***          b    
-#> 22 q0.20_mve          0.983  0.003 < 2e-16             ***          b    
-#> 23 q0.45_mve          0.983  0.004 < 2e-16             ***          b    
-#> 24 q0.15_mve          0.983  0.004 < 2e-16             ***          b    
-#> 25 q0.05_mve          0.983  0.004 < 2e-16             ***          b    
-#> 26 q0.40_mve          0.983  0.004 < 2e-16             ***          b    
-#> 27 q0.50_mve          0.983  0.004 < 2e-16             ***          b    
-#> 28 q0.35_mve          0.983  0.004 2.1e-12             ***          b    
-#> 29 q0.85_mve          0.983  0.004 4.4e-12             ***          b    
-#> 30 q0.25_mve          0.983  0.004 6.3e-12             ***          b    
-#> 31 Original_mve       0.983  0.004 3.5e-07             ***          b    
-#> 32 q0.65_mve          0.983  0.004 1.3e-11             ***          b    
-#> 33 q0.10_mve          0.983  0.004 1.7e-11             ***          b    
-#> 34 q0.80_mve          0.983  0.004 2.2e-11             ***          b    
-#> 35 q0.55_mve          0.983  0.004 3.7e-11             ***          b    
-#> 36 q0.30_mve          0.982  0.004 1.5e-10             ***          b    
-#> 37 q0.75_mve          0.982  0.004 3.7e-10             ***          b    
-#> 38 q0.60_mve          0.982  0.005 3.4e-09             ***          b    
-#> 39 q0.90_mve          0.982  0.004 1.4e-08             ***          b    
-#> 40 q0.70_mve          0.982  0.004 3.6e-08             ***          b    
-#> 41 Original           0.978  0.006 NA                  NA           c    
+#>    combination     mean_auc sd_auc p_value_vs_original significance group 
+#>    <chr>              <dbl>  <dbl> <chr>               <chr>        <chr> 
+#>  1 Original_covmat    0.992  0.002 < 2e-16             ***          a     
+#>  2 q0.95_covmat       0.992  0.003 < 2e-16             ***          a     
+#>  3 q0.05_covmat       0.992  0.003 < 2e-16             ***          a     
+#>  4 q0.10_covmat       0.991  0.002 < 2e-16             ***          a     
+#>  5 q0.20_covmat       0.991  0.003 < 2e-16             ***          a     
+#>  6 q0.25_covmat       0.991  0.003 < 2e-16             ***          a     
+#>  7 q0.85_covmat       0.991  0.003 < 2e-16             ***          a     
+#>  8 q0.70_covmat       0.991  0.003 < 2e-16             ***          a     
+#>  9 q0.15_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 10 q0.75_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 11 q0.65_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 12 q0.80_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 13 q0.90_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 14 q0.55_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 15 q0.60_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 16 q0.30_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 17 q0.35_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 18 q0.50_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 19 q0.40_covmat       0.991  0.002 < 2e-16             ***          a     
+#> 20 q0.45_covmat       0.991  0.003 < 2e-16             ***          a     
+#> 21 q0.10_mve          0.988  0.004 4.2e-13             ***          b     
+#> 22 q0.05_mve          0.988  0.003 1.1e-11             ***          bc    
+#> 23 q0.15_mve          0.987  0.004 2.7e-10             ***          bcd   
+#> 24 q0.65_mve          0.987  0.004 1.3e-09             ***          bcde  
+#> 25 q0.20_mve          0.987  0.004 3.9e-08             ***          bcdef 
+#> 26 q0.25_mve          0.987  0.004 1.0e-07             ***          bcdef 
+#> 27 q0.70_mve          0.987  0.004 2.7e-06             ***          bcdefg
+#> 28 q0.45_mve          0.987  0.004 7.0e-06             ***          bcdefg
+#> 29 Original_mve       0.987  0.005 0.00254             **           bcdefg
+#> 30 q0.95_mve          0.986  0.004 5.4e-05             ***          bcdefg
+#> 31 q0.85_mve          0.986  0.004 7.5e-05             ***          bcdefg
+#> 32 q0.50_mve          0.986  0.005 0.00016             ***          bcdefg
+#> 33 q0.40_mve          0.986  0.005 0.00040             ***          cdefg 
+#> 34 q0.60_mve          0.986  0.004 0.00058             ***          cdefg 
+#> 35 q0.30_mve          0.986  0.004 0.00068             ***          cdefg 
+#> 36 q0.90_mve          0.986  0.004 0.00080             ***          defg  
+#> 37 q0.35_mve          0.986  0.004 0.00179             **           defg  
+#> 38 q0.75_mve          0.986  0.005 0.00507             **           efg   
+#> 39 q0.55_mve          0.985  0.004 0.06185             ns           fgh   
+#> 40 q0.80_mve          0.985  0.004 0.19895             ns           gh    
+#> 41 Original           0.983  0.004 NA                  NA           h     
 #> 
 #> --- Best Combination ---
 #> Optimal Quantile: 0.950
@@ -779,7 +788,8 @@ specialist_calibration
 #> Resulting Grid Resolution:
 #>   - PC1: 1.7648
 #>   - PC2: 2.3352
-#> Resulting Thinning Cap: 50
+#>   - PC3: 2.3606
+#> Resulting Thinning Cap: 42
 #> ---
 #> Significance stars (*) indicate p-value from a pairwise comparison against the 'Original' baseline model.
 #> Signif. codes: '***' p < 0.001,  '**' p < 0.01,  '*' p < 0.05,  'ns' p >= 0.05
