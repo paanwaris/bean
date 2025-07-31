@@ -8,3 +8,4 @@
 .quarto
 README.md
 README.Rmd
+*.pdf

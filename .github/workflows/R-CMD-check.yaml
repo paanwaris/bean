@@ -65,12 +65,16 @@ jobs:
         run: sudo R CMD javareconf
         shell: bash
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
+      # ADDITION 3: Set DISPLAY for dependency installation on Linux
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
+        env:
+          DISPLAY: ':99'
 
-      # ADDITION 3: Set DISPLAY environment variable for the check step on Linux
+      # ADDITION 4: Set DISPLAY for the main check on Linux
       - name: Check R package
         uses: r-lib/actions/check-r-package@v2
         with:

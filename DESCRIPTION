@@ -10,7 +10,10 @@ LazyData: true
 URL: https://github.com/paanwaris/bean
 BugReports: https://github.com/paanwaris/bean/issues
 RoxygenNote: 7.3.2
-Suggests: 
+Suggests:
+    covr,
+    rJava,
+    testthat
 Imports: covr, dismo, dplyr, GGally, ggplot2, MASS, magrittr, multcompView, raster, rgl, rJava, rlang, scales, stats, terra, testthat, tidyr
 Depends: R (>= 3.5)
 Authors@R: c(
