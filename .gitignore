@@ -7,5 +7,4 @@
 .DS_Store
 .quarto
 README.md
-README.Rmd
 *.pdf
