@@ -24,8 +24,9 @@ This function creates a pairs plot to visualize the results of
 }
 \examples{
 \dontrun{
-# --- Example 1: Plotting Density-Based Thinning ---
-# Assume 'prepared_data' is ready and 'thin_env_nd' has been run.
+# Assume 'prepared_data' is ready.
+
+# --- Example: Plotting Density-Based Thinning ---
 thinned_density_obj <- thin_env_nd(
   data = prepared_data,
   env_vars = c("PC1", "PC2", "PC3"),
@@ -33,22 +34,9 @@ thinned_density_obj <- thin_env_nd(
   max_per_cell = 1
 )
 
-plot_bean_thinning(
+plot_bean_nd(
   original_data = prepared_data,
   thinned_object = thinned_density_obj,
-  env_vars = c("PC1", "PC2", "PC3")
-)
-
-# --- Example 2: Plotting Centroid-Based Thinning ---
-thinned_center_obj <- thin_env_center(
-  data = prepared_data,
-  env_vars = c("PC1", "PC2", "PC3"),
-  grid_resolution = 0.5
-)
-
-plot_bean_thinning(
-  original_data = prepared_data,
-  thinned_object = thinned_center_obj,
   env_vars = c("PC1", "PC2", "PC3")
 )
 }
