@@ -91,3 +91,20 @@ thin_env_nd <- function(data, env_vars, grid_resolution, max_per_cell) {
   class(results) <- "bean_thinned_density"
   return(results)
 }
+
+#' Print a summary of bean_thinned_density results
+#'
+#' @param x An object of class `bean_thinned_density`.
+#' @param ... Additional arguments (not used).
+#' @return Invisibly returns the input object `x`.
+#' @export
+#' @keywords internal
+print.bean_thinned_density <- function(x, ...) {
+  cat("--- Bean Stochastic Thinning Results ---\n\n")
+  cat(sprintf("Thinned %d original points to %d points.\n", x$n_original, x$n_thinned))
+  if (x$n_original > 0) {
+    cat(sprintf("This represents a retention of %.1f%% of the data.\n", 100 * (x$n_thinned / x$n_original)))
+  }
+  cat("\n--------------------------------------\n")
+  invisible(x)
+}

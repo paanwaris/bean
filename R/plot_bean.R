@@ -42,7 +42,7 @@ plot_bean <- function(original_data, thinned_object, env_vars) {
     thinned_df <- thinned_object$thinned_points
     plot_title <- "N-Dimensional Centroid Thinning"
   } else {
-    stop("`thinned_object` must be an output from thin_env_nd() or thin_env_center()")
+    stop("`thinned_object` must be an output from thin_env_nd or thin_env_center function")
   }
 
   if (!all(env_vars %in% names(original_data)) || !all(env_vars %in% names(thinned_df))) {
