@@ -11,14 +11,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%",
-  echo = TRUE
+  out.width = "100%"
 )
-
-# Ensure rgl runs headlessly in non-interactive sessions
-if (!interactive()) {
-  options(rgl.useNULL = TRUE)
-}
 ```
 
 # bean 🫛
@@ -75,7 +69,7 @@ The first step is to load your raw species occurrence data and environmental ras
 
 ```{r setup-1, fig.width=10, fig.height=8}
 # Load the raw occurrence data from the package
-occ_file <- system.file("extdata", "Peromyscus_maniculatus_original.csv", package = "bean")
+occ_file <- system.file("extdata", "Rattus_norvegicus.csv", package = "bean")
 occ_data_raw <- read.csv(occ_file)
 
 # Display the first few rows to understand its structure
@@ -84,6 +78,7 @@ head(occ_data_raw)
 # Visualize the spatial distribution of the occurrence points
 ggplot(occ_data_raw, aes(x = x, y = y)) +
   geom_point(alpha = 0.5, color = "darkred") +
+  coord_fixed() +
   labs(title = "Raw Occurrence Point Distribution") +
   theme_bw()
 ```
@@ -120,6 +115,13 @@ origin_dat_prepared <- prepare_bean(
 # View the structure and summary of the clean, scaled data
 head(origin_dat_prepared)
 summary(origin_dat_prepared)
+
+# Visualize the spatial distribution of the cleaned occurrence points
+ggplot(origin_dat_prepared, aes(x = x, y = y)) +
+  geom_point(alpha = 0.5, color = "darkred") +
+  coord_fixed() +
+  labs(title = "Raw Occurrence Point Distribution") +
+  theme_bw()
 ```
 
 ### Step 3: Objective Grid Resolution using Pairwise Distances
@@ -130,15 +132,15 @@ The logic is to calculate the Euclidean distance between all pairs of points in 
 
 The `find_env_resolution()` function automates this process.
 
-```{r find-resolution, fig.width=10, fig.height=8}
+```{r find-resolution, fig.width=12, fig.height=6}
 # Set a seed for reproducibility of the resampling in the correlogram
 set.seed(81)  
 
-# Let's set a low quantile value at 0.25
+# Let's set a low quantile value at 0.10
 resolution_results <- find_env_resolution(
   data = origin_dat_prepared,
   env_vars = c("PC1", "PC2", "PC3"),
-  quantile = 0.25
+  quantile = 0.10
 )
 
 # The function returns a suggested resolution and the full distance distribution
@@ -228,18 +230,18 @@ head(thinned_deterministic$thinned_points)
 
 ### Step 6: Visualize the Thinning Results
 
-The `plot_bean_nd()` function provides a powerful way to visualize the effect of thinning by overlaying the thinned points on the original data within the environmental grid.
+The `plot_bean()` function provides a powerful way to visualize the effect of thinning by overlaying the thinned points on the original data within the environmental grid.
 
 ```{r plot-thinning-results, fig.width=10, fig.height=8}
 # Visualize the stochastic thinning results
-plot_stochastic <- plot_bean_nd(
+plot_stochastic <- plot_bean(
   original_data = origin_dat_prepared,
   thinned_object = thinned_stochastic,
   env_vars = c("PC1", "PC2", "PC3")
 )
 
 # Visualize the deterministic thinning results
-plot_deterministic <- plot_bean_nd(
+plot_deterministic <- plot_bean(
   original_data = origin_dat_prepared,
   thinned_object = thinned_deterministic,
   env_vars = c("PC1", "PC2", "PC3")
@@ -261,7 +263,7 @@ After thinning, we can formalize the environmental niche by fitting a bivariate 
 # Fit an ellipse that contains 95% of the thinned data
 stochastic_ellipse <- fit_ellipsoid(data = thinned_stochastic$thinned_data, 
                                     env_vars = c("PC1", "PC2", "PC3"), 
-                                    method = "mve", 
+                                    method = "covmat", 
                                     level = 0.95)
 # The returned object contains all the details
 # We can use the custom print() method for a clean summary
@@ -382,7 +384,7 @@ ggplot(results_df, aes(x = DataType, y = AUC, fill = DataType)) +
            hjust = 0.5, vjust = 0, fontface = "italic", size = 4)
 ```
 
-### Step 7: Automated Calibration with `calibrate_bean`
+### Step 9: Automated Calibration with `calibrate_bean`
 
 The manual steps above are excellent for understanding the process, but the `calibrate_bean()` function automates the entire workflow. It is the "final boss" of the package, testing multiple combinations of thinning parameters (`quantile`, `method`, `cap`) and identifying the single best set based on final model performance (AUC). It also provides statistical comparisons against baseline models.
 
@@ -410,7 +412,7 @@ generalist_calibration <- calibrate_bean(
   method_range = c("covmat", "mve"),     
   target_percent = 0.95,
   level = 0.95,
-  thinning_reps = 3, 
+  thinning_reps = 4, 
   k = 5,
   n_repeats = 10,      
   maxent_args = c("linear=true", 
@@ -436,7 +438,7 @@ head(generalist_data)
 ## Specialist Model Calibration
 
 ```{r calibrate-bean-3, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
-specialist <- read.csv("inst/extdata/Lynx_canadensis.csv")
+specialist <- read.csv("inst/extdata/Ursus_arctos.csv")
 
 specialist_prepared <- prepare_bean(
   data = specialist,
@@ -445,6 +447,14 @@ specialist_prepared <- prepare_bean(
   latitude = "y",
   transform = "none"
 )
+
+# Visualize the spatial distribution of the specialist occurrence points
+ggplot(specialist_prepared, aes(x = x, y = y)) +
+  geom_point(alpha = 0.5, color = "darkred") +
+  coord_fixed() +
+  labs(title = "Raw Occurrence Point Distribution") +
+  theme_bw()
+
 # Create background points for model evaluation
 set.seed(123)
 background_df <- as.data.frame(
@@ -465,7 +475,7 @@ specialist_calibration <- calibrate_bean(
   method_range = c("covmat", "mve"),      
   target_percent = 0.95,
   level = 0.95,
-  thinning_reps = 3, 
+  thinning_reps = 4, 
   k = 5,
   n_repeats = 10,      
   maxent_args = c("linear=true", 

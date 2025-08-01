@@ -176,7 +176,7 @@ plot.bean_resolution <- function(x, ...) {
     ggplot2::labs(
       title = "Distribution of Pairwise Environmental Distances per Axis",
       subtitle = sprintf("Blue line indicates the suggested grid resolution at the %.0fth percentile", x$parameters$quantile * 100),
-      x = "Environmental Distance (scaled)",
+      x = "Environmental Distance",
       y = "Frequency"
     ) +
     ggplot2::theme_bw()
