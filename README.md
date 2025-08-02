@@ -642,6 +642,42 @@ comparisons against baseline models.
 ## Generalist Model Calibration
 
 ``` r
+# Create background points for model evaluation
+set.seed(123)
+background_df <- as.data.frame(
+  dismo::randomPoints(raster::stack(env_pca), 1000)
+)
+colnames(background_df) <- c("x", "y")
+```
+
+``` r
+set.seed(81)
+# Calibrate all key parameters
+# Note: In a real analysis, use higher thinning_reps and n_repeats.
+generalist_calibration <- calibrate_bean(
+  data = origin_dat_prepared,
+  env_vars = c("PC1", "PC2", "PC3"),
+  background_data = background_df,
+  env_rasters = env_pca,
+  longitude = "x",
+  latitude = "y",
+  quantile_range = seq(0.05, 0.95, 0.05), 
+  method_range = c("covmat", "mve"),     
+  target_percent = 0.95,
+  level = 0.95,
+  thinning_reps = 4, 
+  k = 5,
+  n_repeats = 10,      
+  maxent_args = c("linear=true", 
+                  "quadratic=true", 
+                  "product=false",
+                  "threshold=false", 
+                  "hinge=false", 
+                  "doclamp=false"
+))
+```
+
+``` r
 # Print the summary table to see the best combination of parameters
 generalist_calibration
 #> --- Bean Parameter Calibration Results ---
@@ -709,7 +745,7 @@ generalist_calibration
 plot(generalist_calibration)
 ```
 
-<img src="man/figures/README-calibrate-bean-2-1.png" width="100%" />
+<img src="man/figures/README-calibrate-bean-4-1.png" width="100%" />
 
 ``` r
 
@@ -727,7 +763,66 @@ head(generalist_data)
 
 ## Specialist Model Calibration
 
-<img src="man/figures/README-calibrate-bean-3-1.png" width="100%" />
+``` r
+specialist <- read.csv("inst/extdata/Ursus_arctos.csv")
+
+specialist_prepared <- prepare_bean(
+  data = specialist,
+  env_rasters = env_pca,
+  longitude = "x",
+  latitude = "y",
+  transform = "none"
+)
+#> Skipping raster transformation.
+#> Extracting environmental data for occurrence points...
+#> 432 records removed because they fell outside the raster extent or had NA environmental values.
+#> Data preparation complete. Returning 1258 clean records.
+
+# Visualize the spatial distribution of the specialist occurrence points
+ggplot(specialist_prepared, aes(x = x, y = y)) +
+  geom_point(alpha = 0.5, color = "darkred") +
+  coord_fixed() +
+  labs(title = "Raw Occurrence Point Distribution") +
+  theme_bw()
+```
+
+<img src="man/figures/README-calibrate-bean-5-1.png" width="100%" />
+
+``` r
+
+# Create background points for model evaluation
+set.seed(123)
+background_df <- as.data.frame(
+  dismo::randomPoints(raster::stack(env_pca), 1000)
+)
+colnames(background_df) <- c("x", "y")
+```
+
+``` r
+# Calibrate all key parameters
+# Note: In a real analysis, use higher thinning_reps and n_repeats.
+specialist_calibration <- calibrate_bean(
+  data = specialist_prepared,
+  env_vars = c("PC1", "PC2", "PC3"),
+  background_data = background_df,
+  env_rasters = env_pca,
+  longitude = "x",
+  latitude = "y",
+  quantile_range = seq(0.05, 0.95, 0.05), 
+  method_range = c("covmat", "mve"),      
+  target_percent = 0.50,
+  level = 0.95,
+  thinning_reps = 3, 
+  k = 5,
+  n_repeats = 10,      
+  maxent_args = c("linear=true", 
+                  "quadratic=true", 
+                  "product=false",
+                  "threshold=false", 
+                  "hinge=false", 
+                  "doclamp=false"
+))
+```
 
 ``` r
 # Print the summary table to see the best combination of parameters
@@ -736,58 +831,58 @@ specialist_calibration
 #> 
 #> Search Summary (sorted by performance):
 #> # A tibble: 41 × 6
-#>    combination     mean_auc sd_auc p_value_vs_original significance group     
-#>    <chr>              <dbl>  <dbl> <chr>               <chr>        <chr>     
-#>  1 q0.25_mve          0.993  0     1.3e-11             ***          q         
-#>  2 q0.55_mve          0.993  0     1.3e-11             ***          fq        
-#>  3 q0.85_covmat       0.993  0     1.3e-11             ***          ef        
-#>  4 Original_covmat    0.993  0     1.3e-11             ***          abcdef    
-#>  5 q0.90_mve          0.993  0     1.3e-11             ***          ce        
-#>  6 q0.70_mve          0.993  0     1.3e-11             ***          ce        
-#>  7 q0.65_mve          0.993  0     1.3e-11             ***          cde       
-#>  8 q0.25_covmat       0.993  0     1.3e-11             ***          acde      
-#>  9 q0.90_covmat       0.993  0     1.3e-11             ***          acde      
-#> 10 Original_mve       0.993  0     1.3e-11             ***          abcdefghij
-#> 11 q0.30_mve          0.993  0     1.3e-11             ***          abcdh     
-#> 12 q0.40_mve          0.993  0     1.3e-11             ***          abcdgh    
-#> 13 q0.75_covmat       0.993  0     1.3e-11             ***          abcdgh    
-#> 14 q0.85_mve          0.993  0     1.3e-11             ***          abcdgh    
-#> 15 q0.15_covmat       0.993  0     1.3e-11             ***          abcdgh    
-#> 16 q0.50_mve          0.993  0     1.3e-11             ***          abcdghi   
-#> 17 q0.10_covmat       0.993  0     1.3e-11             ***          abcdghi   
-#> 18 q0.20_covmat       0.993  0     1.3e-11             ***          abcdghi   
-#> 19 q0.70_covmat       0.993  0     1.3e-11             ***          abcdghi   
-#> 20 q0.30_covmat       0.993  0     1.3e-11             ***          abcdghi   
-#> 21 q0.05_covmat       0.993  0     1.3e-11             ***          abcdghij  
-#> 22 q0.40_covmat       0.993  0     1.3e-11             ***          abcdghij  
-#> 23 q0.80_covmat       0.993  0     1.3e-11             ***          abdghij   
-#> 24 q0.45_covmat       0.993  0     1.3e-11             ***          abghijp   
-#> 25 q0.35_covmat       0.993  0     1.3e-11             ***          abghijp   
-#> 26 q0.55_covmat       0.993  0     1.3e-11             ***          bghijmp   
-#> 27 q0.35_mve          0.993  0     1.3e-11             ***          bghijmp   
-#> 28 q0.65_covmat       0.993  0     1.3e-11             ***          bghijmnp  
-#> 29 q0.95_covmat       0.993  0     1.3e-11             ***          ghijmnp   
-#> 30 q0.80_mve          0.993  0     1.3e-11             ***          gijlmnp   
-#> 31 q0.20_mve          0.993  0     1.3e-11             ***          ijklmnp   
-#> 32 q0.50_covmat       0.993  0     1.3e-11             ***          jklmnp    
-#> 33 q0.45_mve          0.993  0     1.3e-11             ***          klmnp     
-#> 34 q0.05_mve          0.993  0     1.3e-11             ***          klmn      
-#> 35 q0.95_mve          0.993  0     1.3e-11             ***          klno      
-#> 36 q0.60_covmat       0.993  0     1.3e-11             ***          klno      
-#> 37 q0.15_mve          0.993  0     1.3e-11             ***          klo       
-#> 38 q0.10_mve          0.993  0     1.3e-11             ***          ko        
-#> 39 q0.75_mve          0.993  0     1.3e-11             ***          o         
-#> 40 q0.60_mve          0.992  0     1.3e-11             ***          r         
-#> 41 Original           0.992  0.001 NA                  NA           s         
+#>    combination     mean_auc sd_auc p_value_vs_original significance group 
+#>    <chr>              <dbl>  <dbl> <chr>               <chr>        <chr> 
+#>  1 q0.95_mve          0.993  0.001 < 2e-16             ***          o     
+#>  2 q0.50_mve          0.993  0.001 < 2e-16             ***          o     
+#>  3 q0.95_covmat       0.993  0     < 2e-16             ***          o     
+#>  4 q0.70_mve          0.993  0.001 < 2e-16             ***          o     
+#>  5 q0.80_mve          0.993  0.001 < 2e-16             ***          do    
+#>  6 q0.55_mve          0.993  0.001 < 2e-16             ***          cd    
+#>  7 Original_covmat    0.993  0     < 2e-16             ***          abcd  
+#>  8 Original_mve       0.993  0     < 2e-16             ***          abce  
+#>  9 q0.70_covmat       0.993  0     < 2e-16             ***          bc    
+#> 10 q0.45_covmat       0.993  0     < 2e-16             ***          abc   
+#> 11 q0.45_mve          0.993  0     < 2e-16             ***          abce  
+#> 12 q0.40_covmat       0.993  0     < 2e-16             ***          abceh 
+#> 13 q0.50_covmat       0.993  0     < 2e-16             ***          abegh 
+#> 14 q0.55_covmat       0.993  0     < 2e-16             ***          abefgh
+#> 15 q0.20_covmat       0.993  0     < 2e-16             ***          abefgh
+#> 16 q0.35_covmat       0.993  0     < 2e-16             ***          abefgh
+#> 17 q0.25_mve          0.993  0.001 < 2e-16             ***          abefgh
+#> 18 q0.40_mve          0.993  0     < 2e-16             ***          aefgh 
+#> 19 q0.60_mve          0.993  0     < 2e-16             ***          aefgh 
+#> 20 q0.05_covmat       0.993  0     < 2e-16             ***          efgh  
+#> 21 q0.80_covmat       0.993  0     < 2e-16             ***          efghj 
+#> 22 q0.20_mve          0.993  0     < 2e-16             ***          efghj 
+#> 23 q0.85_covmat       0.993  0     < 2e-16             ***          efghij
+#> 24 q0.30_covmat       0.993  0     < 2e-16             ***          efghij
+#> 25 q0.10_mve          0.993  0     < 2e-16             ***          efghij
+#> 26 q0.65_mve          0.993  0.001 < 2e-16             ***          efghij
+#> 27 q0.25_covmat       0.993  0     < 2e-16             ***          fghijl
+#> 28 q0.05_mve          0.993  0     < 2e-16             ***          fgijkl
+#> 29 q0.10_covmat       0.993  0     < 2e-16             ***          fijkl 
+#> 30 q0.75_mve          0.992  0     < 2e-16             ***          ijklm 
+#> 31 q0.15_covmat       0.992  0     < 2e-16             ***          iklm  
+#> 32 q0.60_covmat       0.992  0     < 2e-16             ***          iklm  
+#> 33 q0.75_covmat       0.992  0     < 2e-16             ***          klm   
+#> 34 q0.15_mve          0.992  0.001 < 2e-16             ***          km    
+#> 35 q0.65_covmat       0.992  0     < 2e-16             ***          km    
+#> 36 q0.35_mve          0.992  0     < 2e-16             ***          km    
+#> 37 q0.90_mve          0.992  0     < 2e-16             ***          km    
+#> 38 q0.30_mve          0.992  0     < 2e-16             ***          mn    
+#> 39 q0.85_mve          0.992  0.001 < 2e-16             ***          np    
+#> 40 q0.90_covmat       0.992  0     1.3e-07             ***          p     
+#> 41 Original           0.992  0.001 NA                  NA           q     
 #> 
 #> --- Best Combination ---
-#> Optimal Quantile: 0.250
+#> Optimal Quantile: 0.950
 #> Optimal Ellipse Method: 'mve'
 #> Resulting Grid Resolution:
-#>   - PC1: 0.2050
-#>   - PC2: 0.1273
-#>   - PC3: 0.1532
-#> Resulting Thinning Cap: 41
+#>   - PC1: 1.6098
+#>   - PC2: 0.8555
+#>   - PC3: 1.0970
+#> Resulting Thinning Cap: 112
 #> ---
 #> Significance stars (*) indicate p-value from a pairwise comparison against the 'Original' baseline model.
 #> Signif. codes: '***' p < 0.001,  '**' p < 0.01,  '*' p < 0.05,  'ns' p >= 0.05
@@ -797,20 +892,20 @@ specialist_calibration
 plot(specialist_calibration)
 ```
 
-<img src="man/figures/README-calibrate-bean-4-1.png" width="100%" />
+<img src="man/figures/README-calibrate-bean-8-1.png" width="100%" />
 
 ``` r
 
 # You can now access the final, best-thinned data directly for your final model
 specialist_data <- specialist_calibration$best_points_in_ellipse
 head(specialist_data)
-#>         species         x        y       PC1       PC2       PC3
-#> 18 Ursus arctos -110.2677 44.46952 -3.473822 -1.498953 -2.450924
-#> 19 Ursus arctos -110.2836 44.45182 -3.473822 -1.498953 -2.450924
-#> 20 Ursus arctos -110.2684 44.46597 -3.473822 -1.498953 -2.450924
-#> 21 Ursus arctos -110.2734 44.45201 -3.473822 -1.498953 -2.450924
-#> 22 Ursus arctos -110.2546 44.47820 -3.473822 -1.498953 -2.450924
-#> 23 Ursus arctos -110.2120 44.45593 -3.452155 -1.516597 -2.521190
+#>         species         x        y       PC1         PC2        PC3
+#> 17 Ursus arctos -111.5523 45.22335 -3.966187 -0.06275072 -1.0688767
+#> 18 Ursus arctos -111.5458 44.21059 -4.672956 -0.16924854 -0.7717657
+#> 19 Ursus arctos -113.4175 47.12403 -3.867981 -0.47411591 -1.0366868
+#> 20 Ursus arctos -110.7356 45.57133 -3.903330 -0.14857748 -0.7712331
+#> 21 Ursus arctos -112.5559 48.31898 -4.058914 -0.29275873 -1.0248948
+#> 22 Ursus arctos -113.8682 48.32234 -4.202965 -0.80534685 -1.0591527
 ```
 
 ### The End ❤️

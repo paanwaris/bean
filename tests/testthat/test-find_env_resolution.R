@@ -83,6 +83,6 @@ test_that("S3 methods (print and plot) work as expected for n-dimensions", {
   p <- plot(sample_result)
   expect_s3_class(p, "ggplot")
   expect_equal(p$labels$title, "Distribution of Pairwise Environmental Distances per Axis")
-  expect_equal(p$labels$x, "Environmental Distance (scaled)")
+  expect_equal(p$labels$x, "Environmental Distance")
 })
 

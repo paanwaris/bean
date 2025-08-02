@@ -390,14 +390,15 @@ The manual steps above are excellent for understanding the process, but the `cal
 
 ## Generalist Model Calibration
 
-```{r calibrate-bean-1, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
+```{r calibrate-bean-1}
 # Create background points for model evaluation
 set.seed(123)
 background_df <- as.data.frame(
   dismo::randomPoints(raster::stack(env_pca), 1000)
 )
 colnames(background_df) <- c("x", "y")
-
+```
+```{r calibrate-bean-2, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
 set.seed(81)
 # Calibrate all key parameters
 # Note: In a real analysis, use higher thinning_reps and n_repeats.
@@ -423,7 +424,33 @@ generalist_calibration <- calibrate_bean(
                   "doclamp=false"
 ))
 ```
-```{r calibrate-bean-2, warning=FALSE, message=FALSE, fig.width=14, fig.height=8}
+```{r calibrate-bean-3, eval=FALSE}
+set.seed(81)
+# Calibrate all key parameters
+# Note: In a real analysis, use higher thinning_reps and n_repeats.
+generalist_calibration <- calibrate_bean(
+  data = origin_dat_prepared,
+  env_vars = c("PC1", "PC2", "PC3"),
+  background_data = background_df,
+  env_rasters = env_pca,
+  longitude = "x",
+  latitude = "y",
+  quantile_range = seq(0.05, 0.95, 0.05), 
+  method_range = c("covmat", "mve"),     
+  target_percent = 0.95,
+  level = 0.95,
+  thinning_reps = 4, 
+  k = 5,
+  n_repeats = 10,      
+  maxent_args = c("linear=true", 
+                  "quadratic=true", 
+                  "product=false",
+                  "threshold=false", 
+                  "hinge=false", 
+                  "doclamp=false"
+))
+```
+```{r calibrate-bean-4, warning=FALSE, message=FALSE, fig.width=14, fig.height=8}
 # Print the summary table to see the best combination of parameters
 generalist_calibration
 
@@ -437,7 +464,7 @@ head(generalist_data)
 
 ## Specialist Model Calibration
 
-```{r calibrate-bean-3, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
+```{r calibrate-bean-5}
 specialist <- read.csv("inst/extdata/Ursus_arctos.csv")
 
 specialist_prepared <- prepare_bean(
@@ -461,7 +488,8 @@ background_df <- as.data.frame(
   dismo::randomPoints(raster::stack(env_pca), 1000)
 )
 colnames(background_df) <- c("x", "y")
-
+```
+```{r calibrate-bean-6, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
 # Calibrate all key parameters
 # Note: In a real analysis, use higher thinning_reps and n_repeats.
 specialist_calibration <- calibrate_bean(
@@ -473,9 +501,9 @@ specialist_calibration <- calibrate_bean(
   latitude = "y",
   quantile_range = seq(0.05, 0.95, 0.05), 
   method_range = c("covmat", "mve"),      
-  target_percent = 0.95,
+  target_percent = 0.50,
   level = 0.95,
-  thinning_reps = 4, 
+  thinning_reps = 3, 
   k = 5,
   n_repeats = 10,      
   maxent_args = c("linear=true", 
@@ -486,7 +514,32 @@ specialist_calibration <- calibrate_bean(
                   "doclamp=false"
 ))
 ```
-```{r calibrate-bean-4, warning=FALSE, message=FALSE, fig.width=14, fig.height=8}
+```{r calibrate-bean-7, eval=FALSE}
+# Calibrate all key parameters
+# Note: In a real analysis, use higher thinning_reps and n_repeats.
+specialist_calibration <- calibrate_bean(
+  data = specialist_prepared,
+  env_vars = c("PC1", "PC2", "PC3"),
+  background_data = background_df,
+  env_rasters = env_pca,
+  longitude = "x",
+  latitude = "y",
+  quantile_range = seq(0.05, 0.95, 0.05), 
+  method_range = c("covmat", "mve"),      
+  target_percent = 0.50,
+  level = 0.95,
+  thinning_reps = 3, 
+  k = 5,
+  n_repeats = 10,      
+  maxent_args = c("linear=true", 
+                  "quadratic=true", 
+                  "product=false",
+                  "threshold=false", 
+                  "hinge=false", 
+                  "doclamp=false"
+))
+```
+```{r calibrate-bean-8, warning=FALSE, message=FALSE, fig.width=14, fig.height=8}
 # Print the summary table to see the best combination of parameters
 specialist_calibration
 
