@@ -23,4 +23,4 @@ A dataset containing the raw, unthinned occurrence records for Rusa unicolor
 (Sambar deer) in Thailand. This dataset is used to demonstrate the spatial
 clustering and environmental bias present in typical SDM datasets.
 }
-\keyword{datasets}
+\keyword{internal}
