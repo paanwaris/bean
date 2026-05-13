@@ -15,7 +15,7 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 
 <!-- badges: end -->
 
-## Ecological Motivation <img src="man/figures/logo.png" alt="Hexagon sticker for the bean package featuring a green bean pod in environmental space" align="right" height="200"/>
+## Ecological Motivation
 
 The `bean` package provides a tool to address a fundamental challenge in
 species distribution modeling (SDM, or ecological niche modeling, ENM):
