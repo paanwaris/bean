@@ -4,7 +4,7 @@
 # bean 🫛
 
 Paanwaris Paansri and Luis E. Escobar
-<img src="man/figures/logo.png" align="right" height="150" alt="bean logo" />
+
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml)
@@ -15,7 +15,8 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 
 <!-- badges: end -->
 
-## Ecological Motivation
+## Ecological Motivation 
+<img src="man/figures/logo.png" align="right" height="150" alt="bean logo" />
 
 The `bean` package provides a tool to address a fundamental challenge in
 species distribution modeling (SDM, or ecological niche modeling, ENM):
