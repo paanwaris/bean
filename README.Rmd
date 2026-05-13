@@ -19,6 +19,8 @@ knitr::opts_chunk$set(
 
 # bean 🫛
 
+Paanwaris Paansri and Luis E. Escobar
+
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml)
@@ -28,6 +30,8 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <!-- badges: end -->
+
+<img src="man/figures/logo.png" align="right" width="25%"/>
 
 ## Ecological Motivation
 
@@ -53,311 +57,94 @@ The name `bean` reflects the core principle of the method: ensuring that
 each "pod" (a grid cell in environmental space) contains only a
 specified number of "beans" (occurrence points).
 
-## Installation
+## Package Description
 
-To use the package, you first need to install it from GitHub. The
-following code will check for the required `devtools` package, install
-it if necessary, and then install `bean`.
+**bean** operates by shifting the focus from geographic space to
+environmental space:
+
+-   **Environmental Gridding**: Divides the environmental hypercube into
+    "pods".
+
+-   **Objective Thinning**: Reduces clusters to a specified density per
+    pod.
+
+-   **Niche Delineation**: Fits ellipsoids to thinned data to define the
+    fundamental niche.
+
+-   **Projection**: Maps the corrected niche back into geographic space
+    for less biased predictions.
+
+## Installing the Package
+
+The development version of `bean` can be installed from GitHub:
 
 ```{r, eval=FALSE}
-# 1. Install devtools if you don't have it yet
-if (!require("devtools")) {
-  install.packages("devtools")
-}
+# Install devtools if needed
+if (!require("devtools")) install.packages("devtools")
 
-# 2. Install bean from GitHub
+# Install bean
 devtools::install_github("paanwaris/bean")
 ```
 
-## Package Loading
+To load the package:
 
-To perform the necessary analyses, we need several R packages for data
-manipulation, visualization, and modeling.
-
-```{r Installation, warning = FALSE, message = FALSE}
-# Load required libraries
+```{r}
 library(bean)
-library(terra)
-library(rgl)
 ```
 
-## The `bean` Protocol: A Step-by-Step Guide
+## The bean Protocol: Step-by-Step
 
-### Step 1: Data Preparation and Visualization
+A typical `bean` workflow consists of these key steps:
 
-The first step is to load your raw species occurrence data and
-environmental raster layers. It's always a good practice to visualize
-the spatial distribution of your points and inspect the environmental
-layers.
+### 1. Data Preparation
 
-```{r setup-1, fig.width=10, fig.height=8}
-# Load the raw occurrence data from the package
-occ_file <- system.file("extdata", "Rusa_unicolor.csv", package = "bean")
-occ_data_raw <- read.csv(occ_file)
+The `prepare_bean()` function cleans raw occurrence data by removing
+missing coordinates and extracting environmental values from raster
+layers. This ensures all subsequent analyses use a clean, scaled
+dataset.
 
-# Display the first few rows to understand its structure
-head(occ_data_raw)
-```
+### 2. Objective Grid Resolution
 
-```{r setup-2}
-# Load the environmental raster layers
-thai_env_file <- system.file("extdata", "thai_env.tif", package = "bean")
-env <- terra::rast(c(thai_env_file))
+Instead of arbitrary thinning, `find_env_resolution()` uses a geometric
+**"elbow" method** based on nearest-neighbor distances in E-space. This
+identifies the exact distance where dense artificial clustering
+transitions into natural data spacing.
 
-# Plot the environmental layers to check their extent and values
-plot(env, mar = c(1, 1, 2, 4))
+### 3. Apply Thinning
 
-# Visualize the spatial distribution of the occurrence points
-ggplot(occ_data_raw, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env[[1]], xy = TRUE), aes(x = x, y = y), fill = "gray80") +
-  geom_point(alpha = 0.5, color = "darkred") +
-  coord_fixed() +
-  labs(title = "Sambar Deer Occurrence Points") +
-  theme_classic()
-```
+`bean` offers two core thinning methods:
 
-### Step 2: Prepare Data for Environmental Thinning
+-   Stochastic (`thin_env_nd`): Randomly samples one "bean" from each
+    occupied "pod".
 
-Before any analysis, the raw data must be cleaned and standardized. The
-`prepare_bean()` function streamlines this process by:
+-   Deterministic (`thin_env_center`): Generates a new point at the
+    exact center of every occupied grid cell.
 
-1.  Removing records with missing coordinates.
+### 4. Niche Delineation
 
-2.  Extracting environmental data for each point from the raster layers.
+The `fit_ellipsoid()` function formalizes the environmental niche by
+fitting a bivariate or multivariate ellipse around the thinned points.
 
-3.  Removing records that fall outside the raster extent.
+### 5. Prediction and Mapping
 
-This ensures all subsequent functions work with a clean, complete, and
-scaled dataset.
+Using the learned niche, `predict()` projects the results back to
+geographic space. This step emphasizes that algorithms like **MaxEnt**
+are used to calculate suitability scores from the delineated niche
+boundaries.
 
-```{r prepare-data}
-# Run the preparation function to clean and scale the data
-origin_dat_prepared <- prepare_bean(
-  data = occ_data_raw,
-  env_rasters = env,
-  longitude = "x",
-  latitude = "y",
-  transform = "none"
-)
+## Checking the Vignettes
 
-# View the structure and summary of the clean, scaled data
-head(origin_dat_prepared)
-summary(origin_dat_prepared)
-
-# Visualize the spatial distribution of the cleaned occurrence points
-ggplot(origin_dat_prepared, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env[[1]], xy = TRUE), aes(x = x, y = y), fill = "gray80") +
-  geom_point(alpha = 0.5, color = "darkred") +
-  coord_fixed() +
-  labs(title = "Sambar Deer Occurrence Points (Cleaned)") +
-  theme_classic()
-```
-
-### Step 3: Objective Grid Resolution using Nearest Neighbors
-
-The most critical parameter in environmental gridding is the
-`grid_resolution`. Instead of guessing this value, we can derive it
-objectively from the data by analyzing the density of points in
-environmental space.
-
-The `find_env_resolution()` function uses a geometric "elbow" method
-based on nearest-neighbor distances. This identifies the exact distance
-where dense artificial clustering transitions into natural data spacing,
-eliminating the need for arbitrary quantiles.
-
-```{r find-resolution, fig.width=12, fig.height=6}
-# Find the objective resolution using the elbow method
-resolution_results <- find_env_resolution(
-  data = origin_dat_prepared,
-  env_vars = c("bio_1", "bio_4", "bio_12", "bio_15")
-)
-
-plot(resolution_results)
-
-# Let's use this objective resolution in the next step
-grid_res <- resolution_results$suggested_resolution
-grid_res
-```
-
-### Step 4: Apply Thinning
-
-Now that we have an objective, data-driven `grid_resolution`, we can
-apply the thinning. We offer two methods: stochastic and deterministic.
-
-#### Method A: Stochastic Thinning with `thin_env_nd`
-
-This method randomly samples exactly one point from each occupied grid
-cell, enforcing strict presence-only logic within the environmental
-hypercube.
-
-```{r find-and-thin-part2}
-# Apply the stochastic thinning (using a seed for reproducibility)
-thinned_stochastic <- thin_env_nd(
-  data = origin_dat_prepared,
-  env_vars = c("bio_1","bio_4", "bio_12", "bio_15"),
-  grid_resolution = grid_res
-)
-
-# Print the summary of the thinning results
-thinned_stochastic
-head(thinned_stochastic$thinned_data)
-```
-
-#### Method B: Deterministic Thinning with `thin_env_center`
-
-This method provides a simpler, non-random alternative. It returns a
-single new point at the exact center of every occupied grid cell,
-regardless of how many original points fell within it.
-
-```{r thin-center}
-# Apply the deterministic thinning
-thinned_deterministic <- thin_env_center(
-  data = origin_dat_prepared,
-  env_vars = c("bio_1","bio_4", "bio_12", "bio_15"),
-  grid_resolution = c(0.5,0.5,0.5,0.5)
-)
-
-# Print the summary of the thinning results
-thinned_deterministic
-head(thinned_deterministic$thinned_points)
-```
-
-### Step 5: Visualize the Thinning Results
-
-The `plot_bean()` function provides a powerful way to visualize the
-effect of thinning by overlaying the thinned points on the original data
-within the environmental grid.
-
-```{r plot-thinning-results, fig.width=10, fig.height=8}
-# Visualize the stochastic thinning results
-plot_bean(
-  original_data = origin_dat_prepared,
-  thinned_object = thinned_stochastic,
-  env_vars = c("bio_1","bio_4", "bio_12", "bio_15")
-)
-
-# Visualize the deterministic thinning results
-plot_bean(
-  original_data = origin_dat_prepared,
-  thinned_object = thinned_deterministic,
-  env_vars = c("bio_1","bio_4", "bio_12", "bio_15")
-)
-```
+For full demonstrations of the protocol, check the package vignettes:
 
 ```{r}
-# Visualize the spatial distribution of the occurrence and thinned points
-# Combine the data and add a label for the partition
-plot_data <- dplyr::bind_rows(
-  occ_data_raw %>% dplyr::mutate(Data_Type = "Original (Raw)"),
-  thinned_stochastic$thinned_data %>% dplyr::mutate(Data_Type = "Thinned (Stochastic)")
-)
+# Data Preparation & Visualization
+vignette("data-preparation")
 
-# Lock the order so "Original" is always on the left partition
-plot_data$Data_Type <- factor(plot_data$Data_Type, levels = c("Original (Raw)", "Thinned (Stochastic)"))
+# Objective Thinning in Environmental Space
+vignette("environmental-thinning")
 
-# Plot with a partition (facet_wrap)
-ggplot(plot_data, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env[[1]], xy = TRUE), aes(x = x, y = y), fill = "gray80") +
-  geom_point(alpha = 0.5, color = "darkred") +
-  coord_fixed() +
-  facet_wrap(~Data_Type) + # <--- This creates the partition line!
-  labs(title = "Spatial Point Distribution",
-       x = "Longitude", y = "Latitude") +
-  theme_classic() +
-  theme(strip.background = element_rect(fill = "grey90"),
-        strip.text = element_text(face = "bold"))
+# Niche Delineation & Suitability Mapping
+vignette("niche-modeling")
 ```
 
-### Step 6: Delineate and Visualize the Niche Ellipse
-
-After thinning, we can formalize the environmental niche by fitting a
-bivariate ellipse around the points. The `fit_ellipsoid()` function
-delineates this boundary.
-
-### Original Ellipsoid
-
-```{r fit-ellipse-part1, rgl=TRUE, fig.cap="3D Stochastic Ellipsoid"}
-# Fit an ellipse that contains 95% of the original data
-origin_ellipse <- fit_ellipsoid(data = origin_dat_prepared, 
-                                env_vars = c("bio_1","bio_4", "bio_12", "bio_15"), 
-                                method = "covmat", 
-                                level = 0.95)
-# The returned object contains all the details
-origin_ellipse
-
-# And we can use the custom plot() method for a powerful visualization
-plot(origin_ellipse, dims = c(1, 2))
-# For interactive 3D: 
-plot(origin_ellipse, dims = c(1, 2, 3))
-```
-
-### Stochastic Thinned Ellipsoid
-
-```{r fit-ellipse-part2, rgl=TRUE, fig.cap="3D Stochastic Ellipsoid"}
-# Fit an ellipse that contains 95% of the thinned data
-stochastic_ellipse <- fit_ellipsoid(data = thinned_stochastic$thinned_data, 
-                                    env_vars = c("bio_1","bio_4", "bio_12", "bio_15"), 
-                                    method = "covmat", 
-                                    level = 0.95)
-stochastic_ellipse
-
-plot(stochastic_ellipse, dims = c(1, 2))
-# For interactive 3D: 
-plot(stochastic_ellipse, dims = c(1, 2, 3))
-```
-
-### Deterministic Thinned Ellipsoid
-
-```{r fit-ellipse-part3, rgl=TRUE, fig.cap="3D Deterministic Ellipsoid"}
-# Fit an ellipse that contains 95% of the thinned data
-deterministic_ellipse <- fit_ellipsoid(data = thinned_deterministic$thinned_points,
-                                       env_vars = c("bio_1","bio_4", "bio_12", "bio_15"), 
-                                       method = "covmat", 
-                                       level = 0.95)
-deterministic_ellipse
-
-plot(deterministic_ellipse, dims = c(1, 2))
-# For interactive 3D: 
-plot(deterministic_ellipse, dims = c(1, 2, 3))
-```
-
-### Step 7: Predict Niche Suitability
-
-Finally, we project the learned fundamental niche back into geographic
-space. The `predict` method calculates the continuous Mahalanobis
-distance and suitability scores across the landscape.
-
-```{r}
-# Predict using the unthinned ellipsoid
-origin_pred <- predict(object = origin_ellipse,
-                       newdata = env,
-                       include_suitability = TRUE,
-                       suitability_truncated = TRUE,
-                       include_mahalanobis = TRUE,
-                       mahalanobis_truncated = TRUE)
-plot(origin_pred)
-```
-
-```{r}
-# Predict using the stochastic thinned ellipsoid
-stochastic_pred <- predict(object = stochastic_ellipse,
-                           newdata = env,
-                           include_suitability = TRUE,
-                           suitability_truncated = TRUE,
-                           include_mahalanobis = TRUE,
-                           mahalanobis_truncated = TRUE)
-plot(stochastic_pred)
-```
-
-```{r}
-# Predict using the deterministic thinned ellipsoid
-deterministic_pred <- predict(object = deterministic_ellipse,
-                              newdata = env,
-                              include_suitability = TRUE,
-                              suitability_truncated = TRUE,
-                              include_mahalanobis = TRUE,
-                              mahalanobis_truncated = TRUE)
-plot(deterministic_pred)
-```
-
-### The End ❤️
+The End ❤️
