@@ -20,7 +20,6 @@ knitr::opts_chunk$set(
 # bean 🫛
 
 Paanwaris Paansri and Luis E. Escobar
-<img src="man/figures/logo.png" align="right" height="120" alt="Hexagon sticker for the bean package featuring a green bean pod in environmental space" />
 
 <!-- badges: start -->
 
@@ -32,7 +31,7 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 
 <!-- badges: end -->
 
-## Ecological Motivation
+## Ecological Motivation <img src="man/figures/logo.png" alt="Hexagon sticker for the bean package featuring a green bean pod in environmental space" align="right" height="200"/>
 
 The `bean` package provides a tool to address a fundamental challenge in
 species distribution modeling (SDM, or ecological niche modeling, ENM):
