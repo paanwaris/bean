@@ -4,7 +4,7 @@
 \alias{thin_env_nd}
 \title{Thin occurrence data in n-dimensional environmental space}
 \usage{
-thin_env_nd(data, env_vars, grid_resolution, max_per_cell)
+thin_env_nd(data, env_vars, grid_resolution, seed = NULL)
 }
 \arguments{
 \item{data}{A data.frame containing species occurrences and pre-scaled
@@ -16,11 +16,12 @@ the environmental variables (dimensions) to use for thinning.}
 \item{grid_resolution}{A numeric vector of resolutions for each environmental
 axis. Its length must match the length of `env_vars`.}
 
-\item{max_per_cell}{An integer specifying the maximum number of points to
-retain per grid cell.}
+\item{seed}{(numeric) An optional random seed for reproducibility. If provided,
+the random number generator state is safely isolated to this function call
+and will not affect the global environment. Default = NULL.}
 }
 \value{
-An object of class `bean_thinned_density`, which is a list containing:
+An object of class `bean_thinned`, which is a list containing:
   \item{thinned_data}{A data.frame containing the occurrence records that were retained after the thinning process.}
   \item{n_original}{An integer representing the number of complete occurrence records in the input data before thinning.}
   \item{n_thinned}{An integer representing the number of occurrence records remaining after thinning.}
@@ -28,20 +29,20 @@ An object of class `bean_thinned_density`, which is a list containing:
 }
 \description{
 This function thins species occurrence records in an n-dimensional
-environmental space by randomly sampling a specified number of points from
-each occupied n-dimensional grid cell (hypercube).
+environmental space by randomly sampling exactly one point from each occupied
+n-dimensional grid cell (hypercube).
 }
 \examples{
 \dontrun{
 # Assume 'prepared_pca' is the output from prepare_bean(..., transform = "pca")
 # and contains columns PC1, PC2, PC3.
 
-# Thin the data in 3D environmental space
+# Thin the data in 3D environmental space, retaining 1 point per grid cell
 thinned_3d <- thin_env_nd(
   data = prepared_pca$prepared_data,
   env_vars = c("PC1", "PC2", "PC3"),
   grid_resolution = c(0.5, 0.5, 0.5), # One resolution value for each axis
-  max_per_cell = 1
+  seed = 123
 )
 
 # Print the summary
