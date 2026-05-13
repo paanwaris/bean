@@ -1,0 +1,62 @@
+url: https://paanwaris.github.io/bean/
+
+template:
+  bootstrap: 5
+  light-switch: true
+  # You can keep bootswatch: united if you want the specific font/layout,
+  # but bslib will overwrite the colors with your custom bean brand below.
+  params:
+    bootswatch: flatly
+  bslib:
+    bg: "#ffffff"              # white background
+    fg: "#3C3C3C"              # dark grey text (matches your logo text)
+    primary: "#7FBF7F"         # primary elements: bean green
+    input-bg: "#ffffff"        # color search bar
+    input-color: "#3C3C3C"     # color text search bar
+    navbar-light-bg: "#7FBF7F" # color for navbar when light (bean green)
+    navbar-dark-bg: "#2b2b2b"  # color for navbar when dark
+
+# Ensure your logo is in man/figures/logo.png
+figures:
+  dev: png
+
+# Navigation bar configuration with icons
+navbar:
+  left:
+    - icon: fa-home
+      href: index.html
+      aria-label: Home
+    - text: "Functions"
+      href: reference/index.html
+    - icon: fas fa-book
+      text: "Articles"
+      menu:
+        - text: "1. Data Prep"
+          href: articles/data-preparation.html
+        - text: "2. Environmental Thinning"
+          href: articles/environmental-thinning.html
+        - text: "3. Niche Delineation & Mapping"
+          href: articles/niche-modeling.html
+  right:
+    - icon: fab fa-github
+      href: https://github.com/paanwaris/bean
+      aria-label: GitHub
+
+# Grouping functions in the Reference tab
+reference:
+  - title: Data Preparation
+    desc: Functions for preparing and cleaning occurrence data.
+    contents:
+      - prepare_bean
+  - title: Thinning Logic
+    desc: Functions for addressing sampling bias by thinning in environmental space (E-space).
+    contents:
+      - find_env_resolution
+      - thin_env_nd
+      - thin_env_center
+  - title: Modeling & Visualization
+    desc: Functions for fundamental niche delineation and predicting suitability.
+    contents:
+      - fit_ellipsoid
+      - plot_bean
+      - predict.ellipsoid_bean
