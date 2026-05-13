@@ -14,29 +14,28 @@ plot_bean(original_data, thinned_object, env_vars)
 \item{env_vars}{A character vector of the environmental variables to plot.}
 }
 \value{
-A `GGally::ggpairs` plot object.
+Invisibly returns `NULL`. Draws a plot to the active graphics device.
 }
 \description{
-This function creates a pairs plot to visualize the results of
-  n-dimensional environmental thinning. It can accept thinned objects from either
-  density-based thinning (`thin_env_nd`) or deterministic centroid thinning
-  (`thin_env_center`).
+This function creates a scatterplot matrix (pairs plot) to
+  visualize the results of n-dimensional environmental thinning using base R
+  graphics. It can accept thinned objects from either density-based thinning
+  (`thin_env_nd`) or deterministic centroid thinning (`thin_env_center`).
 }
 \examples{
 \dontrun{
 # Assume 'prepared_data' is ready.
 
 # --- Example: Plotting Density-Based Thinning ---
-thinned_density_obj <- thin_env_nd(
+thinned_obj <- thin_env_nd(
   data = prepared_data,
   env_vars = c("PC1", "PC2", "PC3"),
-  grid_resolution = 0.5,
-  max_per_cell = 1
+  grid_resolution = c(0.5, 0.5, 0.5)
 )
 
 plot_bean(
   original_data = prepared_data,
-  thinned_object = thinned_density_obj,
+  thinned_object = thinned_obj,
   env_vars = c("PC1", "PC2", "PC3")
 )
 }
