@@ -11,6 +11,7 @@
 #'   \item{y}{Latitude coordinates in decimal degrees}
 #' }
 #' @source Example dataset provided with the bean package.
+#' @keywords internal
 "occ_data_raw"
 
 #' Prepared occurrence data
@@ -29,6 +30,7 @@
 #'   \item{bio_12}{Scaled Annual Precipitation}
 #'   \item{bio_15}{Scaled Precipitation Seasonality}
 #' }
+#' @keywords internal
 "origin_dat_prepared"
 
 #' Stochastic thinned environmental data
@@ -44,6 +46,7 @@
 #'   \item{n_thinned}{The number of points after thinning}
 #'   \item{parameters}{The thinning parameters used}
 #' }
+#' @keywords internal
 "thinned_stochastic"
 
 #' Deterministic thinned environmental data
@@ -59,6 +62,7 @@
 #'   \item{n_thinned}{The number of unique grid cells occupied}
 #'   \item{parameters}{The thinning parameters used}
 #' }
+#' @keywords internal
 "thinned_deterministic"
 
 #' Fitted origin ellipsoid
@@ -73,4 +77,5 @@
 #'   \item{volume}{The hypervolume of the fitted ellipsoid}
 #'   \item{parameters}{Model parameters including the confidence level (e.g., 0.95)}
 #' }
+#' @keywords internal
 "origin_ellipse"
