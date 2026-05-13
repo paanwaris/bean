@@ -19,6 +19,11 @@ Useful links:
 \author{
 \strong{Maintainer}: Paanwaris Paansri \email{paanwaris@vt.edu}
 
+Authors:
+\itemize{
+  \item Paanwaris Paansri \email{paanwaris@vt.edu}
+}
+
 Other contributors:
 \itemize{
   \item Luis E. Escobar \email{escobar1@vt.edu} [contributor]
