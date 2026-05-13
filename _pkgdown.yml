@@ -16,10 +16,6 @@ template:
     navbar-light-bg: "#7FBF7F" # color for navbar when light (bean green)
     navbar-dark-bg: "#2b2b2b"  # color for navbar when dark
 
-# Ensure your logo is in man/figures/logo.png
-figures:
-  dev: png
-
 # Navigation bar configuration with icons
 navbar:
   left:
