@@ -2,102 +2,22 @@
 % Please edit documentation in R/find_env_resolution.R
 \name{find_env_resolution}
 \alias{find_env_resolution}
-\title{Find objective grid resolutions for each environmental axis}
+\title{Find objective environmental resolution using the Nearest Neighbor Elbow Method}
 \usage{
-find_env_resolution(data, env_vars, quantile = 0.1)
+find_env_resolution(data, env_vars)
 }
 \arguments{
-\item{data}{A data.frame containing species occurrence coordinates and the environmental variables.}
+\item{data}{A data.frame containing environmental variables.}
 
-\item{env_vars}{A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.}
-
-\item{quantile}{(numeric) The quantile of pairwise distances to use for the
-resolution. A smaller quantile value (e.g., 0.05-0.25) is generally recommended for gentle
-thinning. However, for widespread generalists, a higher quantile (e.g., > 0.75) may improve
-model performance by more aggressively reducing large-scale bias. Default = 0.1.}
+\item{env_vars}{A character vector specifying the environmental variables to analyze.}
 }
 \value{
-An object of class \code{bean_resolution}, which is a list containing:
-  \item{suggested_resolution}{A named numeric vector of the calculated grid
-    resolutions for each environmental variable.}
-  \item{distance_distributions}{A data frame containing all pairwise
-    distances for each variable, suitable for plotting.}
-  \item{quantile}{The percentile used for the calculation.}
+An object of class \code{bean_env_resolution}
 }
 \description{
-This function calculates an objective, data-driven grid resolution for use in
-environmental thinning. It operates by analyzing the distribution of pairwise
-1D distances for each environmental variable separately. The distance at a
-specified lower quantile of this distribution is returned as a suggested
-grid resolution for each axis. The function allows for the creation of rectangular
-grid cells that are adapted to the unique scale and clustering within each
-environmental dimension.
-}
-\details{
-### The Rationale for Using a Distance Quantile (\code{quantile})
-
-Selecting an appropriate grid resolution for environmental thinning is crucial
-for reducing sampling bias without discarding excessive data. Rather than
-relying on an arbitrary, user-defined value, this function employs a
-data-driven heuristic to determine a characteristic scale from the data
-itself based on environmental filtering (Varela et al., 2014). For each environmental variable,
-it calculates all pairwise distances between occurrence points. The quantile of this
-distribution is then used as the grid resolution. This approach adapts the cell size to the
-inherent data structure and focuses on distributional properties rather than just the mean (Cade & Noon, 2003).
-
-### Selecting a Quantile
-
-The choice of (\code{quantile}) allows you to control the aggressiveness of the
-thinning. It creates a spectrum from gentle, fine-scale thinning (low quantiles)
-to more aggressive, large-scale bias reduction (high quantiles). The optimal
-value often depends on the species' ecology and the nature of the sampling bias.
-
-- Low Quantiles (e.g., 0.05-0.25): A low quantile selects a *small
-  distance, creating a fine grid. This performs a gentle thinning that removes
-  fine-scale clustering while preserving the overall data structure. This is
-  often a suitable starting point, especially for species with more specialized
-  niches.
-
-- High Quantiles (e.g., > 0.75): The primary issue is often large-scale, regional sampling bias. In
-  these cases, a high quantile can improve model performance by selecting a
-  large distance. This creates a coarse grid that aggressively
-  de-clusters the data, forcing the model to learn the broad, fundamental
-  tolerances of the species.
-}
-\note{
-The quantile-based approach has the advantage of adapting the thinning
-resolution to the data's inherent structure. Because there is no universal
-best value, the recommended approach is to use the \code{\link{calibrate_bean}}
-function to test a range of quantiles and let the model's final performance
-guide the selection.
-}
-\examples{
-\dontrun{
-# 1. Create the example occurrence records and environmental variables
-occ_data <- data.frame(
- BIO1 = c(0, 1, 3, 6),
- BIO12 = c(0, 10, 30, 60),
- x = c(1, 1, 0, 0.5),
- y = c(0, 0.5, 2, 1.5),
- species = "A"
-)
-# 2. Find the resolution at the 10th percentile
-resolutions <- find_env_resolution(
-  data = occ_data,
-  env_vars = c("BIO1", "BIO12"),
-  quantile = 0.1
-)
-
-# 3. Print the summary and plot the results
-print(resolutions)
-plot(resolutions)
-}
-}
-\references{
-Cade, B. S., & Noon, B. R. (2003). A gentle introduction to quantile regression for ecologists. Frontiers in Ecology and the Environment, 1(8), 412–420.
-
-Varela, S., Anderson, R. P., García-Valdés, R., & Fernández-González, F. (2014). Environmental filters reduce the effects of sampling bias and improve predictions of ecological niche models. Ecography, 37(11), 1084–1091.
-}
-\seealso{
-\code{\link{calibrate_bean}}
+Calculates an objective, data-driven grid resolution for environmental
+thinning. Instead of relying on user-defined quantiles, this function analyzes the
+1D Nearest Neighbor (NN) distances for each environmental variable. It uses the
+geometric "elbow" method (point of maximum curvature) to identify the exact distance
+where dense artificial clustering transitions into natural data spacing.
 }
