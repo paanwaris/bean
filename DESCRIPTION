@@ -9,12 +9,11 @@ Encoding: UTF-8
 LazyData: true
 URL: https://github.com/paanwaris/bean
 BugReports: https://github.com/paanwaris/bean/issues
-RoxygenNote: 7.3.2
-Suggests:
-    covr,
-    rJava,
-    testthat
-Imports: covr, dismo, dplyr, GGally, ggplot2, MASS, magrittr, multcompView, raster, rgl, rJava, rlang, scales, stats, terra, testthat, tidyr
+Suggests: covr
+Imports: MASS,
+    stats,
+    terra,
+    rgl
 Depends: R (>= 3.5)
 Authors@R: c(
 	person("Paanwaris", "Paansri", role = c("cre", "aut"),  
@@ -22,3 +21,4 @@ Authors@R: c(
 	person("Luis E.", "Escobar", role = "ctb", email = "escobar1@vt.edu"))
 Author: Paanwaris Paansri [cre, aut] (ORCID: <https://orcid.org/0000-0001-9992-098X>)
 	Luis E. Escobar [ctb] (ORCID: <https://orcid.org/0000-0001-5735-2750>)
+Config/roxygen2/version: 8.0.0
