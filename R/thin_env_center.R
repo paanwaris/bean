@@ -7,7 +7,7 @@
 #' @param data A data.frame containing species occurrence coordinates and the environmental variables.
 #' @param env_vars A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.
 #' @param grid_resolution A numeric vector of length one or two specifying the
-#'   resolution(s) for the grid axes. If length one, it is used for both axes. See the Details section of \code{\link{find_optimal_cap}} for a full explanation
+#'   resolution(s) for the grid axes. If length one, it is used for both axes.
 #' @return An object of class \code{bean_thinned_center}. which is a list containing:
 #'   \item{thinned_points}{A data.frame with two columns representing the new
 #'     points at the center of each occupied environmental grid cell.}
@@ -17,7 +17,7 @@
 #'     that were occupied, which is also the number of points returned.}
 #'   \item{parameters}{A list of the key parameters used, such as whether
 #'     scaling was applied.}
-#' @seealso \code{\link{find_optimal_cap}}
+#' @seealso \code{\link{thin_env_nd}}, \code{\link{find_env_resolution}}
 #' @export
 #' @examples
 #' \dontrun{
@@ -56,9 +56,9 @@ thin_env_center <- function(data, env_vars, grid_resolution) {
   }
 
   # --- Data Cleaning ---
-  clean_data <- data %>%
-    # Keep only rows with complete, finite values for all selected env_vars
-    dplyr::filter(dplyr::if_all(dplyr::all_of(env_vars), is.finite))
+  # Keep only rows with complete, finite values for all selected env_vars
+  valid_rows <- apply(data[, env_vars, drop = FALSE], 1, function(row) all(is.finite(row)))
+  clean_data <- data[valid_rows, , drop = FALSE]
 
   n_original <- nrow(clean_data)
 
@@ -76,23 +76,24 @@ thin_env_center <- function(data, env_vars, grid_resolution) {
     return(results)
   }
 
-  # --- Calculate Centroids in N-Dimensions ---
+  # --- Calculate Centroids in N-Dimensions (Base R Matrix Algebra) ---
+  env_data <- clean_data[, env_vars, drop = FALSE]
 
-  # Create a named vector for easy lookup of resolution within across()
-  resolutions_named <- setNames(grid_resolution, env_vars)
+  # 1. Scale data by dividing by resolution
+  gridded_vals <- t(t(env_data) / grid_resolution)
 
-  centroids_df <- clean_data %>%
-    # For each environmental variable, calculate its cell center
-    dplyr::mutate(dplyr::across(
-      dplyr::all_of(env_vars),
-      ~ floor(.x / resolutions_named[dplyr::cur_column()]) * resolutions_named[dplyr::cur_column()] + (resolutions_named[dplyr::cur_column()] / 2)
-    )) %>%
-    # Keep only the unique combinations of cell centers
-    dplyr::distinct(dplyr::across(dplyr::all_of(env_vars)))
+  # 2. Floor to find the lower corner boundary of the occupied grid cell
+  floored_vals <- floor(gridded_vals)
+
+  # 3. Multiply back by resolution and add half-resolution to find the exact center point
+  centroids_matrix <- t(t(floored_vals) * grid_resolution + (grid_resolution / 2))
+
+  # 4. Convert back to data frame and drop duplicates (keep only one unique center per cell)
+  centroids_df <- unique(as.data.frame(centroids_matrix))
 
   # --- Construct S3 Object ---
   results <- list(
-    thinned_points = as.data.frame(centroids_df),
+    thinned_points = centroids_df,
     n_original = n_original,
     n_thinned = nrow(centroids_df),
     parameters = list(grid_resolution = grid_resolution)
@@ -112,6 +113,9 @@ print.bean_thinned_center <- function(x, ...) {
   cat("--- Bean Deterministic Thinning Results ---\n\n")
   cat(sprintf("Thinned %d original points to %d unique grid cell centers.\n",
               x$n_original, x$n_thinned))
-  cat("\n-----------------------------------------\n")
+  if (x$n_original > 0) {
+    cat(sprintf("This represents a retention of %.1f%% of the data.\n", 100 * (x$n_thinned / x$n_original)))
+  }
+  cat("\n--------------------------------------\n")
   invisible(x)
 }
