@@ -2,7 +2,7 @@
 
 Paanwaris Paansri and Luis E. Escobar
 
-## Ecological Motivation ![Hexagon sticker for the bean package featuring a green bean pod in environmental space](reference/figures/logo.png)
+## Ecological Motivation
 
 The `bean` package provides a tool to address a fundamental challenge in
 species distribution modeling (SDM, or ecological niche modeling, ENM):
