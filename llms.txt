@@ -4,7 +4,7 @@ Paanwaris Paansri and Luis E. Escobar
 
 ## Ecological Motivation
 
-# bean
+![bean logo](reference/figures/logo.png)
 
 The `bean` package provides a tool to address a fundamental challenge in
 species distribution modeling (SDM, or ecological niche modeling, ENM):
