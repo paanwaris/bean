@@ -7,7 +7,7 @@ Description: Provides a suite of tools to mitigate sampling bias in species occu
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/paanwaris/bean
+URL: https://github.com/paanwaris/bean, https://paanwaris.github.io/bean/
 BugReports: https://github.com/paanwaris/bean/issues
 Suggests: covr
 Imports: MASS,
