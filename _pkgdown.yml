@@ -1,20 +1,18 @@
 url: https://paanwaris.github.io/bean/
 
 template:
-  bootstrap: 5
   light-switch: true
-  # You can keep bootswatch: united if you want the specific font/layout,
-  # but bslib will overwrite the colors with your custom bean brand below.
   params:
-    bootswatch: flatly
+     bootswatch: united
+  bootstrap: 5
   bslib:
-    bg: "#ffffff"              # white background
-    fg: "#3C3C3C"              # dark grey text (matches your logo text)
-    primary: "#7FBF7F"         # primary elements: bean green
-    input-bg: "#ffffff"        # color search bar
-    input-color: "#3C3C3C"     # color text search bar
-    navbar-light-bg: "#7FBF7F" # color for navbar when light (bean green)
-    navbar-dark-bg: "#2b2b2b"  # color for navbar when dark
+    bg: "#ffffff" # white background
+    fg: "#212529" # black text
+    primary: "#007bff" # primary elements: blue
+    input-bg: "#ffffff"     # color search bar
+    input-color: "#212529"  # color text search bar
+    navbar-light-bg: "#007bff" #color for navbar when light
+    navbar-dark-bg: "#00008B" #color for navbar when dark
 
 # Navigation bar configuration with icons
 navbar:
@@ -33,10 +31,9 @@ navbar:
           href: articles/environmental-thinning.html
         - text: "3. Niche Delineation & Mapping"
           href: articles/niche-modeling.html
-  right:
-    - icon: fab fa-github
-      href: https://github.com/paanwaris/bean
-      aria-label: GitHub
+
+components:
+    home: ~
 
 # Grouping functions in the Reference tab
 reference:
