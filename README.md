@@ -4,7 +4,7 @@
 # bean 🫛
 
 Paanwaris Paansri and Luis E. Escobar
-<img src="man/figures/logo.png" align="right" height="150" alt="Hexagon sticker for the bean package featuring a green bean pod in environmental space" />
+<img src="man/figures/logo.png" align="right" height="120" alt="Hexagon sticker for the bean package featuring a green bean pod in environmental space" />
 
 <!-- badges: start -->
 
