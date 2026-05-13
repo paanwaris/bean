@@ -32,24 +32,18 @@ jobs:
       R_KEEP_PKG_SOURCE: yes
 
     steps:
-      - name: Set up JDK 11
-        uses: actions/setup-java@v4
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-
       - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      # ADDITION 1: Install system dependencies for rgl on Linux
+      # Install system dependencies for rgl on Linux
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libglu1-mesa-dev xvfb
 
-      # ADDITION 2: Start virtual display (Xvfb) on Linux
+      # Start virtual display (Xvfb) on Linux for rgl rendering
       - name: Start Xvfb
         if: runner.os == 'Linux'
         run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
@@ -60,12 +54,7 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      - name: Register Java with R
-        if: runner.os != 'Windows'
-        run: sudo R CMD javareconf
-        shell: bash
-
-      # ADDITION 3: Set DISPLAY for dependency installation on Linux
+      # Set DISPLAY for dependency installation on Linux
       - name: Install R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -74,7 +63,7 @@ jobs:
         env:
           DISPLAY: ':99'
 
-      # ADDITION 4: Set DISPLAY for the main check on Linux
+      # Set DISPLAY for the main check on Linux
       - name: Check R package
         uses: r-lib/actions/check-r-package@v2
         with:
