@@ -84,7 +84,6 @@
 #' @export
 #' @importFrom stats cov var qchisq mahalanobis
 #' @importFrom MASS cov.mve
-#' @importFrom dplyr filter
 #' @importFrom rgl ellipse3d
 #' @examples
 #' \dontrun{
@@ -212,107 +211,156 @@ print.bean_ellipsoid <- function(x, ...) {
 
 #' @export
 #' @keywords internal
-#' @importFrom stats setNames
-#' @importFrom ggplot2 ggplot aes geom_point geom_polygon labs theme_bw scale_color_manual .data theme element_text
-#' @importFrom GGally ggpairs wrap
-#' @importFrom rgl plot3d wire3d title3d legend3d open3d bg3d
-plot.bean_ellipsoid <- function(x, ..., window_size = c(800, 800)) {
+#' @importFrom grDevices adjustcolor
+#' @importFrom rgl plot3d wire3d ellipse3d open3d bg3d
+plot.bean_ellipsoid <- function(x, dims = c(1, 2), ..., window_size = c(800, 800)) {
   env_vars <- names(x$centroid)
-  n_dim <- length(env_vars)
+  total_dim <- length(env_vars)
 
-  # --- Define a new, more appealing color palette ---
+  # --- Input Validation for Dimensions ---
+  if (is.numeric(dims)) {
+    if (any(dims < 1 | dims > total_dim)) {
+      stop("Numeric 'dims' indices are out of bounds.")
+    }
+    plot_vars <- env_vars[dims]
+  } else if (is.character(dims)) {
+    if (!all(dims %in% env_vars)) {
+      stop("One or more 'dims' names not found in the ellipsoid variables.")
+    }
+    plot_vars <- dims
+  } else {
+    stop("'dims' must be a numeric vector of indices or a character vector of variable names.")
+  }
+
+  n_plot_dim <- length(plot_vars)
+
+  # --- Define color palette ---
   colors <- list(
-    inside = "#118ab2",   # A vibrant teal
-    outside = "#ef476f",  # A gentle coral/pink
-    ellipse_fill = "#06d6a0", # A soft mint/aqua
-    ellipse_line = "#073b4c", # A dark navy for contrast
-    centroid = "#ffd166" # A warm yellow
+    inside = "#118ab2",       # Teal
+    outside = "#ef476f",      # Coral/pink
+    ellipse_fill = "#06d6a0", # Mint/aqua
+    ellipse_line = "#073b4c", # Dark navy
+    centroid = "#ffd166"      # Warm yellow
   )
 
-  # --- Determine point status (Inside/Outside) ---
+  # --- Determine point status for coloring ---
   plot_data_all <- x$all_points_used
-  plot_data_all$Status <- "Outside"
-  plot_data_all$Status[x$inside_indices] <- "Inside"
-  plot_data_all$Status <- factor(plot_data_all$Status, levels = c("Inside", "Outside"))
+  point_status <- rep("Outside", nrow(plot_data_all))
+  point_status[x$inside_indices] <- "Inside"
 
-  # --- Create Plot based on number of dimensions ---
-  if (n_dim == 2) {
-    # --- 2D Plot (ggplot2) ---
-    centroid_data <- data.frame(x = x$centroid[1], y = x$centroid[2])
+  # Base R needs an exact vector of colors
+  point_colors <- ifelse(point_status == "Inside", colors$inside, colors$outside)
 
-    fit_ellip_plot <- ggplot2::ggplot(plot_data_all, ggplot2::aes(x = .data[[env_vars[1]]], y = .data[[env_vars[2]]])) +
-      ggplot2::geom_polygon(
-        data = x$niche_ellipse,
-        fill = colors$ellipse_fill,
-        alpha = 0.3,
-        color = colors$ellipse_line,
-        linewidth = 0.8
-      ) +
-      ggplot2::geom_point(ggplot2::aes(color = Status), alpha = 0.8, size = 2) +
-      ggplot2::geom_point(
-        data = centroid_data,
-        ggplot2::aes(x = x, y = y),
-        color = colors$centroid,
-        fill = colors$ellipse_line,
-        size = 3,
-        shape = 23, # Diamond shape
-        stroke = 1.2
-      ) +
-      ggplot2::scale_color_manual(name = "Point Status", values = c("Inside" = colors$inside, "Outside" = colors$outside)) +
-      ggplot2::labs(
-        title = "Fitted Environmental Niche Ellipse",
-        subtitle = sprintf("Ellipse boundary defined by the '%s' method at %g%% level", x$parameters$method, x$parameters$level * 100),
-        x = env_vars[1],
-        y = env_vars[2]
-      ) +
-      ggplot2::theme_bw(base_size = 14) + # Increase base font size for readability
-      ggplot2::theme(
-        plot.title = ggplot2::element_text(face = "bold", size = rel(1.2)),
-        plot.subtitle = ggplot2::element_text(size = rel(1)),
-        legend.title = ggplot2::element_text(face = "bold"),
-        legend.position = "bottom"
-      )
+  # Use the chi-squared threshold from the full model to ensure correct boundaries
+  level <- x$parameters$level
+  radius_plot <- sqrt(stats::qchisq(level, df = total_dim))
 
-    return(fit_ellip_plot)
+  if (n_plot_dim == 2) {
+    # ==========================================
+    # 2D Plot (Base R Graphics)
+    # ==========================================
+    var1 <- plot_vars[1]
+    var2 <- plot_vars[2]
 
-  } else if (n_dim >= 3) {
-    # --- 3D Plot (rgl) ---
+    # Extract 2D sub-matrix and centroid
+    centroid_2d <- x$centroid[plot_vars]
+    cov_2d <- x$covariance_matrix[plot_vars, plot_vars]
+
+    # Generate 2D ellipse polygon mathematically
+    n_points <- 100
+    eigen_plot <- eigen(cov_2d)
+    transformation_matrix <- eigen_plot$vectors %*% diag(sqrt(eigen_plot$values))
+    angles <- seq(0, 2 * pi, length.out = n_points)
+    unit_circle <- cbind(cos(angles), sin(angles))
+    ellipse_points <- t(centroid_2d + radius_plot * transformation_matrix %*% t(unit_circle))
+
+    # Calculate plot limits to ensure everything fits
+    x_range <- range(c(plot_data_all[[var1]], ellipse_points[, 1]), na.rm = TRUE)
+    y_range <- range(c(plot_data_all[[var2]], ellipse_points[, 2]), na.rm = TRUE)
+
+    # 1. Setup the empty plot canvas
+    plot(x_range, y_range, type = "n",
+         xlab = var1, ylab = var2,
+         main = "Fitted Environmental Niche Ellipse",
+         sub = sprintf("Method: '%s' | Confidence Level: %g%%", x$parameters$method, level * 100))
+
+    # 2. Draw the shaded Ellipse Polygon
+    polygon(ellipse_points[, 1], ellipse_points[, 2],
+            col = grDevices::adjustcolor(colors$ellipse_fill, alpha.f = 0.3),
+            border = colors$ellipse_line, lwd = 2)
+
+    # 3. Draw the Occurrence Points
+    points(plot_data_all[[var1]], plot_data_all[[var2]],
+           col = grDevices::adjustcolor(point_colors, alpha.f = 0.8),
+           pch = 16, cex = 1.2)
+
+    # 4. Draw the Centroid
+    points(centroid_2d[1], centroid_2d[2],
+           col = colors$ellipse_line, bg = colors$centroid,
+           pch = 22, cex = 1.8, lwd = 2)
+
+    # 5. Add the Legend
+    legend("topright",
+           legend = c("Inside", "Outside", "Centroid"),
+           col = c(colors$inside, colors$outside, colors$ellipse_line),
+           pt.bg = c(NA, NA, colors$centroid),
+           pch = c(16, 16, 23),
+           bty = "n", pt.cex = 1.2, inset = 0.02)
+
+    return(invisible(NULL))
+
+  } else if (n_plot_dim >= 3) {
+    # ==========================================
+    # 3D Plot (rgl)
+    # ==========================================
     if (!requireNamespace("rgl", quietly = TRUE)) {
       stop("Package 'rgl' is required for plotting ellipsoids with >= 3 dimensions. Please install it.", call. = FALSE)
     }
 
-    vars_3d <- env_vars[1:3]
-    if (n_dim > 3) {
-      message(sprintf("Visualizing in 3D using the first three variables: %s, %s, %s", vars_3d[1], vars_3d[2], vars_3d[3]))
+    vars_3d <- plot_vars[1:3]
+    if (n_plot_dim > 3) {
+      message(sprintf("Visualizing in 3D using the first three selected variables: %s, %s, %s",
+                      vars_3d[1], vars_3d[2], vars_3d[3]))
     }
 
-    points_3d <- plot_data_all[, vars_3d]
-    point_colors <- ifelse(plot_data_all$Status == "Inside", colors$inside, colors$outside)
+    # Extract 3D sub-matrix and centroid
+    centroid_3d <- x$centroid[vars_3d]
+    cov_3d <- x$covariance_matrix[vars_3d, vars_3d]
 
-    # CHANGE: Open a new rgl window with a specified, larger size
+    # Generate 3D mesh dynamically
+    mesh_3d <- rgl::ellipse3d(cov_3d, centre = centroid_3d, t = radius_plot)
+
+    points_3d <- plot_data_all[, vars_3d]
+
+    # Initialize RGL window
     rgl::open3d(windowRect = c(50, 50, 50 + window_size[1], 50 + window_size[2]))
     rgl::bg3d("#f7f7f7")
 
-    # Plot points
+    # Determine a base radius for the points
+    base_radius <- 0.01 * diff(range(points_3d, na.rm = TRUE))
+
+    # Plot points as spheres
     rgl::plot3d(
       x = points_3d[[1]], y = points_3d[[2]], z = points_3d[[3]],
       col = point_colors,
       type = "s",
-      radius = 0.01 * diff(range(points_3d, na.rm = TRUE)),
+      radius = base_radius,
       xlab = vars_3d[1], ylab = vars_3d[2], zlab = vars_3d[3],
       aspect = "iso",
       lit = TRUE
     )
 
-    # Add the ellipsoid wireframe
-    if (!is.null(x$niche_ellipse)) {
-      rgl::wire3d(x$niche_ellipse, col = colors$ellipse_line, alpha = 0.4, lit = FALSE)
-    }
+    # ---> ADDED: Plot the Centroid as a larger, distinct sphere <---
+    rgl::spheres3d(
+      x = centroid_3d[1], y = centroid_3d[2], z = centroid_3d[3],
+      col = colors$centroid,
+      radius = base_radius * 2.5, # Make the centroid 2.5x larger than normal points
+      lit = TRUE
+    )
 
-    return(invisible(NULL))
+    # Plot the ellipsoid wireframe
+    rgl::wire3d(mesh_3d, col = colors$ellipse_line, alpha = 0.4, lit = FALSE)
 
-  } else {
-    message("Plotting is only available for 2 or more dimensions.")
     return(invisible(NULL))
   }
 }
