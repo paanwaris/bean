@@ -2,6 +2,8 @@
 output: github_document
 editor_options: 
   chunk_output_type: console
+  markdown: 
+    wrap: 72
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -18,23 +20,44 @@ knitr::opts_chunk$set(
 # bean 🫛
 
 <!-- badges: start -->
+
 [![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/paanwaris/bean/graph/badge.svg)](https://app.codecov.io/gh/paanwaris/bean)
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 <!-- badges: end -->
 
 ## Ecological Motivation
 
-The `bean` package provides a tool to address a fundamental challenge in species distribution modeling (SDM, or ecological niche modeling, ENM): **sampling bias**. Occurrence records for species are rarely collected through a systematic, stratified process. Instead, they often cluster in easily accessible areas (like roads and cities) or in well-studied research sites. This spatial bias can translate into an **environmental bias**, where the model incorrectly learns that the species is associated with the environmental conditions of those heavily sampled areas, rather than its true ecological requirements.
+The `bean` package provides a tool to address a fundamental challenge in
+species distribution modeling (SDM, or ecological niche modeling, ENM):
+**sampling bias**. Occurrence records for species are rarely collected
+through a systematic, stratified process. Instead, they often cluster in
+easily accessible areas (like roads and cities) or in well-studied
+research sites. This spatial bias can translate into an **environmental
+bias**, where the model incorrectly learns that the species is
+associated with the environmental conditions of those heavily sampled
+areas, rather than its true ecological requirements.
 
-`bean` tackles this problem by thinning occurrence data in **environmental space**. The goal is to create a more uniform distribution of points across the species' observed environmental niche, reducing the influence of densely clustered records. This allows for the construction of a more accurate **fundamental niche** volume, which can then be projected into geographic space to create a less biased prediction of area with environmental suitability.
+`bean` tackles this problem by thinning occurrence data in
+**environmental space**. The goal is to create a more uniform
+distribution of points across the species' observed environmental niche,
+reducing the influence of densely clustered records. This allows for the
+construction of a more accurate **fundamental niche** volume, which can
+then be projected into geographic space to create a less biased
+prediction of area with environmental suitability.
 
-The name `bean` reflects the core principle of the method: ensuring that each "pod" (a grid cell in environmental space) contains only a specified number of "beans" (occurrence points).
+The name `bean` reflects the core principle of the method: ensuring that
+each "pod" (a grid cell in environmental space) contains only a
+specified number of "beans" (occurrence points).
 
 ## Installation
 
-To use the package, you first need to install it from GitHub. The following code will check for the required `devtools` package, install it if necessary, and then install `bean`.
+To use the package, you first need to install it from GitHub. The
+following code will check for the required `devtools` package, install
+it if necessary, and then install `bean`.
 
 ```{r, eval=FALSE}
 # 1. Install devtools if you don't have it yet
@@ -47,66 +70,71 @@ devtools::install_github("paanwaris/bean")
 ```
 
 ## Package Loading
-To perform the necessary analyses, we need several R packages for data manipulation, visualization, and modeling.
+
+To perform the necessary analyses, we need several R packages for data
+manipulation, visualization, and modeling.
 
 ```{r Installation, warning = FALSE, message = FALSE}
 # Load required libraries
 library(bean)
-library(dplyr)
-library(ggplot2)
-library(GGally)
 library(terra)
-library(raster)
 library(rgl)
-library(dismo)
 ```
 
 ## The `bean` Protocol: A Step-by-Step Guide
 
 ### Step 1: Data Preparation and Visualization
 
-The first step is to load your raw species occurrence data and environmental raster layers. It's always a good practice to visualize the spatial distribution of your points and inspect the environmental layers.
+The first step is to load your raw species occurrence data and
+environmental raster layers. It's always a good practice to visualize
+the spatial distribution of your points and inspect the environmental
+layers.
 
 ```{r setup-1, fig.width=10, fig.height=8}
 # Load the raw occurrence data from the package
-occ_file <- system.file("extdata", "Rattus_norvegicus.csv", package = "bean")
+occ_file <- system.file("extdata", "Rusa_unicolor.csv", package = "bean")
 occ_data_raw <- read.csv(occ_file)
 
 # Display the first few rows to understand its structure
 head(occ_data_raw)
+```
+
+```{r setup-2}
+# Load the environmental raster layers
+thai_env_file <- system.file("extdata", "thai_env.tif", package = "bean")
+env <- terra::rast(c(thai_env_file))
+
+# Plot the environmental layers to check their extent and values
+plot(env, mar = c(1, 1, 2, 4))
 
 # Visualize the spatial distribution of the occurrence points
 ggplot(occ_data_raw, aes(x = x, y = y)) +
+  geom_raster(data = as.data.frame(env[[1]], xy = TRUE), aes(x = x, y = y), fill = "gray80") +
   geom_point(alpha = 0.5, color = "darkred") +
   coord_fixed() +
-  labs(title = "Raw Occurrence Point Distribution") +
-  theme_bw()
-```
-```{r setup-2}
-# Load the environmental raster layers
-PC1_file <- system.file("extdata", "PC1.tif", package = "bean")
-PC2_file <- system.file("extdata", "PC2.tif", package = "bean")
-PC3_file <- system.file("extdata", "PC3.tif", package = "bean")
-env_pca <- terra::rast(c(PC1_file, PC2_file, PC3_file))
-
-# Plot the environmental layers to check their extent and values
-plot(env_pca, mar = c(1, 1, 2, 4))
+  labs(title = "Sambar Deer Occurrence Points") +
+  theme_classic()
 ```
 
 ### Step 2: Prepare Data for Environmental Thinning
 
-Before any analysis, the raw data must be cleaned and standardized. The `prepare_bean()` function streamlines this process by:
-1. Removing records with missing coordinates.
-2. Extracting environmental data for each point from scaled raster layers.
-3. Removing records that fall outside the raster extent.
+Before any analysis, the raw data must be cleaned and standardized. The
+`prepare_bean()` function streamlines this process by:
 
-This ensures all subsequent functions work with a clean, complete, and scaled dataset.
+1.  Removing records with missing coordinates.
+
+2.  Extracting environmental data for each point from the raster layers.
+
+3.  Removing records that fall outside the raster extent.
+
+This ensures all subsequent functions work with a clean, complete, and
+scaled dataset.
 
 ```{r prepare-data}
 # Run the preparation function to clean and scale the data
 origin_dat_prepared <- prepare_bean(
   data = occ_data_raw,
-  env_rasters = env_pca,
+  env_rasters = env,
   longitude = "x",
   latitude = "y",
   transform = "none"
@@ -118,92 +146,56 @@ summary(origin_dat_prepared)
 
 # Visualize the spatial distribution of the cleaned occurrence points
 ggplot(origin_dat_prepared, aes(x = x, y = y)) +
+  geom_raster(data = as.data.frame(env[[1]], xy = TRUE), aes(x = x, y = y), fill = "gray80") +
   geom_point(alpha = 0.5, color = "darkred") +
   coord_fixed() +
-  labs(title = "Raw Occurrence Point Distribution") +
-  theme_bw()
+  labs(title = "Sambar Deer Occurrence Points (Cleaned)") +
+  theme_classic()
 ```
 
-### Step 3: Objective Grid Resolution using Pairwise Distances
+### Step 3: Objective Grid Resolution using Nearest Neighbors
 
-The most critical parameter in environmental gridding is the `grid_resolution`. Instead of guessing this value, we can derive it objectively from the data by analyzing the **distribution of pairwise environmental distances**.
+The most critical parameter in environmental gridding is the
+`grid_resolution`. Instead of guessing this value, we can derive it
+objectively from the data by analyzing the density of points in
+environmental space.
 
-The logic is to calculate the Euclidean distance between all pairs of points in the (scaled) environmental space. The quantile of pairwise distances to use for the resolution. A smaller quantile value (e.g., 0.05-0.25) is generally recommended for gentle thinning. However, for widespread generalists, a higher quantile (e.g., > 0.75) may improve model performance by more aggressively reducing large-scale bias
-
-The `find_env_resolution()` function automates this process.
+The `find_env_resolution()` function uses a geometric "elbow" method
+based on nearest-neighbor distances. This identifies the exact distance
+where dense artificial clustering transitions into natural data spacing,
+eliminating the need for arbitrary quantiles.
 
 ```{r find-resolution, fig.width=12, fig.height=6}
-# Set a seed for reproducibility of the resampling in the correlogram
-set.seed(81)  
-
-# Let's set a low quantile value at 0.10
+# Find the objective resolution using the elbow method
 resolution_results <- find_env_resolution(
   data = origin_dat_prepared,
-  env_vars = c("PC1", "PC2", "PC3"),
-  quantile = 0.10
+  env_vars = c("bio_1", "bio_4", "bio_12", "bio_15")
 )
 
-# The function returns a suggested resolution and the full distance distribution
-resolution_results
-
-# We can also plot the distribution to visualize the analysis
-# The blue line shows the distance at the chosen quantile.
 plot(resolution_results)
 
 # Let's use this objective resolution in the next step
 grid_res <- resolution_results$suggested_resolution
+grid_res
 ```
 
-### Step 4: Parameter Exploration with `find_optimal_cap()`
+### Step 4: Apply Thinning
 
-This is the most important step for ensuring a defensible thinning strategy. Instead of guessing parameters, `find_optimal_cap()` allows you to explore the trade-offs and make a data-driven choice.
-
-**Key Parameters:**
-* `grid_resolution`: This defines the size of the cells in your environmental grid. The choice is ecologically significant. A small value creates a fine grid, which is sensitive to small environmental variations but may not thin large, dense clusters effectively. A large value creates a coarse grid, which is better for thinning broad-scale bias but may group distinct environmental conditions together.
-* `target_percent`: This is your goal for data retention. A value of `0.8` means you want to keep approximately 80% of your data. A value of `0.95` is recommended to remove 5% of the most densely clustered points while retaining most of the data.
-
-The function returns two key recommendations to guide your choice:
-1.  `best_cap_closest`: The cap that results in a point count *numerically closest* to your target.
-2.  `best_cap_above_target`: The cap that results in a point count that is *closest to, but not below*, your target. This is often the safer, more conservative choice if you want to avoid losing too much data.
-
-```{r find-and-thin-part1, fig.width=10, fig.height=8}
-set.seed(81)
-# Let's target retaining 95% of the data as recommended
-optimal_params <- find_optimal_cap(
-  data = origin_dat_prepared,
-  env_vars = c("PC1", "PC2", "PC3"),
-  grid_resolution = grid_res,
-  target_percent = 0.95
-)
-
-# The function automatically saves results to the output directory.
-# We can also inspect the returned list object.
-# Print the recommendations
-optimal_params
-
-# Visualize the search process to understand the trade-offs
-# The plot is also saved as a PNG in the output directory.
-plot(optimal_params)
-```
-
-### Step 5: Apply Thinning 
-
-Now that we have an objective `grid_resolution` and an optimal `max_per_cell`, we can apply the thinning. We offer two methods: stochastic and deterministic.
+Now that we have an objective, data-driven `grid_resolution`, we can
+apply the thinning. We offer two methods: stochastic and deterministic.
 
 #### Method A: Stochastic Thinning with `thin_env_nd`
 
-This method randomly samples up to `max_per_cell` points from each occupied grid cell. It's the most common approach.
+This method randomly samples exactly one point from each occupied grid
+cell, enforcing strict presence-only logic within the environmental
+hypercube.
 
 ```{r find-and-thin-part2}
-# Use the recommended cap from the previous step
-chosen_cap <- optimal_params$best_cap_above_target
-
-# Apply the stochastic thinning
+# Apply the stochastic thinning (using a seed for reproducibility)
 thinned_stochastic <- thin_env_nd(
   data = origin_dat_prepared,
-  env_vars = c("PC1", "PC2", "PC3"),
-  grid_resolution = grid_res, 
-  max_per_cell = chosen_cap
+  env_vars = c("bio_1","bio_4", "bio_12", "bio_15"),
+  grid_resolution = grid_res
 )
 
 # Print the summary of the thinning results
@@ -213,14 +205,16 @@ head(thinned_stochastic$thinned_data)
 
 #### Method B: Deterministic Thinning with `thin_env_center`
 
-This method provides a simpler, non-random alternative. It returns a single new point at the exact center of every occupied grid cell, regardless of how many points were originally in it.
+This method provides a simpler, non-random alternative. It returns a
+single new point at the exact center of every occupied grid cell,
+regardless of how many original points fell within it.
 
 ```{r thin-center}
 # Apply the deterministic thinning
 thinned_deterministic <- thin_env_center(
   data = origin_dat_prepared,
-  env_vars = c("PC1", "PC2", "PC3"),
-  grid_resolution = grid_res
+  env_vars = c("bio_1","bio_4", "bio_12", "bio_15"),
+  grid_resolution = c(0.5,0.5,0.5,0.5)
 )
 
 # Print the summary of the thinning results
@@ -228,327 +222,142 @@ thinned_deterministic
 head(thinned_deterministic$thinned_points)
 ```
 
-### Step 6: Visualize the Thinning Results
+### Step 5: Visualize the Thinning Results
 
-The `plot_bean()` function provides a powerful way to visualize the effect of thinning by overlaying the thinned points on the original data within the environmental grid.
+The `plot_bean()` function provides a powerful way to visualize the
+effect of thinning by overlaying the thinned points on the original data
+within the environmental grid.
 
 ```{r plot-thinning-results, fig.width=10, fig.height=8}
 # Visualize the stochastic thinning results
-plot_stochastic <- plot_bean(
+plot_bean(
   original_data = origin_dat_prepared,
   thinned_object = thinned_stochastic,
-  env_vars = c("PC1", "PC2", "PC3")
+  env_vars = c("bio_1","bio_4", "bio_12", "bio_15")
 )
 
 # Visualize the deterministic thinning results
-plot_deterministic <- plot_bean(
+plot_bean(
   original_data = origin_dat_prepared,
   thinned_object = thinned_deterministic,
-  env_vars = c("PC1", "PC2", "PC3")
+  env_vars = c("bio_1","bio_4", "bio_12", "bio_15")
+)
+```
+
+```{r}
+# Visualize the spatial distribution of the occurrence and thinned points
+# Combine the data and add a label for the partition
+plot_data <- dplyr::bind_rows(
+  occ_data_raw %>% dplyr::mutate(Data_Type = "Original (Raw)"),
+  thinned_stochastic$thinned_data %>% dplyr::mutate(Data_Type = "Thinned (Stochastic)")
 )
 
-# Display plots side-by-side (requires cowplot or similar package)
-# cowplot::plot_grid(plot_stochastic, plot_deterministic)
-plot_stochastic
-plot_deterministic
-```
+# Lock the order so "Original" is always on the left partition
+plot_data$Data_Type <- factor(plot_data$Data_Type, levels = c("Original (Raw)", "Thinned (Stochastic)"))
 
-### Step 7: Delineate and Visualize the Niche Ellipse
-
-After thinning, we can formalize the environmental niche by fitting a bivariate ellipse around the points. The `fit_ellipsoid()` function delineates this boundary.
-
-### Stochastic Thinned Ellipsoid 
-
-```{r fit-ellipse-part1, rgl=TRUE, fig.cap="3D Stochastic Ellipsoid"}
-# Fit an ellipse that contains 95% of the thinned data
-stochastic_ellipse <- fit_ellipsoid(data = thinned_stochastic$thinned_data, 
-                                    env_vars = c("PC1", "PC2", "PC3"), 
-                                    method = "covmat", 
-                                    level = 0.95)
-# The returned object contains all the details
-# We can use the custom print() method for a clean summary
-stochastic_ellipse
-
-# And we can use the custom plot() method for a powerful visualization
-plot(stochastic_ellipse)
-```
-
-### Deterministic Thinned Ellipsoid 
-
-```{r fit-ellipse-part2, rgl=TRUE, fig.cap="3D Deterministic Ellipsoid"}
-# Fit an ellipse that contains 95% of the thinned data
-deterministic_ellipse <- fit_ellipsoid(data = thinned_deterministic$thinned_points,
-                                       env_vars = c("PC1", "PC2", "PC3"), 
-                                       method = "covmat", 
-                                       level = 0.95)
-# The returned object contains all the details
-# We can use the custom print() method for a clean summary
-deterministic_ellipse
-
-# And we can use the custom plot() method for a powerful visualization
-plot(deterministic_ellipse)
-```
-
-### Step 8: Evaluate Model Performance
-
-Finally, we test whether thinning improved our model. We will build and evaluate two sets of Maxent models—one with the original (but cleaned) data and one with the `bean`-thinned data—and then statistically compare their performance.
-
-```{r model-evaluation-1}
-# Create background points by sampling from the study area
-# Note: We use the unscaled rasters here for sampling background points.
-set.seed(123)
-
-# Create background points by sampling from the study area
-background_points <- randomPoints(raster::stack(env_pca), 1000)
-colnames(background_points) <- c("x", "y")
-```
-
-```{r model-evaluation-2, warning = FALSE, message = FALSE, fig.width=10, fig.height=8}
-# --- Run Evaluation on ORIGINAL Data ---
-# Note: In a real analysis, use a higher n_repeats (e.g., 50 or 100).
-auc_original <- test_env_thinning(
-  presence_data = origin_dat_prepared, # Use the cleaned, but unthinned data
-  background_data = background_points,
-  env_rasters = env_pca,
-  longitude = "x",
-  latitude = "y", 
-  k = 5, 
-  n_repeats = 20,
-  maxent_args = c("linear=true", 
-                  "quadratic=true", 
-                  "product=false",
-                  "threshold=false", 
-                  "hinge=false", 
-                  "doclamp=false")
-)
-
-auc_original
-plot(auc_original)
-```
-
-```{r model-evaluation-3, warning = FALSE, message = FALSE, fig.width=10, fig.height=8}
-# --- Run Evaluation on THINNED Data ---
-auc_thinned <- test_env_thinning(
-  presence_data = stochastic_ellipse$points_in_ellipse, # Use the thinned data
-  background_data = background_points,
-  env_rasters = env_pca,
-  longitude = "x",
-  latitude = "y", 
-  k = 5, 
-  n_repeats = 20,
-  maxent_args = c("linear=true", 
-                  "quadratic=true", 
-                  "product=false",
-                  "threshold=false", 
-                  "hinge=false", 
-                  "doclamp=false")
-)
-
-auc_thinned
-plot(auc_thinned)
-```
-
-```{r model-evaluation-4, fig.width=10, fig.height=8}
-# --- Statistically Compare the Results ---
-# Perform a two-sample t-test to see if the difference in AUC is significant
-auc_ttest <- t.test(auc_original$all_auc_scores, auc_thinned$all_auc_scores)
-auc_ttest
-
-# --- Visualize the Comparison ---
-# Combine results into a data frame for plotting
-results_df <- data.frame(
-  AUC = c(auc_original$all_auc_scores, auc_thinned$all_auc_scores),
-  DataType = factor(
-    rep(c("Original", "Thinned"), 
-        each = length(auc_original$all_auc_scores)), 
-    levels = c("Original", "Thinned")
-  )
-)
-
-# Create the final comparison boxplot
-ggplot(results_df, aes(x = DataType, y = AUC, fill = DataType)) +
-  geom_boxplot(alpha = 0.7, width = 0.5) +
-  labs(
-    title = "Comparison of Model Performance (AUC)",
-    subtitle = "Comparing models built with original vs. bean-thinned data",
-    x = "Presence Data Type",
-    y = "Area Under Curve (AUC)"
-  ) +
-  scale_fill_manual(values = c("Original" = "#D55E00", "Thinned" = "#0072B2")) +
-  theme_bw() +
-  theme(legend.position = "none",
-        plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text(hjust = 0.5)) +
-  annotate("text", x = 1.5, y = min(results_df$AUC) * 0.99,
-           label = paste("T-test p-value =", format.pval(auc_ttest$p.value, digits = 3)),
-           hjust = 0.5, vjust = 0, fontface = "italic", size = 4)
-```
-
-### Step 9: Automated Calibration with `calibrate_bean`
-
-The manual steps above are excellent for understanding the process, but the `calibrate_bean()` function automates the entire workflow. It is the "final boss" of the package, testing multiple combinations of thinning parameters (`quantile`, `method`, `cap`) and identifying the single best set based on final model performance (AUC). It also provides statistical comparisons against baseline models.
-
-## Generalist Model Calibration
-
-```{r calibrate-bean-1}
-# Create background points for model evaluation
-set.seed(123)
-background_df <- as.data.frame(
-  dismo::randomPoints(raster::stack(env_pca), 1000)
-)
-colnames(background_df) <- c("x", "y")
-```
-```{r calibrate-bean-2, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
-set.seed(81)
-# Calibrate all key parameters
-# Note: In a real analysis, use higher thinning_reps and n_repeats.
-generalist_calibration <- calibrate_bean(
-  data = origin_dat_prepared,
-  env_vars = c("PC1", "PC2", "PC3"),
-  background_data = background_df,
-  env_rasters = env_pca,
-  longitude = "x",
-  latitude = "y",
-  quantile_range = seq(0.05, 0.95, 0.05), 
-  method_range = c("covmat", "mve"),     
-  target_percent = 0.95,
-  level = 0.95,
-  thinning_reps = 4, 
-  k = 5,
-  n_repeats = 10,      
-  maxent_args = c("linear=true", 
-                  "quadratic=true", 
-                  "product=false",
-                  "threshold=false", 
-                  "hinge=false", 
-                  "doclamp=false"
-))
-```
-```{r calibrate-bean-3, eval=FALSE}
-set.seed(81)
-# Calibrate all key parameters
-# Note: In a real analysis, use higher thinning_reps and n_repeats.
-generalist_calibration <- calibrate_bean(
-  data = origin_dat_prepared,
-  env_vars = c("PC1", "PC2", "PC3"),
-  background_data = background_df,
-  env_rasters = env_pca,
-  longitude = "x",
-  latitude = "y",
-  quantile_range = seq(0.05, 0.95, 0.05), 
-  method_range = c("covmat", "mve"),     
-  target_percent = 0.95,
-  level = 0.95,
-  thinning_reps = 4, 
-  k = 5,
-  n_repeats = 10,      
-  maxent_args = c("linear=true", 
-                  "quadratic=true", 
-                  "product=false",
-                  "threshold=false", 
-                  "hinge=false", 
-                  "doclamp=false"
-))
-```
-```{r calibrate-bean-4, warning=FALSE, message=FALSE, fig.width=14, fig.height=8}
-# Print the summary table to see the best combination of parameters
-generalist_calibration
-
-# Plot the results to visualize the performance trade-offs
-plot(generalist_calibration)
-
-# You can now access the final, best-thinned data directly for your final model
-generalist_data <- generalist_calibration$best_points_in_ellipse
-head(generalist_data)
-```
-
-## Specialist Model Calibration
-
-```{r calibrate-bean-5}
-specialist <- read.csv("inst/extdata/Ursus_arctos.csv")
-
-specialist_prepared <- prepare_bean(
-  data = specialist,
-  env_rasters = env_pca,
-  longitude = "x",
-  latitude = "y",
-  transform = "none"
-)
-
-# Visualize the spatial distribution of the specialist occurrence points
-ggplot(specialist_prepared, aes(x = x, y = y)) +
+# Plot with a partition (facet_wrap)
+ggplot(plot_data, aes(x = x, y = y)) +
+  geom_raster(data = as.data.frame(env[[1]], xy = TRUE), aes(x = x, y = y), fill = "gray80") +
   geom_point(alpha = 0.5, color = "darkred") +
   coord_fixed() +
-  labs(title = "Raw Occurrence Point Distribution") +
-  theme_bw()
-
-# Create background points for model evaluation
-set.seed(123)
-background_df <- as.data.frame(
-  dismo::randomPoints(raster::stack(env_pca), 1000)
-)
-colnames(background_df) <- c("x", "y")
+  facet_wrap(~Data_Type) + # <--- This creates the partition line!
+  labs(title = "Spatial Point Distribution",
+       x = "Longitude", y = "Latitude") +
+  theme_classic() +
+  theme(strip.background = element_rect(fill = "grey90"),
+        strip.text = element_text(face = "bold"))
 ```
-```{r calibrate-bean-6, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
-# Calibrate all key parameters
-# Note: In a real analysis, use higher thinning_reps and n_repeats.
-specialist_calibration <- calibrate_bean(
-  data = specialist_prepared,
-  env_vars = c("PC1", "PC2", "PC3"),
-  background_data = background_df,
-  env_rasters = env_pca,
-  longitude = "x",
-  latitude = "y",
-  quantile_range = seq(0.05, 0.95, 0.05), 
-  method_range = c("covmat", "mve"),      
-  target_percent = 0.50,
-  level = 0.95,
-  thinning_reps = 3, 
-  k = 5,
-  n_repeats = 10,      
-  maxent_args = c("linear=true", 
-                  "quadratic=true", 
-                  "product=false",
-                  "threshold=false", 
-                  "hinge=false", 
-                  "doclamp=false"
-))
-```
-```{r calibrate-bean-7, eval=FALSE}
-# Calibrate all key parameters
-# Note: In a real analysis, use higher thinning_reps and n_repeats.
-specialist_calibration <- calibrate_bean(
-  data = specialist_prepared,
-  env_vars = c("PC1", "PC2", "PC3"),
-  background_data = background_df,
-  env_rasters = env_pca,
-  longitude = "x",
-  latitude = "y",
-  quantile_range = seq(0.05, 0.95, 0.05), 
-  method_range = c("covmat", "mve"),      
-  target_percent = 0.50,
-  level = 0.95,
-  thinning_reps = 3, 
-  k = 5,
-  n_repeats = 10,      
-  maxent_args = c("linear=true", 
-                  "quadratic=true", 
-                  "product=false",
-                  "threshold=false", 
-                  "hinge=false", 
-                  "doclamp=false"
-))
-```
-```{r calibrate-bean-8, warning=FALSE, message=FALSE, fig.width=14, fig.height=8}
-# Print the summary table to see the best combination of parameters
-specialist_calibration
 
-# Plot the results to visualize the performance trade-offs
-plot(specialist_calibration)
+### Step 6: Delineate and Visualize the Niche Ellipse
 
-# You can now access the final, best-thinned data directly for your final model
-specialist_data <- specialist_calibration$best_points_in_ellipse
-head(specialist_data)
+After thinning, we can formalize the environmental niche by fitting a
+bivariate ellipse around the points. The `fit_ellipsoid()` function
+delineates this boundary.
+
+### Original Ellipsoid
+
+```{r fit-ellipse-part1, rgl=TRUE, fig.cap="3D Stochastic Ellipsoid"}
+# Fit an ellipse that contains 95% of the original data
+origin_ellipse <- fit_ellipsoid(data = origin_dat_prepared, 
+                                env_vars = c("bio_1","bio_4", "bio_12", "bio_15"), 
+                                method = "covmat", 
+                                level = 0.95)
+# The returned object contains all the details
+origin_ellipse
+
+# And we can use the custom plot() method for a powerful visualization
+plot(origin_ellipse, dims = c(1, 2))
+# For interactive 3D: 
+plot(origin_ellipse, dims = c(1, 2, 3))
+```
+
+### Stochastic Thinned Ellipsoid
+
+```{r fit-ellipse-part2, rgl=TRUE, fig.cap="3D Stochastic Ellipsoid"}
+# Fit an ellipse that contains 95% of the thinned data
+stochastic_ellipse <- fit_ellipsoid(data = thinned_stochastic$thinned_data, 
+                                    env_vars = c("bio_1","bio_4", "bio_12", "bio_15"), 
+                                    method = "covmat", 
+                                    level = 0.95)
+stochastic_ellipse
+
+plot(stochastic_ellipse, dims = c(1, 2))
+# For interactive 3D: 
+plot(stochastic_ellipse, dims = c(1, 2, 3))
+```
+
+### Deterministic Thinned Ellipsoid
+
+```{r fit-ellipse-part3, rgl=TRUE, fig.cap="3D Deterministic Ellipsoid"}
+# Fit an ellipse that contains 95% of the thinned data
+deterministic_ellipse <- fit_ellipsoid(data = thinned_deterministic$thinned_points,
+                                       env_vars = c("bio_1","bio_4", "bio_12", "bio_15"), 
+                                       method = "covmat", 
+                                       level = 0.95)
+deterministic_ellipse
+
+plot(deterministic_ellipse, dims = c(1, 2))
+# For interactive 3D: 
+plot(deterministic_ellipse, dims = c(1, 2, 3))
+```
+
+### Step 7: Predict Niche Suitability
+
+Finally, we project the learned fundamental niche back into geographic
+space. The `predict` method calculates the continuous Mahalanobis
+distance and suitability scores across the landscape.
+
+```{r}
+# Predict using the unthinned ellipsoid
+origin_pred <- predict(object = origin_ellipse,
+                       newdata = env,
+                       include_suitability = TRUE,
+                       suitability_truncated = TRUE,
+                       include_mahalanobis = TRUE,
+                       mahalanobis_truncated = TRUE)
+plot(origin_pred)
+```
+
+```{r}
+# Predict using the stochastic thinned ellipsoid
+stochastic_pred <- predict(object = stochastic_ellipse,
+                           newdata = env,
+                           include_suitability = TRUE,
+                           suitability_truncated = TRUE,
+                           include_mahalanobis = TRUE,
+                           mahalanobis_truncated = TRUE)
+plot(stochastic_pred)
+```
+
+```{r}
+# Predict using the deterministic thinned ellipsoid
+deterministic_pred <- predict(object = deterministic_ellipse,
+                              newdata = env,
+                              include_suitability = TRUE,
+                              suitability_truncated = TRUE,
+                              include_mahalanobis = TRUE,
+                              mahalanobis_truncated = TRUE)
+plot(deterministic_pred)
 ```
 
 ### The End ❤️
