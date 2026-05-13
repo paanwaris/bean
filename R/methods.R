@@ -26,6 +26,7 @@
 #'   containing the requested prediction layers.
 #'
 #' @export
+#' @name predict.ellipsoid_bean
 #' @method predict bean_ellipsoid
 #' @importFrom stats mahalanobis qchisq complete.cases
 predict.bean_ellipsoid <- function(object, newdata,
