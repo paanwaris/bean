@@ -20,4 +20,4 @@ origin_ellipse
 A multidimensional ellipsoid fitted to the unthinned, prepared occurrence data
 representing the baseline environmental niche of the species.
 }
-\keyword{datasets}
+\keyword{internal}
