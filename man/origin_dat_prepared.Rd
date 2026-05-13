@@ -24,4 +24,4 @@ A dataset containing the cleaned and scaled occurrence records ready for
 environmental thinning. Missing coordinates and points outside the raster
 extent have been removed, and environmental data has been extracted.
 }
-\keyword{datasets}
+\keyword{internal}
