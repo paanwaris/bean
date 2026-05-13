@@ -1,0 +1,99 @@
+---
+title: "Environmental thinning"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Environmental thinning}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 7,
+  dpi = 100,
+  out.width = "95%"
+)
+```
+
+Load the package
+
+```{r}
+library(bean)
+library(terra)
+library(rgl)
+```
+
+# Step 3: Objective Grid Resolution using Nearest Neighbors
+
+The most critical parameter in environmental gridding is the
+`grid_resolution`. Instead of guessing this value, we can derive it
+objectively from the data by analyzing the density of points in
+environmental space.
+
+The `find_env_resolution()` function uses a geometric "elbow" method
+based on nearest-neighbor distances. This identifies the exact distance
+where dense artificial clustering transitions into natural data spacing,
+eliminating the need for arbitrary quantiles.
+
+```{r find-resolution, fig.width=12, fig.height=6}
+data(origin_dat_prepared, package = "bean")
+# Find the objective resolution using the elbow method
+resolution_results <- find_env_resolution(
+  data = origin_dat_prepared,
+  env_vars = c("bio_1", "bio_4", "bio_12", "bio_15")
+)
+
+plot(resolution_results)
+
+# Let's use this objective resolution in the next step
+grid_res <- resolution_results$suggested_resolution
+grid_res
+```
+
+# Step 4: Apply Thinning
+
+Now that we have an objective, data-driven `grid_resolution`, we can
+apply the thinning. We offer two methods: stochastic and deterministic.
+
+## Method A: Stochastic Thinning with `thin_env_nd`
+
+This method randomly samples exactly one point from each occupied grid
+cell, enforcing strict presence-only logic within the environmental
+hypercube.
+
+```{r find-and-thin-part2}
+# Apply the stochastic thinning (using a seed for reproducibility)
+thinned_stochastic <- thin_env_nd(
+  data = origin_dat_prepared,
+  env_vars = c("bio_1","bio_4", "bio_12", "bio_15"),
+  grid_resolution = grid_res
+)
+
+# Print the summary of the thinning results
+thinned_stochastic
+head(thinned_stochastic$thinned_data)
+```
+
+## Method B: Deterministic Thinning with `thin_env_center`
+
+This method provides a simpler, non-random alternative. It returns a
+single new point at the exact center of every occupied grid cell,
+regardless of how many original points fell within it.
+
+```{r thin-center}
+# Apply the deterministic thinning
+thinned_deterministic <- thin_env_center(
+  data = origin_dat_prepared,
+  env_vars = c("bio_1","bio_4", "bio_12", "bio_15"),
+  grid_resolution = c(0.5,0.5,0.5,0.5)
+)
+
+# Print the summary of the thinning results
+thinned_deterministic
+head(thinned_deterministic$thinned_points)
+```
