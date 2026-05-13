@@ -4,6 +4,7 @@
 # bean 🫛
 
 Paanwaris Paansri and Luis E. Escobar
+<img src="man/figures/logo.png" align="right" height="150" alt="Hexagon sticker for the bean package featuring a green bean pod in environmental space" />
 
 <!-- badges: start -->
 
@@ -14,8 +15,6 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <!-- badges: end -->
-
-<img src="man/figures/logo.png" align="right" width="25%"/>
 
 ## Ecological Motivation
 
