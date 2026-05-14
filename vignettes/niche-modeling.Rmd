@@ -89,6 +89,12 @@ space. The `predict` method calculates the continuous Mahalanobis
 distance and suitability scores across the landscape.
 
 ```{r}
+# Load the environmental raster layers
+thai_env_file <- system.file("extdata", "thai_env.tif", package = "bean")
+env <- terra::rast(c(thai_env_file))
+```
+
+```{r}
 # Predict using the unthinned ellipsoid
 origin_pred <- predict(object = origin_ellipse,
                        newdata = env,
