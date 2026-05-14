@@ -117,11 +117,17 @@
 <h3 id="id_1-data-preparation">1. Data Preparation<a class="anchor" aria-label="anchor" href="#id_1-data-preparation"></a>
 </h3>
 <p>The <code><a href="reference/prepare_bean.html">prepare_bean()</a></code> function cleans raw occurrence data by removing missing coordinates and extracting environmental values from raster layers. This ensures all subsequent analyses use a clean, scaled dataset.</p>
+<blockquote>
+<p>See the <a href="https://paanwaris.github.io/bean/articles/data-preparation.html">Preparing bean</a> vignette.</p>
+</blockquote>
 </div>
 <div class="section level3">
 <h3 id="id_2-objective-grid-resolution">2. Objective Grid Resolution<a class="anchor" aria-label="anchor" href="#id_2-objective-grid-resolution"></a>
 </h3>
 <p>Instead of arbitrary thinning, <code><a href="reference/find_env_resolution.html">find_env_resolution()</a></code> uses a geometric <strong>“elbow” method</strong> based on nearest-neighbor distances in E-space. This identifies the exact distance where dense artificial clustering transitions into natural data spacing.</p>
+<blockquote>
+<p>See the <a href="https://paanwaris.github.io/bean/articles/environmental-thinning.html">Finding the environmental resolution</a> vignette.</p>
+</blockquote>
 </div>
 <div class="section level3">
 <h3 id="id_3-apply-thinning">3. Apply Thinning<a class="anchor" aria-label="anchor" href="#id_3-apply-thinning"></a>
@@ -131,16 +137,25 @@
 <li><p>Stochastic (<code>thin_env_nd</code>): Randomly samples one “bean” from each occupied “pod”.</p></li>
 <li><p>Deterministic (<code>thin_env_center</code>): Generates a new point at the exact center of every occupied grid cell.</p></li>
 </ul>
+<blockquote>
+<p>See the <a href="https://paanwaris.github.io/bean/articles/environmental-thinning.html">Apply thinning</a> vignette.</p>
+</blockquote>
 </div>
 <div class="section level3">
 <h3 id="id_4-niche-delineation">4. Niche Delineation<a class="anchor" aria-label="anchor" href="#id_4-niche-delineation"></a>
 </h3>
 <p>The <code><a href="reference/fit_ellipsoid.html">fit_ellipsoid()</a></code> function formalizes the environmental niche by fitting a bivariate or multivariate ellipse around the thinned points.</p>
+<blockquote>
+<p>See the <a href="https://paanwaris.github.io/bean/articles/niche-modeling.html">Niche delineation</a> vignette.</p>
+</blockquote>
 </div>
 <div class="section level3">
 <h3 id="id_5-prediction-and-mapping">5. Prediction and Mapping<a class="anchor" aria-label="anchor" href="#id_5-prediction-and-mapping"></a>
 </h3>
 <p>Using the learned niche, <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> projects the results back to geographic space. This step emphasizes the ellipsoid-based approach is used to calculate suitability scores from the delineated niche boundaries.</p>
+<blockquote>
+<p>See the <a href="https://paanwaris.github.io/bean/articles/niche-modeling.html">Prediction and mapping</a> vignette.</p>
+</blockquote>
 </div>
 </div>
 <div class="section level2">

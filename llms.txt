@@ -75,6 +75,10 @@ function cleans raw occurrence data by removing missing coordinates and
 extracting environmental values from raster layers. This ensures all
 subsequent analyses use a clean, scaled dataset.
 
+> See the [Preparing
+> bean](https://paanwaris.github.io/bean/articles/data-preparation.html)
+> vignette.
+
 ### 2. Objective Grid Resolution
 
 Instead of arbitrary thinning,
@@ -82,6 +86,10 @@ Instead of arbitrary thinning,
 uses a geometric **“elbow” method** based on nearest-neighbor distances
 in E-space. This identifies the exact distance where dense artificial
 clustering transitions into natural data spacing.
+
+> See the [Finding the environmental
+> resolution](https://paanwaris.github.io/bean/articles/environmental-thinning.html)
+> vignette.
 
 ### 3. Apply Thinning
 
@@ -93,12 +101,20 @@ clustering transitions into natural data spacing.
 - Deterministic (`thin_env_center`): Generates a new point at the exact
   center of every occupied grid cell.
 
+> See the [Apply
+> thinning](https://paanwaris.github.io/bean/articles/environmental-thinning.html)
+> vignette.
+
 ### 4. Niche Delineation
 
 The
 [`fit_ellipsoid()`](https://paanwaris.github.io/bean/reference/fit_ellipsoid.md)
 function formalizes the environmental niche by fitting a bivariate or
 multivariate ellipse around the thinned points.
+
+> See the [Niche
+> delineation](https://paanwaris.github.io/bean/articles/niche-modeling.html)
+> vignette.
 
 ### 5. Prediction and Mapping
 
@@ -107,6 +123,10 @@ Using the learned niche,
 back to geographic space. This step emphasizes the ellipsoid-based
 approach is used to calculate suitability scores from the delineated
 niche boundaries.
+
+> See the [Prediction and
+> mapping](https://paanwaris.github.io/bean/articles/niche-modeling.html)
+> vignette.
 
 ## Checking the Vignettes
 
