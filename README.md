@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# bean 🫛
+# bean 🫛 <a href="https://paanwaris.github.io/bean/"><img src="man/figures/logo.png" alt="bean website" align="right" height="138"/></a>
 
 Paanwaris Paansri and Luis E. Escobar
 
