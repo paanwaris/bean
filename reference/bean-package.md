@@ -24,11 +24,12 @@ Useful links:
 ## Author
 
 **Maintainer**: Paanwaris Paansri <paanwaris@vt.edu>
+([ORCID](https://orcid.org/0000-0001-9992-098X))
 
 Authors:
 
 - Paanwaris Paansri <paanwaris@vt.edu>
+  ([ORCID](https://orcid.org/0000-0001-9992-098X))
 
-Other contributors:
-
-- Luis E. Escobar <escobar1@vt.edu> \[contributor\]
+- Luis E. Escobar <escobar1@vt.edu>
+  ([ORCID](https://orcid.org/0000-0001-5735-2750)) \[contributor\]
