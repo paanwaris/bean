@@ -104,8 +104,8 @@ multivariate ellipse around the thinned points.
 
 Using the learned niche,
 [`predict()`](https://rdrr.io/r/stats/predict.html) projects the results
-back to geographic space. This step emphasizes that algorithms like
-**MaxEnt** are used to calculate suitability scores from the delineated
+back to geographic space. This step emphasizes the ellipsoid-based
+approach is used to calculate suitability scores from the delineated
 niche boundaries.
 
 ## Checking the Vignettes
