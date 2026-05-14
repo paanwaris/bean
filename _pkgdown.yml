@@ -47,9 +47,9 @@ reference:
       - find_env_resolution
       - thin_env_nd
       - thin_env_center
+      - plot_bean
   - title: Modeling & Visualization
     desc: Functions for fundamental niche delineation and predicting suitability.
     contents:
       - fit_ellipsoid
-      - plot_bean
       - predict.ellipsoid_bean
