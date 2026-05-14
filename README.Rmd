@@ -126,8 +126,8 @@ fitting a bivariate or multivariate ellipse around the thinned points.
 ### 5. Prediction and Mapping
 
 Using the learned niche, `predict()` projects the results back to
-geographic space. This step emphasizes that algorithms like **MaxEnt**
-are used to calculate suitability scores from the delineated niche
+geographic space. This step emphasizes the ellipsoid-based approach
+is used to calculate suitability scores from the delineated niche
 boundaries.
 
 ## Checking the Vignettes
