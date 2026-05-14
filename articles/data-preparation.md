@@ -5,11 +5,7 @@ Load the package
 ``` r
 
 library(bean)
-#> Warning in rgl.init(initValue, onlyNULL): RGL: unable to open X11 display
-#> Warning: 'rgl.init' failed, will use the null device.
-#> See '?rgl.useNULL' for ways to avoid this warning.
 library(terra)
-#> terra 1.9.27
 library(rgl)
 library(ggplot2)
 ```
@@ -52,7 +48,6 @@ plot(env, mar = c(1, 1, 2, 4))
 
 ``` r
 
-
 # Visualize the spatial distribution of the occurrence points
 ggplot(occ_data_raw, aes(x = x, y = y)) +
   geom_raster(data = as.data.frame(env[[1]], xy = TRUE), aes(x = x, y = y), fill = "gray80") +
@@ -62,7 +57,7 @@ ggplot(occ_data_raw, aes(x = x, y = y)) +
   theme_classic()
 ```
 
-![](data-preparation_files/figure-html/setup-2-2.png)
+![](data-preparation_files/figure-html/setup-3-1.png)
 
 ## Step 2: Prepare Data for Environmental Thinning
 

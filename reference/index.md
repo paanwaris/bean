@@ -19,6 +19,8 @@ space (E-space).
   : Thin occurrence data in n-dimensional environmental space
 - [`thin_env_center()`](https://paanwaris.github.io/bean/reference/thin_env_center.md)
   : Deterministic centroid
+- [`plot_bean()`](https://paanwaris.github.io/bean/reference/plot_bean.md)
+  : Visualize n-dimensional environmental thinning results
 
 ## Modeling & Visualization
 
@@ -26,7 +28,5 @@ Functions for fundamental niche delineation and predicting suitability.
 
 - [`fit_ellipsoid()`](https://paanwaris.github.io/bean/reference/fit_ellipsoid.md)
   : Outlier removal
-- [`plot_bean()`](https://paanwaris.github.io/bean/reference/plot_bean.md)
-  : Visualize n-dimensional environmental thinning results
 - [`predict(`*`<bean_ellipsoid>`*`)`](https://paanwaris.github.io/bean/reference/predict.ellipsoid_bean.md)
   : Predict suitability and Mahalanobis distance from a bean ellipsoid
