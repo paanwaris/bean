@@ -51,7 +51,7 @@ resolution_results <- find_env_resolution(
 plot(resolution_results)
 ```
 
-```{r find-resolution, fig.width=12, fig.height=6}
+```{r}
 # Let's use this objective resolution in the next step
 grid_res <- resolution_results$suggested_resolution
 grid_res
