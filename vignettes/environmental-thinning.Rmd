@@ -26,6 +26,7 @@ Load the package
 library(bean)
 library(terra)
 library(rgl)
+library(ggplot2)
 ```
 
 # Step 3: Objective Grid Resolution using Nearest Neighbors
