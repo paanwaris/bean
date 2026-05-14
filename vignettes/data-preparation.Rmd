@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 
 Load the package
 
-```{r}
+```{r, results='hide', message=FALSE, warning=FALSE}
 library(bean)
 library(terra)
 library(rgl)
@@ -52,7 +52,9 @@ env <- terra::rast(c(thai_env_file))
 
 # Plot the environmental layers to check their extent and values
 plot(env, mar = c(1, 1, 2, 4))
+```
 
+```{r setup-3}
 # Visualize the spatial distribution of the occurrence points
 ggplot(occ_data_raw, aes(x = x, y = y)) +
   geom_raster(data = as.data.frame(env[[1]], xy = TRUE), aes(x = x, y = y), fill = "gray80") +
