@@ -20,16 +20,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Paanwaris Paansri \email{paanwaris@vt.edu}
+\strong{Maintainer}: Paanwaris Paansri \email{paanwaris@vt.edu} (\href{https://orcid.org/0000-0001-9992-098X}{ORCID})
 
 Authors:
 \itemize{
-  \item Paanwaris Paansri \email{paanwaris@vt.edu}
-}
-
-Other contributors:
-\itemize{
-  \item Luis E. Escobar \email{escobar1@vt.edu} [contributor]
+  \item Paanwaris Paansri \email{paanwaris@vt.edu} (\href{https://orcid.org/0000-0001-9992-098X}{ORCID})
+  \item Luis E. Escobar \email{escobar1@vt.edu} (\href{https://orcid.org/0000-0001-5735-2750}{ORCID}) [contributor]
 }
 
 }
