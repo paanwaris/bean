@@ -15,7 +15,7 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 
 <!-- badges: end -->
 
-## Ecological Motivation 
+## Ecological Motivation
 
 The `bean` package provides a tool to address a fundamental challenge in
 species distribution modeling (SDM, or ecological niche modeling, ENM):
@@ -56,6 +56,10 @@ environmental space:
 - **Projection**: Maps the corrected niche back into geographic space
   for less biased predictions.
 
+A brief description of each step is presented below. For complete
+demonstrations, see the package vignettes listed in [Checking the
+vignettes](#sec-checking-the-vignettes).
+
 ## Installing the Package
 
 The development version of `bean` can be installed from GitHub:
@@ -85,12 +89,20 @@ missing coordinates and extracting environmental values from raster
 layers. This ensures all subsequent analyses use a clean, scaled
 dataset.
 
+> See the [Preparing
+> bean](https://paanwaris.github.io/bean/articles/data-preparation.html)
+> vignette.
+
 ### 2. Objective Grid Resolution
 
 Instead of arbitrary thinning, `find_env_resolution()` uses a geometric
 **“elbow” method** based on nearest-neighbor distances in E-space. This
 identifies the exact distance where dense artificial clustering
 transitions into natural data spacing.
+
+> See the [Finding the environmental
+> resolution](https://paanwaris.github.io/bean/articles/environmental-thinning.html)
+> vignette.
 
 ### 3. Apply Thinning
 
@@ -102,10 +114,18 @@ transitions into natural data spacing.
 - Deterministic (`thin_env_center`): Generates a new point at the exact
   center of every occupied grid cell.
 
+> See the [Apply
+> thinning](https://paanwaris.github.io/bean/articles/environmental-thinning.html)
+> vignette.
+
 ### 4. Niche Delineation
 
 The `fit_ellipsoid()` function formalizes the environmental niche by
 fitting a bivariate or multivariate ellipse around the thinned points.
+
+> See the [Niche
+> delineation](https://paanwaris.github.io/bean/articles/niche-modeling.html)
+> vignette.
 
 ### 5. Prediction and Mapping
 
@@ -113,6 +133,10 @@ Using the learned niche, `predict()` projects the results back to
 geographic space. This step emphasizes the ellipsoid-based approach is
 used to calculate suitability scores from the delineated niche
 boundaries.
+
+> See the [Prediction and
+> mapping](https://paanwaris.github.io/bean/articles/niche-modeling.html)
+> vignette.
 
 ## Checking the Vignettes
 
