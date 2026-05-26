@@ -34,7 +34,7 @@ origin_ellipse <- fit_ellipsoid(
   method   = "covmat",
   level    = 0.95
 )
-
+save(origin_ellipse, file = "origin_ellipse.rda")
 stochastic_ellipse <- fit_ellipsoid(
   data     = thinned_stochastic$thinned_data,
   env_vars = env_vars,
