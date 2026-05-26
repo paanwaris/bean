@@ -1,171 +1,245 @@
-#' Find objective environmental resolution using the Nearest Neighbor Elbow Method
+#' Find an objective environmental grid resolution
 #'
-#' @description Calculates an objective, data-driven grid resolution for environmental
-#' thinning. Instead of relying on user-defined quantiles, this function analyzes the
-#' 1D Nearest Neighbor (NN) distances for each environmental variable. It uses the
-#' geometric "elbow" method (point of maximum curvature) to identify the exact distance
-#' where dense artificial clustering transitions into natural data spacing.
+#' @description
+#' Calculates an objective, data-driven grid resolution for environmental
+#' thinning. For each environmental variable, the function selects a bandwidth
+#' for a kernel-density estimate (KDE) of the marginal distribution. The chosen
+#' bandwidth defines the spatial scale below which two observations carry
+#' essentially redundant information, and is therefore a natural choice for the
+#' edge length of an environmental grid cell.
 #'
-#' @param data A data.frame containing environmental variables.
-#' @param env_vars A character vector specifying the environmental variables to analyze.
+#' Three established bandwidth selectors are supported (see Details):
+#' \itemize{
+#'   \item \code{"sheather-jones"} (default) — the Sheather–Jones direct
+#'         plug-in estimator (Sheather & Jones, 1991), the modern recommended
+#'         default for non-Gaussian data;
+#'   \item \code{"silverman"} — Silverman's rule of thumb (Silverman, 1986);
+#'   \item \code{"scott"} — Scott's rule (Scott, 1992).
+#' }
 #'
-#' @return An object of class \code{bean_env_resolution}
+#' @param data A \code{data.frame} containing the environmental variables.
+#' @param env_vars A character vector specifying the environmental variables to
+#'   analyse.
+#' @param method The bandwidth selector. One of \code{"sheather-jones"}
+#'   (default), \code{"silverman"}, or \code{"scott"}.
+#'
+#' @return An object of class \code{bean_env_resolution} (a list) with:
+#'   \describe{
+#'     \item{\code{suggested_resolution}}{A named numeric vector of the
+#'           suggested grid resolution for each variable, in the units of that
+#'           variable.}
+#'     \item{\code{bandwidths}}{The bandwidths used to derive each resolution
+#'           (identical to \code{suggested_resolution}).}
+#'     \item{\code{density_data}}{A long-format \code{data.frame} of the kernel
+#'           density estimates, used by \code{\link{plot.bean_env_resolution}}.}
+#'     \item{\code{method}}{The bandwidth selector that was used.}
+#'   }
+#'
+#' @details
+#' \strong{Why a bandwidth?} A good environmental grid cell should be small
+#' enough to distinguish ecologically meaningful differences, but large enough
+#' to absorb sampling noise. A kernel density bandwidth chosen from the data
+#' answers exactly that question: it is the scale at which the empirical
+#' density of observations becomes smooth. Using it as the grid resolution
+#' yields one occurrence per cell on average when the sampling intensity is
+#' near the mode of the data.
+#'
+#' \strong{Selectors.}
+#' \itemize{
+#'   \item \emph{Sheather–Jones} (\code{stats::bw.SJ} with \code{method = "dpi"})
+#'         is a plug-in selector that is robust for non-Gaussian densities and
+#'         is the standard recommendation in the modern literature (Sheather &
+#'         Jones, 1991; Jones, Marron & Sheather, 1996). Recommended default.
+#'   \item \emph{Silverman} (\code{stats::bw.nrd0}) is the rule-of-thumb
+#'         \eqn{h = 0.9 \, \min(\hat\sigma, IQR/1.34) \, n^{-1/5}} (Silverman,
+#'         1986). Fast and stable, but assumes near-Gaussian shape.
+#'   \item \emph{Scott} (\code{stats::bw.nrd}) is the Gaussian-optimal rule
+#'         \eqn{h = 1.06 \, \hat\sigma \, n^{-1/5}} (Scott, 1992). Simpler than
+#'         Silverman but less robust to outliers.
+#' }
+#'
+#' If \code{"sheather-jones"} fails (this can happen with strongly tied data),
+#' the function falls back to Silverman's rule for that variable and emits a
+#' \code{message()}.
+#'
+#' @references
+#' Sheather, S. J. & Jones, M. C. (1991). A reliable data-based bandwidth
+#' selection method for kernel density estimation. \emph{Journal of the Royal
+#' Statistical Society: Series B}, 53(3), 683–690.
+#'
+#' Silverman, B. W. (1986). \emph{Density Estimation for Statistics and Data
+#' Analysis}. Chapman & Hall, London.
+#'
+#' Scott, D. W. (1992). \emph{Multivariate Density Estimation: Theory,
+#' Practice, and Visualization}. Wiley, New York.
+#'
+#' Jones, M. C., Marron, J. S. & Sheather, S. J. (1996). A brief survey of
+#' bandwidth selection for density estimation. \emph{Journal of the American
+#' Statistical Association}, 91(433), 401–407.
+#'
+#' @seealso \code{\link{thin_env_nd}}, \code{\link{thin_env_center}},
+#'   \code{\link[stats]{bw.SJ}}, \code{\link[stats]{bw.nrd0}}.
+#'
+#' @examples
+#' set.seed(1)
+#' df <- data.frame(
+#'   bio1  = c(rnorm(200, 15, 2), rnorm(50, 25, 1)),
+#'   bio12 = c(rnorm(200, 1200, 200), rnorm(50, 2500, 100))
+#' )
+#' res <- find_env_resolution(df, env_vars = c("bio1", "bio12"))
+#' res$suggested_resolution
+#' \donttest{plot(res)}
+#'
 #' @export
-find_env_resolution <- function(data, env_vars) {
+#' @importFrom stats bw.SJ bw.nrd0 bw.nrd density complete.cases sd
+find_env_resolution <- function(data,
+                                env_vars,
+                                method = c("sheather-jones",
+                                           "silverman",
+                                           "scott")) {
 
-  # --- Input Validation ---
+  # --- Input validation ---------------------------------------------------
+  method <- match.arg(method)
+  if (!is.data.frame(data)) {
+    stop("`data` must be a data.frame.", call. = FALSE)
+  }
   if (!all(env_vars %in% names(data))) {
-    stop("One or more `env_vars` not found in the data frame")
+    missing_vars <- setdiff(env_vars, names(data))
+    stop("Variables not found in `data`: ",
+         paste(missing_vars, collapse = ", "), call. = FALSE)
   }
 
-  clean_data <- data[stats::complete.cases(data[, env_vars]), env_vars, drop = FALSE]
+  clean_data <- data[stats::complete.cases(data[, env_vars, drop = FALSE]),
+                     env_vars, drop = FALSE]
 
   if (nrow(clean_data) < 4) {
-    stop("At least 4 complete observations are needed to calculate an elbow curve.")
+    stop("At least four complete observations are required.", call. = FALSE)
   }
 
-  cat("Calculating nearest neighbor environmental distances and detecting elbows...\n")
+  # --- Per-variable bandwidth estimation ----------------------------------
+  bws <- vapply(env_vars, function(v) {
+    x <- clean_data[[v]]
+    .bean_bandwidth(x, method = method, var_name = v)
+  }, numeric(1))
+  names(bws) <- env_vars
 
-  resolution_list <- lapply(env_vars, function(var) {
-    val <- clean_data[[var]]
-    n <- length(val)
-
-    # 1. Fast 1D Nearest Neighbor Calculation (O(n log n))
-    sorted_val <- sort(val)
-    nn_distances <- numeric(n)
-
-    # Edges only have one neighbor
-    nn_distances[1] <- sorted_val[2] - sorted_val[1]
-    nn_distances[n] <- sorted_val[n] - sorted_val[n-1]
-
-    # Middle points look left and right for the closest neighbor
-    for(i in 2:(n-1)) {
-      nn_distances[i] <- min(sorted_val[i] - sorted_val[i-1],
-                             sorted_val[i+1] - sorted_val[i])
-    }
-
-    # 2. Sort the NN distances to form the growth curve
-    sorted_nn <- sort(nn_distances)
-
-    # 3. Geometric Elbow Detection (Kneedle Algorithm Logic)
-    x <- 1:n
-    y <- sorted_nn
-
-    # Define the line connecting the first and last points of the curve: Ax + By + C = 0
-    A <- y[n] - y[1]
-    B <- x[1] - x[n]
-    C <- (x[n] * y[1]) - (x[1] * y[n])
-
-    # Calculate perpendicular distance from every point on the curve to the line
-    dist_to_line <- abs(A * x + B * y + C) / sqrt(A^2 + B^2)
-
-    # The elbow is the point furthest from the straight line
-    elbow_index <- which.max(dist_to_line)
-    suggested_res <- y[elbow_index]
-
-    # --- ZERO HANDLING FIX ---
-    # If the elbow falls on the 'last zero' before the curve bends,
-    # shift the index forward to the first ecologically meaningful (non-zero) distance.
-    if (suggested_res <= 1e-8) {
-      first_non_zero <- which(y > 1e-8)[1]
-
-      if (!is.na(first_non_zero)) {
-        elbow_index <- first_non_zero
-        suggested_res <- y[elbow_index]
-      } else {
-        # Fallback if literally every single point has the exact same environmental value
-        suggested_res <- 1e-4
-        warning(sprintf("Variable %s has zero variance. A fallback resolution of 1e-4 was applied.", var))
-      }
-    }
-
-    return(list(
-      resolution = suggested_res,
-      distances = y,
-      elbow_x = elbow_index
-    ))
+  # --- Build density data for plotting ------------------------------------
+  density_list <- lapply(env_vars, function(v) {
+    x  <- clean_data[[v]]
+    bw <- bws[[v]]
+    d  <- stats::density(x, bw = bw)
+    data.frame(variable = v,
+               x        = d$x,
+               density  = d$y,
+               stringsAsFactors = FALSE)
   })
+  density_data <- do.call(rbind, density_list)
 
-  # --- Construct Output ---
-  names(resolution_list) <- env_vars
-  suggested_res <- sapply(resolution_list, `[[`, "resolution")
-
-  # Prepare plotting data
-  distance_df_list <- lapply(seq_along(env_vars), function(i) {
-    data.frame(
-      variable = env_vars[i],
-      point_index = 1:length(resolution_list[[i]]$distances),
-      nn_distance = resolution_list[[i]]$distances,
-      is_elbow = (1:length(resolution_list[[i]]$distances)) == resolution_list[[i]]$elbow_x
-    )
-  })
-
-  curve_data <- do.call(rbind, distance_df_list)
-
-  results <- list(
-    suggested_resolution = suggested_res,
-    curve_data = curve_data
+  out <- list(
+    suggested_resolution = bws,
+    bandwidths           = bws,
+    density_data         = density_data,
+    method               = method
   )
-
-  class(results) <- "bean_env_resolution"
-  return(results)
+  class(out) <- "bean_env_resolution"
+  out
 }
 
-#' @export
-#' @keywords internal
-#' @importFrom graphics par plot abline points title
-plot.bean_env_resolution <- function(x, ...) {
-
-  # Extract variables and resolutions
-  vars <- names(x$suggested_resolution)
-  n_vars <- length(vars)
-
-  # --- Dynamically Calculate Grid Layout (like facet_wrap) ---
-  cols <- ceiling(sqrt(n_vars))
-  rows <- ceiling(n_vars / cols)
-
-  # Save original graphics parameters to restore later
-  old_par <- graphics::par(no.readonly = TRUE)
-  on.exit(graphics::par(old_par))
-
-  # Setup the multi-plot grid
-  # oma adds an outer margin for the main title, mar sets the margins for each individual plot
-  graphics::par(mfrow = c(rows, cols),
-                oma = c(1, 1, 4, 1),
-                mar = c(4, 4, 2, 1))
-
-  # --- Loop through each variable to draw the curves ---
-  for (var in vars) {
-    # Subset data for this specific variable
-    var_data <- x$curve_data[x$curve_data$variable == var, ]
-    res_val <- x$suggested_resolution[var]
-    elbow_pt <- var_data[var_data$is_elbow, ]
-
-    # 1. Draw the base line graph
-    graphics::plot(var_data$point_index, var_data$nn_distance,
-                   type = "l", col = "grey30", lwd = 2,
-                   xlab = "Sorted Points", ylab = "NN Distance",
-                   main = var, font.main = 2, cex.main = 1.2)
-
-    # 2. Add the blue dashed threshold line
-    graphics::abline(h = res_val, col = "blue", lty = 2, lwd = 2)
-
-    # 3. Add the red dot marking the exact elbow point
-    if (nrow(elbow_pt) > 0) {
-      graphics::points(elbow_pt$point_index, elbow_pt$nn_distance,
-                       col = "red", pch = 16, cex = 1.8)
-    }
+# Internal: compute a single bandwidth with a safe fallback.
+.bean_bandwidth <- function(x, method, var_name) {
+  if (length(unique(x)) < 2 || stats::sd(x) <= .Machine$double.eps) {
+    stop(sprintf("Variable '%s' has no variability; cannot estimate a grid resolution.",
+                 var_name), call. = FALSE)
   }
 
-  # --- Add the Master Title and Subtitle ---
-  graphics::title(
-    main = "k-Nearest Neighbor Distance Curves (Environmental Space)",
-    sub = "Red dot and blue dashed line indicate the objective 'Elbow' resolution",
-    outer = TRUE,
-    cex.main = 1.5,
-    font.main = 2,
-    col.sub = "grey20"
+  bw <- switch(method,
+    "sheather-jones" = tryCatch(stats::bw.SJ(x, method = "dpi"),
+                                error = function(e) NA_real_),
+    "silverman"      = stats::bw.nrd0(x),
+    "scott"          = stats::bw.nrd(x)
   )
 
-  return(invisible(NULL))
+  if (is.na(bw) || bw <= 0) {
+    if (method == "sheather-jones") {
+      message(sprintf(
+        "Sheather-Jones bandwidth failed for '%s'; falling back to Silverman's rule.",
+        var_name))
+      bw <- stats::bw.nrd0(x)
+    } else {
+      stop(sprintf("Bandwidth estimation failed for '%s'.", var_name),
+           call. = FALSE)
+    }
+  }
+  bw
+}
+
+#' Print method for \code{bean_env_resolution}
+#'
+#' @param x A \code{bean_env_resolution} object.
+#' @param ... Unused.
+#' @return Invisibly returns \code{x}.
+#' @export
+#' @keywords internal
+print.bean_env_resolution <- function(x, ...) {
+  cat("--- Bean environmental grid resolution ---\n")
+  cat(sprintf("Bandwidth selector: %s\n\n", x$method))
+  res_df <- data.frame(variable   = names(x$suggested_resolution),
+                       resolution = unname(x$suggested_resolution))
+  print(res_df, row.names = FALSE)
+  invisible(x)
+}
+
+#' Plot method for \code{bean_env_resolution}
+#'
+#' Draws one panel per environmental variable showing the kernel density
+#' estimate used to derive the suggested grid resolution. The bandwidth is
+#' marked as a horizontal scale bar at the bottom of each panel.
+#'
+#' @param x A \code{bean_env_resolution} object.
+#' @param ... Additional graphical parameters passed to \code{plot()}.
+#' @return Invisibly returns \code{NULL}.
+#' @export
+#' @keywords internal
+#' @importFrom graphics par plot abline points title axis box polygon legend
+#' @importFrom grDevices adjustcolor
+plot.bean_env_resolution <- function(x, ...) {
+  vars   <- names(x$suggested_resolution)
+  n_vars <- length(vars)
+  cols   <- ceiling(sqrt(n_vars))
+  rows   <- ceiling(n_vars / cols)
+
+  old_par <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(old_par), add = TRUE)
+  graphics::par(mfrow = c(rows, cols),
+                oma   = c(1, 1, 4, 1),
+                mar   = c(4, 4, 2, 1))
+
+  for (v in vars) {
+    dd  <- x$density_data[x$density_data$variable == v, ]
+    bw  <- x$suggested_resolution[[v]]
+    mid <- dd$x[which.max(dd$density)]
+
+    graphics::plot(dd$x, dd$density, type = "l", lwd = 2, col = "grey20",
+                   xlab = v, ylab = "Density",
+                   main = sprintf("%s  (bw = %.4g)", v, bw), ...)
+    graphics::polygon(c(dd$x, rev(dd$x)),
+                      c(dd$density, rep(0, nrow(dd))),
+                      col    = grDevices::adjustcolor("#118ab2", alpha.f = 0.25),
+                      border = NA)
+    # Scale bar showing the bandwidth (= suggested cell width).
+    y_bar <- 0.02 * max(dd$density)
+    graphics::segments(mid - bw / 2, y_bar, mid + bw / 2, y_bar,
+                       col = "#ef476f", lwd = 3)
+    graphics::points(c(mid - bw / 2, mid + bw / 2), c(y_bar, y_bar),
+                     pch = 16, col = "#ef476f")
+  }
+
+  graphics::title(
+    main = sprintf("Suggested grid resolution (%s)", x$method),
+    sub  = "Red bar shows the bandwidth = suggested cell width",
+    outer = TRUE,
+    cex.main = 1.3,
+    font.main = 2
+  )
+  invisible(NULL)
 }
