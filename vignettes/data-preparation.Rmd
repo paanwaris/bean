@@ -1,102 +1,74 @@
 ---
-title: "Data preparation"
+title: "1. Data preparation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Data preparation}
+  %\VignetteIndexEntry{1. Data preparation}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
-editor_options: 
-  chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
+  collapse  = TRUE,
+  comment   = "#>",
   fig.width = 7,
-  fig.height = 7,
-  dpi = 100,
-  out.width = "95%"
+  fig.height = 5,
+  out.width = "90%"
 )
+has_terra   <- requireNamespace("terra",   quietly = TRUE)
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
 ```
 
-Load the package
+`prepare_bean()` cleans raw occurrence records and extracts environmental
+values for each point:
 
-```{r, results='hide', message=FALSE, warning=FALSE}
+1. drops records with missing coordinates;
+2. (optionally) standardises the raster layers (`"scale"`) or projects them
+   onto principal components (`"pca"`);
+3. extracts environmental values for each occurrence;
+4. drops records that fall outside the raster extent.
+
+```{r, eval = has_terra}
 library(bean)
 library(terra)
-library(rgl)
-library(ggplot2)
-```
 
-# Step 1: Import Data
-
-The first step is to load your raw species occurrence data and
-environmental raster layers. It's always a good practice to visualize
-the spatial distribution of your points and inspect the environmental
-layers.
-
-```{r setup-1, fig.width=10, fig.height=8}
-# Load the raw occurrence data from the package
 occ_file <- system.file("extdata", "Rusa_unicolor.csv", package = "bean")
-occ_data_raw <- read.csv(occ_file)
+env_file <- system.file("extdata", "thai_env.tif",     package = "bean")
 
-# Display the first few rows to understand its structure
+occ_data_raw <- read.csv(occ_file)
+env <- terra::rast(env_file)
 head(occ_data_raw)
 ```
 
-```{r setup-2}
-# Load the environmental raster layers
-thai_env_file <- system.file("extdata", "thai_env.tif", package = "bean")
-env <- terra::rast(c(thai_env_file))
+Inspect spatial distribution (only if `ggplot2` is available):
 
-# Plot the environmental layers to check their extent and values
-plot(env, mar = c(1, 1, 2, 4))
-```
-
-```{r setup-3}
-# Visualize the spatial distribution of the occurrence points
-ggplot(occ_data_raw, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env[[1]], xy = TRUE), aes(x = x, y = y), fill = "gray80") +
-  geom_point(alpha = 0.5, color = "darkred") +
+```{r, eval = has_terra && has_ggplot2}
+library(ggplot2)
+env_df <- as.data.frame(env[[1]], xy = TRUE)
+ggplot(occ_data_raw, aes(x, y)) +
+  geom_raster(data = env_df, aes(x, y), fill = "grey80") +
+  geom_point(alpha = 0.5, colour = "darkred") +
   coord_fixed() +
-  labs(title = "Sambar Deer Occurrence Points") +
   theme_classic()
 ```
 
-# Step 2: Prepare Data for Environmental Thinning
+Run the preparation step:
 
-Before any analysis, the raw data must be cleaned and standardized. The
-`prepare_bean()` function streamlines this process by:
-
-1.  Removing records with missing coordinates.
-
-2.  Extracting environmental data for each point from the raster layers.
-
-3.  Removing records that fall outside the raster extent.
-
-This ensures all subsequent functions work with a clean, complete, and
-scaled dataset.
-
-```{r prepare-data}
-# Run the preparation function to clean and scale the data
-origin_dat_prepared <- prepare_bean(
-  data = occ_data_raw,
+```{r, eval = has_terra}
+prepared <- prepare_bean(
+  data        = occ_data_raw,
   env_rasters = env,
-  longitude = "x",
-  latitude = "y",
-  transform = "none"
+  longitude   = "x",
+  latitude    = "y",
+  transform   = "scale"
 )
+head(prepared)
+```
 
-# View the structure and summary of the clean, scaled data
+For users without `terra`, the package ships a prepared copy of the same
+data:
+
+```{r}
+data(origin_dat_prepared, package = "bean")
 head(origin_dat_prepared)
-summary(origin_dat_prepared)
-
-# Visualize the spatial distribution of the cleaned occurrence points
-ggplot(origin_dat_prepared, aes(x = x, y = y)) +
-  geom_raster(data = as.data.frame(env[[1]], xy = TRUE), aes(x = x, y = y), fill = "gray80") +
-  geom_point(alpha = 0.5, color = "darkred") +
-  coord_fixed() +
-  labs(title = "Sambar Deer Occurrence Points (Cleaned)") +
-  theme_classic()
 ```
