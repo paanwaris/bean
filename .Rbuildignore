@@ -1,5 +1,7 @@
 ^renv$
 ^renv\.lock$
+^\.Rprofile$
+^\.Rhistory$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
@@ -8,3 +10,4 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^cran-comments\.md$
