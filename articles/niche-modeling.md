@@ -57,7 +57,7 @@ origin_ellipse
 #> Points used : 1024  (inside: 947, 92.5%)
 #> Centroid:
 #>      bio_1      bio_4     bio_12     bio_15 
-#>   24.47107  179.68260 1191.05273   76.98212
+#> -1.1433128 -0.1851743 -0.4804313 -0.4194209
 stochastic_ellipse
 #> -- Bean Environmental Niche Ellipsoid --
 #> Method      : covmat
@@ -66,16 +66,16 @@ stochastic_ellipse
 #> Points used : 78  (inside: 71, 91.0%)
 #> Centroid:
 #>      bio_1      bio_4     bio_12     bio_15 
-#>   25.63890  167.99191 1323.07692   76.97539
+#> -0.3502912 -0.3690432 -0.1938518 -0.4200464
 deterministic_ellipse
 #> -- Bean Environmental Niche Ellipsoid --
 #> Method      : covmat
 #> Dimensions  : 4 (bio_1, bio_4, bio_12, bio_15)
 #> Level       : 95.00%
-#> Points used : 78  (inside: 72, 92.3%)
+#> Points used : 56  (inside: 53, 94.6%)
 #> Centroid:
 #>      bio_1      bio_4     bio_12     bio_15 
-#>   25.66026  168.01923 1323.32692   76.98718
+#> -0.3839286 -0.4732143 -0.1607143 -0.4464286
 ```
 
 ## Visualise the ellipsoids (2-D slices)
@@ -122,9 +122,11 @@ library(terra)
 #> terra 1.9.27
 env <- terra::rast(system.file("extdata", "thai_env.tif", package = "bean"))
 
+env_scaled <- terra::scale(env)
+
 origin_pred <- predict(
   object                = origin_ellipse,
-  newdata               = env,
+  newdata               = env_scaled,
   include_suitability   = TRUE,
   suitability_truncated = FALSE,
   include_mahalanobis   = FALSE
@@ -132,7 +134,7 @@ origin_pred <- predict(
 
 stochastic_pred <- predict(
   object                = stochastic_ellipse,
-  newdata               = env,
+  newdata               = env_scaled,
   include_suitability   = TRUE,
   suitability_truncated = FALSE,
   include_mahalanobis   = FALSE
@@ -140,7 +142,7 @@ stochastic_pred <- predict(
 
 deterministic_pred <- predict(
   object                = deterministic_ellipse,
-  newdata               = env,
+  newdata               = env_scaled,
   include_suitability   = TRUE,
   suitability_truncated = FALSE,
   include_mahalanobis   = FALSE
@@ -218,7 +220,7 @@ summary_df
 #>           model  mean_suit  median_suit
 #> 1           Raw 0.01575929 8.268550e-06
 #> 2    Stochastic 0.12812961 7.113131e-02
-#> 3 Deterministic 0.12814998 7.257248e-02
+#> 3 Deterministic 0.15473723 9.700130e-02
 ```
 
 A drop in mean / median suitability after thinning is the expected

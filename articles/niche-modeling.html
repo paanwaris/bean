@@ -135,7 +135,7 @@ inferred niche.</p>
 <span><span class="co">#&gt; Points used : 1024  (inside: 947, 92.5%)</span></span>
 <span><span class="co">#&gt; Centroid:</span></span>
 <span><span class="co">#&gt;      bio_1      bio_4     bio_12     bio_15 </span></span>
-<span><span class="co">#&gt;   24.47107  179.68260 1191.05273   76.98212</span></span>
+<span><span class="co">#&gt; -1.1433128 -0.1851743 -0.4804313 -0.4194209</span></span>
 <span><span class="va">stochastic_ellipse</span></span>
 <span><span class="co">#&gt; -- Bean Environmental Niche Ellipsoid --</span></span>
 <span><span class="co">#&gt; Method      : covmat</span></span>
@@ -144,16 +144,16 @@ inferred niche.</p>
 <span><span class="co">#&gt; Points used : 78  (inside: 71, 91.0%)</span></span>
 <span><span class="co">#&gt; Centroid:</span></span>
 <span><span class="co">#&gt;      bio_1      bio_4     bio_12     bio_15 </span></span>
-<span><span class="co">#&gt;   25.63890  167.99191 1323.07692   76.97539</span></span>
+<span><span class="co">#&gt; -0.3502912 -0.3690432 -0.1938518 -0.4200464</span></span>
 <span><span class="va">deterministic_ellipse</span></span>
 <span><span class="co">#&gt; -- Bean Environmental Niche Ellipsoid --</span></span>
 <span><span class="co">#&gt; Method      : covmat</span></span>
 <span><span class="co">#&gt; Dimensions  : 4 (bio_1, bio_4, bio_12, bio_15)</span></span>
 <span><span class="co">#&gt; Level       : 95.00%</span></span>
-<span><span class="co">#&gt; Points used : 78  (inside: 72, 92.3%)</span></span>
+<span><span class="co">#&gt; Points used : 56  (inside: 53, 94.6%)</span></span>
 <span><span class="co">#&gt; Centroid:</span></span>
 <span><span class="co">#&gt;      bio_1      bio_4     bio_12     bio_15 </span></span>
-<span><span class="co">#&gt;   25.66026  168.01923 1323.32692   76.98718</span></span></code></pre></div>
+<span><span class="co">#&gt; -0.3839286 -0.4732143 -0.1607143 -0.4464286</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="visualise-the-ellipsoids-2-d-slices">Visualise the ellipsoids (2-D slices)<a class="anchor" aria-label="anchor" href="#visualise-the-ellipsoids-2-d-slices"></a>
@@ -189,9 +189,11 @@ analogously, so we omit them here).</p>
 <span><span class="co">#&gt; terra 1.9.27</span></span>
 <span><span class="va">env</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"thai_env.tif"</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
+<span><span class="va">env_scaled</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">env</span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">origin_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict</a></span><span class="op">(</span></span>
 <span>  object                <span class="op">=</span> <span class="va">origin_ellipse</span>,</span>
-<span>  newdata               <span class="op">=</span> <span class="va">env</span>,</span>
+<span>  newdata               <span class="op">=</span> <span class="va">env_scaled</span>,</span>
 <span>  include_suitability   <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  suitability_truncated <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include_mahalanobis   <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -199,7 +201,7 @@ analogously, so we omit them here).</p>
 <span></span>
 <span><span class="va">stochastic_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict</a></span><span class="op">(</span></span>
 <span>  object                <span class="op">=</span> <span class="va">stochastic_ellipse</span>,</span>
-<span>  newdata               <span class="op">=</span> <span class="va">env</span>,</span>
+<span>  newdata               <span class="op">=</span> <span class="va">env_scaled</span>,</span>
 <span>  include_suitability   <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  suitability_truncated <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include_mahalanobis   <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -207,7 +209,7 @@ analogously, so we omit them here).</p>
 <span></span>
 <span><span class="va">deterministic_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict</a></span><span class="op">(</span></span>
 <span>  object                <span class="op">=</span> <span class="va">deterministic_ellipse</span>,</span>
-<span>  newdata               <span class="op">=</span> <span class="va">env</span>,</span>
+<span>  newdata               <span class="op">=</span> <span class="va">env_scaled</span>,</span>
 <span>  include_suitability   <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  suitability_truncated <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include_mahalanobis   <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -276,7 +278,7 @@ only the “core” niche.</p>
 <span><span class="co">#&gt;           model  mean_suit  median_suit</span></span>
 <span><span class="co">#&gt; 1           Raw 0.01575929 8.268550e-06</span></span>
 <span><span class="co">#&gt; 2    Stochastic 0.12812961 7.113131e-02</span></span>
-<span><span class="co">#&gt; 3 Deterministic 0.12814998 7.257248e-02</span></span></code></pre></div>
+<span><span class="co">#&gt; 3 Deterministic 0.15473723 9.700130e-02</span></span></code></pre></div>
 <p>A drop in mean / median suitability after thinning is the expected
 effect: bias correction makes the model less willing to call
 under-sampled environments “highly suitable”.</p>

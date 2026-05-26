@@ -41,11 +41,11 @@ res
 #> --- Bean environmental grid resolution ---
 #> Bandwidth selector: sheather-jones
 #> 
-#>  variable resolution
-#>     bio_1 0.08274934
-#>     bio_4 0.85162273
-#>    bio_12 2.25907105
-#>    bio_15 0.07070831
+#>  variable  resolution
+#>     bio_1 0.056162684
+#>     bio_4 0.013438324
+#>    bio_12 0.004615848
+#>    bio_15 0.006501067
 
 # 2. Thin in environmental space
 thinned <- thin_env_nd(

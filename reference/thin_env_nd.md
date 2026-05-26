@@ -69,8 +69,8 @@ thinned <- thin_env_nd(
 print(thinned)
 #> --- Bean Stochastic Thinning Results ---
 #> 
-#> Thinned 1024 original points to 77 points.
-#> This represents a retention of 7.5% of the data.
+#> Thinned 1024 original points to 26 points.
+#> This represents a retention of 2.5% of the data.
 #> 
 #> --------------------------------------
 ```

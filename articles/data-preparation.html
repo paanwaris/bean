@@ -191,12 +191,12 @@ a classic example of spatial sampling bias.</p>
 </h2>
 <p>After cleaning, the records that survived are mapped here in blue.
 Points that were dropped (missing coordinates or outside the raster
-extent) are shown in light grey for comparison.</p>
+extent) are shown in red for comparison.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">env_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">.data</span><span class="op">[[</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">env</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">occ_data_raw</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>,</span>
-<span>             colour <span class="op">=</span> <span class="st">"grey60"</span>, size <span class="op">=</span> <span class="fl">1.4</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>             colour <span class="op">=</span> <span class="st">"red"</span>, size <span class="op">=</span> <span class="fl">1.4</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">prepared</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>,</span>
 <span>             colour <span class="op">=</span> <span class="st">"#118ab2"</span>, size <span class="op">=</span> <span class="fl">1.4</span>, alpha <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradient</a></span><span class="op">(</span>low <span class="op">=</span> <span class="st">"grey95"</span>, high <span class="op">=</span> <span class="st">"grey55"</span>, guide <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -215,13 +215,20 @@ result of running the same pipeline on the bundled rasters:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span><span class="op">)</span></span>
-<span><span class="co">#&gt;         species        y         x    bio_1 bio_12   bio_15    bio_4</span></span>
-<span><span class="co">#&gt; 1 Rusa unicolor 15.37239  99.11555 23.66463   1414 78.85445 175.0943</span></span>
-<span><span class="co">#&gt; 2 Rusa unicolor 15.41415  99.28763 24.87193   1289 78.20957 180.2106</span></span>
-<span><span class="co">#&gt; 3 Rusa unicolor 14.46838 101.22005 24.11074   1166 77.36796 173.1696</span></span>
-<span><span class="co">#&gt; 4 Rusa unicolor 15.65606  99.31600 25.22871   1309 78.92366 186.1482</span></span>
-<span><span class="co">#&gt; 5 Rusa unicolor 14.39543 101.41694 23.16356   1134 76.03447 182.5639</span></span>
-<span><span class="co">#&gt; 6 Rusa unicolor 12.72500 100.88947 27.70646   1269 74.36774 123.1260</span></span></code></pre></div>
+<span><span class="co">#&gt;         species        y         x      bio_1       bio_12     bio_15</span></span>
+<span><span class="co">#&gt; 1 Rusa unicolor 15.37239  99.11555 -1.6909295  0.003511156 -0.2454693</span></span>
+<span><span class="co">#&gt; 2 Rusa unicolor 15.41415  99.28763 -0.8711075 -0.267821213 -0.3053829</span></span>
+<span><span class="co">#&gt; 3 Rusa unicolor 14.46838 101.22005 -1.3879976 -0.534812263 -0.3835742</span></span>
+<span><span class="co">#&gt; 4 Rusa unicolor 15.65606  99.31600 -0.6288324 -0.224408034 -0.2390396</span></span>
+<span><span class="co">#&gt; 5 Rusa unicolor 14.39543 101.41694 -2.0311866 -0.604273349 -0.5074636</span></span>
+<span><span class="co">#&gt; 6 Rusa unicolor 12.72500 100.88947  1.0537073 -0.311234392 -0.6623129</span></span>
+<span><span class="co">#&gt;        bio_4</span></span>
+<span><span class="co">#&gt; 1 -0.2573387</span></span>
+<span><span class="co">#&gt; 2 -0.1768698</span></span>
+<span><span class="co">#&gt; 3 -0.2876102</span></span>
+<span><span class="co">#&gt; 4 -0.0834852</span></span>
+<span><span class="co">#&gt; 5 -0.1398570</span></span>
+<span><span class="co">#&gt; 6 -1.0746857</span></span></code></pre></div>
 <p>This is the object used in the next two vignettes.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

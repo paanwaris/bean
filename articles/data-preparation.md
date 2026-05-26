@@ -118,14 +118,14 @@ summary(prepared[, -(1:3)])
 
 After cleaning, the records that survived are mapped here in blue.
 Points that were dropped (missing coordinates or outside the raster
-extent) are shown in light grey for comparison.
+extent) are shown in red for comparison.
 
 ``` r
 
 ggplot() +
   geom_raster(data = env_df, aes(x, y, fill = .data[[names(env)[1]]])) +
   geom_point(data = occ_data_raw, aes(x, y),
-             colour = "grey60", size = 1.4, alpha = 0.5) +
+             colour = "red", size = 1.4, alpha = 0.5) +
   geom_point(data = prepared, aes(x, y),
              colour = "#118ab2", size = 1.4, alpha = 0.8) +
   scale_fill_gradient(low = "grey95", high = "grey55", guide = "none") +
@@ -147,13 +147,20 @@ the same pipeline on the bundled rasters:
 
 data(origin_dat_prepared, package = "bean")
 head(origin_dat_prepared)
-#>         species        y         x    bio_1 bio_12   bio_15    bio_4
-#> 1 Rusa unicolor 15.37239  99.11555 23.66463   1414 78.85445 175.0943
-#> 2 Rusa unicolor 15.41415  99.28763 24.87193   1289 78.20957 180.2106
-#> 3 Rusa unicolor 14.46838 101.22005 24.11074   1166 77.36796 173.1696
-#> 4 Rusa unicolor 15.65606  99.31600 25.22871   1309 78.92366 186.1482
-#> 5 Rusa unicolor 14.39543 101.41694 23.16356   1134 76.03447 182.5639
-#> 6 Rusa unicolor 12.72500 100.88947 27.70646   1269 74.36774 123.1260
+#>         species        y         x      bio_1       bio_12     bio_15
+#> 1 Rusa unicolor 15.37239  99.11555 -1.6909295  0.003511156 -0.2454693
+#> 2 Rusa unicolor 15.41415  99.28763 -0.8711075 -0.267821213 -0.3053829
+#> 3 Rusa unicolor 14.46838 101.22005 -1.3879976 -0.534812263 -0.3835742
+#> 4 Rusa unicolor 15.65606  99.31600 -0.6288324 -0.224408034 -0.2390396
+#> 5 Rusa unicolor 14.39543 101.41694 -2.0311866 -0.604273349 -0.5074636
+#> 6 Rusa unicolor 12.72500 100.88947  1.0537073 -0.311234392 -0.6623129
+#>        bio_4
+#> 1 -0.2573387
+#> 2 -0.1768698
+#> 3 -0.2876102
+#> 4 -0.0834852
+#> 5 -0.1398570
+#> 6 -1.0746857
 ```
 
 This is the object used in the next two vignettes.

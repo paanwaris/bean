@@ -79,11 +79,11 @@ res
 #> --- Bean environmental grid resolution ---
 #> Bandwidth selector: sheather-jones
 #> 
-#>  variable resolution
-#>     bio_1 0.08274934
-#>     bio_4 0.85162273
-#>    bio_12 2.25907105
-#>    bio_15 0.07070831
+#>  variable  resolution
+#>     bio_1 0.056162684
+#>     bio_4 0.013438324
+#>    bio_12 0.004615848
+#>    bio_15 0.006501067
 ```
 
 ### Visualising the bandwidth
@@ -110,11 +110,11 @@ the densities yourself.
 sapply(c("sheather-jones", "silverman", "scott"), function(m) {
   find_env_resolution(origin_dat_prepared, env_vars, method = m)$suggested_resolution
 })
-#>        sheather-jones silverman     scott
-#> bio_1      0.08274934 0.2648006 0.3118763
-#> bio_4      0.85162273 2.5175294 2.9650902
-#> bio_12     2.25907105 7.0522388 8.3059701
-#> bio_15     0.07070831 0.2577496 0.3035717
+#>        sheather-jones  silverman      scott
+#> bio_1     0.056162684 0.17981503 0.21178215
+#> bio_4     0.013438324 0.03959521 0.04663436
+#> bio_12    0.004615848 0.01530801 0.01802943
+#> bio_15    0.006501067 0.02394656 0.02820372
 ```
 
 ## Stochastic thinning
@@ -152,13 +152,13 @@ of the cell — no randomness involved.
 thinned_deterministic <- thin_env_center(
   data            = origin_dat_prepared,
   env_vars        = env_vars,
-  grid_resolution = res$suggested_resolution
+  grid_resolution = c(0.5, 0.5, 0.5, 0.5)
 )
 thinned_deterministic
 #> --- Bean Deterministic Thinning Results ---
 #> 
-#> Thinned 1024 original points to 78 unique grid cell centers.
-#> This represents a retention of 7.6% of the data.
+#> Thinned 1024 original points to 56 unique grid cell centers.
+#> This represents a retention of 5.5% of the data.
 #> 
 #> --------------------------------------
 ```
@@ -177,7 +177,7 @@ plot_compare$Status <- factor(plot_compare$Status,
                               levels = c("Original", "Stochastic", "Deterministic"))
 
 ggplot(plot_compare, aes(bio_1, bio_12, colour = Status)) +
-  geom_point(alpha = 0.6, size = 1.2) +
+  geom_point(alpha = 0.5, size = 3) +
   facet_wrap(~Status, nrow = 1) +
   scale_colour_manual(values = c(Original = "#ef476f",
                                  Stochastic = "#118ab2",
@@ -218,6 +218,13 @@ plot_bean(
 ```
 
 ![](environmental-thinning_files/figure-html/unnamed-chunk-9-1.png)
+
+``` r
+
+
+save(thinned_stochastic, file = "thinned_stochastic.rda")
+save(thinned_deterministic, file = "thinned_deterministic.rda")
+```
 
 The next vignette uses these two thinned datasets to fit niche
 ellipsoids and project suitability across the landscape.
