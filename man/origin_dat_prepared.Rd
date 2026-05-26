@@ -3,25 +3,25 @@
 \docType{data}
 \name{origin_dat_prepared}
 \alias{origin_dat_prepared}
-\title{Prepared occurrence data}
+\title{Cleaned and scaled occurrence data}
 \format{
-A data frame containing coordinates and environmental variables:
+A \code{data.frame} with the columns:
 \describe{
-  \item{species}{The species name}
-  \item{x}{Longitude coordinates}
-  \item{y}{Latitude coordinates}
-  \item{bio_1}{Scaled Annual Mean Temperature}
-  \item{bio_4}{Scaled Temperature Seasonality}
-  \item{bio_12}{Scaled Annual Precipitation}
-  \item{bio_15}{Scaled Precipitation Seasonality}
+  \item{species}{Species name.}
+  \item{x, y}{Coordinates.}
+  \item{bio_1}{Scaled annual mean temperature.}
+  \item{bio_4}{Scaled temperature seasonality.}
+  \item{bio_12}{Scaled annual precipitation.}
+  \item{bio_15}{Scaled precipitation seasonality.}
 }
 }
 \usage{
 origin_dat_prepared
 }
 \description{
-A dataset containing the cleaned and scaled occurrence records ready for
-environmental thinning. Missing coordinates and points outside the raster
-extent have been removed, and environmental data has been extracted.
+Output of \code{\link{prepare_bean}} applied to \code{occ_data_raw} using
+the bundled environmental rasters. Missing coordinates and records outside
+the raster extent have been removed, and environmental values have been
+extracted and standardised.
 }
-\keyword{internal}
+\keyword{datasets}
