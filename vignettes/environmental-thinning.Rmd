@@ -137,7 +137,7 @@ the geometric centre of the cell — no randomness involved.
 thinned_deterministic <- thin_env_center(
   data            = origin_dat_prepared,
   env_vars        = env_vars,
-  grid_resolution = res$suggested_resolution
+  grid_resolution = c(0.5, 0.5, 0.5, 0.5)
 )
 thinned_deterministic
 ```
@@ -155,7 +155,7 @@ plot_compare$Status <- factor(plot_compare$Status,
                               levels = c("Original", "Stochastic", "Deterministic"))
 
 ggplot(plot_compare, aes(bio_1, bio_12, colour = Status)) +
-  geom_point(alpha = 0.6, size = 1.2) +
+  geom_point(alpha = 0.5, size = 3) +
   facet_wrap(~Status, nrow = 1) +
   scale_colour_manual(values = c(Original = "#ef476f",
                                  Stochastic = "#118ab2",
@@ -187,6 +187,9 @@ plot_bean(
   thinned_object = thinned_deterministic,
   env_vars       = env_vars
 )
+
+save(thinned_stochastic, file = "thinned_stochastic.rda")
+save(thinned_deterministic, file = "thinned_deterministic.rda")
 ```
 
 The next vignette uses these two thinned datasets to fit niche
