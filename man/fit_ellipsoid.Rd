@@ -2,119 +2,79 @@
 % Please edit documentation in R/fit_ellipsoid.R
 \name{fit_ellipsoid}
 \alias{fit_ellipsoid}
-\title{Outlier removal}
+\title{Fit an environmental niche ellipsoid}
 \usage{
 fit_ellipsoid(data, env_vars, method = "covmat", level = 0.95)
 }
 \arguments{
-\item{data}{A data.frame containing species occurrence coordinates and the environmental variables.}
+\item{data}{A \code{data.frame} containing the environmental variables.}
 
-\item{env_vars}{A character vector specifying the column names in data that represent the environmental variables to be used in the analysis.}
+\item{env_vars}{A character vector of at least two column names in
+\code{data} representing the environmental variables.}
 
-\item{method}{(character) The method for calculating the centroid and
-covariance matrix. Options are "covmat" (for a standard covariance matrix) and "mve"
-(Minimum Volume Ellipsoid, robust to outliers). Default = "covmat". See Details}
+\item{method}{One of \code{"covmat"} (default, classical) or \code{"mve"}
+(robust Minimum Volume Ellipsoid via \code{\link[MASS]{cov.mve}}).}
 
-\item{level}{(numeric) A single value between 0 and 1 representing the
-proportion of data points the ellipse is intended to encompass.
-Default is 0.95.}
+\item{level}{A single number in \code{(0, 1)}: the confidence level of the
+ellipsoid. Default \code{0.95}.}
 }
 \value{
-An object of class \code{bean_ellipsoid}, which is a list containing:
-  \item{niche_ellipse}{A data.frame of points defining the perimeter of the calculated ellipse.}
-  \item{centroid}{A named vector representing the center of the ellipse.}
-  \item{covariance_matrix}{The 2x2 covariance matrix used to define the ellipse's shape.}
-  \item{all_points_used}{The input data frame, filtered to include only complete, finite observations.}
-  \item{points_in_ellipse}{A data.frame containing the subset of rows from \code{all_points_used} that fall inside the ellipse boundary.}
-  \item{points_outside_ellipse}{A data.frame containing the subset of rows from \code{all_points_used} that fall outside the ellipse boundary.}
-  \item{inside_indices}{A numeric vector of the row indices (from \code{all_points_used}) of the points inside the ellipse.}
-  \item{parameters}{A list of the key parameters used, including \code{level} and \code{method}.}
+An object of class \code{bean_ellipsoid} (a list) with:
+  \describe{
+    \item{\code{centroid}}{Named vector of variable means / centre.}
+    \item{\code{covariance_matrix}}{The covariance matrix used.}
+    \item{\code{niche_ellipse}}{A \code{data.frame} of polygon vertices for
+          the 2-D ellipse. \code{NULL} when more than two variables are
+          supplied (the 3-D mesh is generated lazily on plot).}
+    \item{\code{all_points_used}}{Complete-case input data.}
+    \item{\code{points_in_ellipse}}{Subset inside the ellipsoid.}
+    \item{\code{points_outside_ellipse}}{Subset outside the ellipsoid.}
+    \item{\code{inside_indices}}{Row indices (in \code{all_points_used})
+          classified as inside.}
+    \item{\code{parameters}}{List with \code{level} and \code{method}.}
+  }
 }
 \description{
-This function calculates a bivariate ellipse that encompasses a
-specified proportion of the data points in a 2D environmental space. It can
-use either a standard covariance matrix or a robust Minimum Volume Ellipsoid.
-The function also correctly identifies which of the input points fall within
-and outside the calculated ellipse boundary, preserving all original columns.
+Fits an ellipsoid that encompasses a chosen proportion of the
+data points in an environmental space of two or more dimensions. The
+centroid and covariance matrix can be estimated either by the classical
+sample moments (\code{"covmat"}) or by the robust Minimum Volume Ellipsoid
+(\code{"mve"}; Rousseeuw, 1985). Points are classified as inside or outside
+the ellipsoid using a \eqn{\chi^2} cutoff on their squared Mahalanobis
+distance.
 }
 \details{
-This function provides two distinct statistical approaches for defining the
-center and shape of the ellipse, selectable via the \code{method} parameter. The
-size of the ellipse is controlled by the \code{level} parameter, which defines a
-statistical confidence interval.
+\strong{Methods.} \code{"covmat"} uses the sample mean and sample covariance
+matrix. It is optimal under multivariate normality but sensitive to
+outliers. \code{"mve"} (Rousseeuw, 1985) finds the smallest-volume ellipsoid
+that contains a fraction of the data and is robust to a moderate proportion
+of contaminating points.
 
-## Method
-
-The \code{method} argument determines how the centroid and covariance
-matrix (shape and orientation) of the data cloud are calculated.
-
- - "covmat" (Default): This is the classical approach, which uses the
-    standard sample mean and sample covariance matrix calculated from all
-    provided data points. While optimal for cleanly distributed, multivariate
-    normal data, this method is highly sensitive to outliers. A single
-    anomalous data point can significantly skew the mean and inflate the
-    covariance matrix, resulting in an ellipse that poorly represents the
-    central tendency of the data (Rousseeuw & Leroy, 2003).
-
- - "mve": This option uses the Minimum Volume Ellipsoid (MVE) estimator,
-    a robust statistical method designed to resist the influence of outliers
-    (Rousseeuw et al., 1984, 1985). Instead of using all data points, the MVE algorithm finds the
-    ellipsoid with the smallest possible volume that contains a specified
-    subset of the data (at least h = (n_points + n_variables + 1)/2 points)
-    (Cobos et al., 2024). By focusing on the most concentrated "core" of the data,
-    the MVE method effectively ignores outliers, providing a more reliable
-    estimate of the data's true center and scatter when contamination is
-    present (Van Aelst & Rousseeuw, 2009).
-
-## Confidence Level
-
-The \code{level} parameter specifies the confidence level for the ellipse,
-representing the percentage of the data that the ellipse is intended to
-encompass (Cobos et al., 2024). It determines the size of the ellipse by defining a
-statistical boundary based on Mahalanobis distances from the centroid.
-
-Assuming the data follows a multivariate normal distribution, the boundary of
-the ellipse corresponds to a quantile of the chi-squared (\eqn{\chi^2})
-distribution (Van Aelst & Rousseeuw, 2009). For example, a \code{level} of 95 (the default)
-constructs an ellipse whose boundary is defined by the set of points having a
-squared Mahalanobis distance equal to the 0.95 quantile of the \eqn{\chi^2}
-distribution with 2 degrees of freedom (for a 2D analysis). Points with a
-smaller Mahalanobis distance are inside the ellipse, while those with a
-larger distance are outside.
-
-A higher \code{level} (e.g., 99) will result in a larger ellipse, while a lower
-\code{level} (e.g., 90) will produce a smaller, more conservative ellipse.
+\strong{Confidence level.} Assuming approximate multivariate normality, the
+boundary of the ellipsoid is the set of points whose squared Mahalanobis
+distance equals \code{qchisq(level, df = n_dim)}.
 }
 \examples{
-\dontrun{
-# 1. Create environmental data with a cluster and an outlier
 set.seed(81)
 env_data <- data.frame(
-  BIO1 = c(rnorm(50, mean = 10, sd = 1), 30),
-  BIO12 = c(rnorm(50, mean = 20, sd = 2), 50)
+  BIO1  = c(rnorm(50, 10, 1), 30),
+  BIO12 = c(rnorm(50, 20, 2), 50)
 )
-
-# 2. Fit a 95\% ellipse using the standard covariance method
-fit <- fit_ellipsoid(
-  data = env_data,
-  env_vars = c("BIO1", "BIO12"),
-  method = "covmat",
-  level = 0.95
-)
-
-# 3. Print the summary and plot the results
+fit <- fit_ellipsoid(env_data, env_vars = c("BIO1", "BIO12"),
+                     method = "covmat", level = 0.95)
 print(fit)
-plot(fit)
-}
+\donttest{plot(fit)}
+
 }
 \references{
-Rousseeuw, P. J., & Leroy, A. M. (2003). Robust regression and outlier detection. John wiley & sons.
+Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown point.
+In \emph{Mathematical Statistics and Applications, Vol. B}, 283–297.
 
-Van Aelst, S., & Rousseeuw, P. (2009). Minimum volume ellipsoid. Wiley Interdisciplinary Reviews: Computational Statistics, 1(1), 71-82.
+Van Aelst, S. & Rousseeuw, P. (2009). Minimum volume ellipsoid.
+\emph{Wiley Interdisciplinary Reviews: Computational Statistics}, 1(1),
+71–82.
 
-Cobos, M.E., Osorio-Olvera, L., Soberón, J., Peterson, A.T., Barve, V. & Barve, N. (2024) ellipsenm: ecological niche’s characterizations using ellipsoids. <https://github.com/marlonecobos/ellipsenm>
-
-Rousseeuw, P. J. (1984). Least median of squares regression. Journal of the American statistical association, 79(388), 871-880.
-
-Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown point. Mathematical statistics and applications, 8(283-297), 37.
+Cobos, M. E., Osorio-Olvera, L., Soberón, J., Peterson, A. T., Barve, V. &
+Barve, N. (2024). ellipsenm: ecological niches' characterizations using
+ellipsoids. \url{https://github.com/marlonecobos/ellipsenm}.
 }
