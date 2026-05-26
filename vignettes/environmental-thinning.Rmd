@@ -83,9 +83,9 @@ slightly finer structure, not arbitrarily finer.
 
 ```{r}
 res <- find_env_resolution(
-  data     = origin_dat_prepared,
+  data = origin_dat_prepared,
   env_vars = env_vars,
-  method   = "sheather-jones"
+  method = "sheather-jones"
 )
 res
 ```
@@ -120,10 +120,10 @@ the global random state.
 
 ```{r}
 thinned_stochastic <- thin_env_nd(
-  data            = origin_dat_prepared,
-  env_vars        = env_vars,
+  data = origin_dat_prepared,
+  env_vars = env_vars,
   grid_resolution = res$suggested_resolution,
-  seed            = 1
+  seed = 1
 )
 thinned_stochastic
 ```
@@ -135,8 +135,8 @@ the geometric centre of the cell — no randomness involved.
 
 ```{r}
 thinned_deterministic <- thin_env_center(
-  data            = origin_dat_prepared,
-  env_vars        = env_vars,
+  data = origin_dat_prepared,
+  env_vars = env_vars,
   grid_resolution = c(0.5, 0.5, 0.5, 0.5)
 )
 thinned_deterministic
@@ -147,7 +147,7 @@ thinned_deterministic
 ```{r, eval = has_ggplot2, fig.width = 8, fig.height = 6}
 library(ggplot2)
 plot_compare <- rbind(
-  data.frame(origin_dat_prepared[, env_vars],          Status = "Original"),
+  data.frame(origin_dat_prepared[, env_vars], Status = "Original"),
   data.frame(thinned_stochastic$thinned_data[, env_vars], Status = "Stochastic"),
   data.frame(thinned_deterministic$thinned_points[, env_vars], Status = "Deterministic")
 )
@@ -175,21 +175,18 @@ centre, so its points sit on a regular lattice.
 
 ```{r, fig.width = 8, fig.height = 8}
 plot_bean(
-  original_data  = origin_dat_prepared,
+  original_data = origin_dat_prepared,
   thinned_object = thinned_stochastic,
-  env_vars       = env_vars
+  env_vars = env_vars
 )
 ```
 
 ```{r, fig.width = 8, fig.height = 8}
 plot_bean(
-  original_data  = origin_dat_prepared,
+  original_data = origin_dat_prepared,
   thinned_object = thinned_deterministic,
-  env_vars       = env_vars
+  env_vars = env_vars
 )
-
-save(thinned_stochastic, file = "thinned_stochastic.rda")
-save(thinned_deterministic, file = "thinned_deterministic.rda")
 ```
 
 The next vignette uses these two thinned datasets to fit niche
