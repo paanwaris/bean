@@ -153,9 +153,9 @@ see slightly finer structure, not arbitrarily finer.</p>
 </h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_env_resolution.html">find_env_resolution</a></span><span class="op">(</span></span>
-<span>  data     <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
 <span>  env_vars <span class="op">=</span> <span class="va">env_vars</span>,</span>
-<span>  method   <span class="op">=</span> <span class="st">"sheather-jones"</span></span>
+<span>  method <span class="op">=</span> <span class="st">"sheather-jones"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">res</span></span>
 <span><span class="co">#&gt; --- Bean environmental grid resolution ---</span></span>
@@ -202,10 +202,10 @@ per occupied grid cell. A <code>seed</code> makes the selection
 reproducible without disturbing the global random state.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">thinned_stochastic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/thin_env_nd.html">thin_env_nd</a></span><span class="op">(</span></span>
-<span>  data            <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
-<span>  env_vars        <span class="op">=</span> <span class="va">env_vars</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<span>  env_vars <span class="op">=</span> <span class="va">env_vars</span>,</span>
 <span>  grid_resolution <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">suggested_resolution</span>,</span>
-<span>  seed            <span class="op">=</span> <span class="fl">1</span></span>
+<span>  seed <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">thinned_stochastic</span></span>
 <span><span class="co">#&gt; --- Bean Stochastic Thinning Results ---</span></span>
@@ -223,8 +223,8 @@ single point at the geometric centre of the cell — no randomness
 involved.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">thinned_deterministic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/thin_env_center.html">thin_env_center</a></span><span class="op">(</span></span>
-<span>  data            <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
-<span>  env_vars        <span class="op">=</span> <span class="va">env_vars</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<span>  env_vars <span class="op">=</span> <span class="va">env_vars</span>,</span>
 <span>  grid_resolution <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">thinned_deterministic</span></span>
@@ -241,7 +241,7 @@ involved.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="va">plot_compare</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span><span class="op">[</span>, <span class="va">env_vars</span><span class="op">]</span>,          Status <span class="op">=</span> <span class="st">"Original"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span><span class="op">[</span>, <span class="va">env_vars</span><span class="op">]</span>, Status <span class="op">=</span> <span class="st">"Original"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">thinned_stochastic</span><span class="op">$</span><span class="va">thinned_data</span><span class="op">[</span>, <span class="va">env_vars</span><span class="op">]</span>, Status <span class="op">=</span> <span class="st">"Stochastic"</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">thinned_deterministic</span><span class="op">$</span><span class="va">thinned_points</span><span class="op">[</span>, <span class="va">env_vars</span><span class="op">]</span>, Status <span class="op">=</span> <span class="st">"Deterministic"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
@@ -269,22 +269,18 @@ cell’s centre, so its points sit on a regular lattice.</p>
 </h2>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_bean.html">plot_bean</a></span><span class="op">(</span></span>
-<span>  original_data  <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<span>  original_data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
 <span>  thinned_object <span class="op">=</span> <span class="va">thinned_stochastic</span>,</span>
-<span>  env_vars       <span class="op">=</span> <span class="va">env_vars</span></span>
+<span>  env_vars <span class="op">=</span> <span class="va">env_vars</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="environmental-thinning_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="90%"></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_bean.html">plot_bean</a></span><span class="op">(</span></span>
-<span>  original_data  <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<span>  original_data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
 <span>  thinned_object <span class="op">=</span> <span class="va">thinned_deterministic</span>,</span>
-<span>  env_vars       <span class="op">=</span> <span class="va">env_vars</span></span>
+<span>  env_vars <span class="op">=</span> <span class="va">env_vars</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="environmental-thinning_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="90%"></p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">thinned_stochastic</span>, file <span class="op">=</span> <span class="st">"thinned_stochastic.rda"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/save.html" class="external-link">save</a></span><span class="op">(</span><span class="va">thinned_deterministic</span>, file <span class="op">=</span> <span class="st">"thinned_deterministic.rda"</span><span class="op">)</span></span></code></pre></div>
 <p>The next vignette uses these two thinned datasets to fit niche
 ellipsoids and project suitability across the landscape.</p>
 </div>

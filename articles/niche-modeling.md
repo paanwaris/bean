@@ -14,9 +14,9 @@ Mahalanobis distance, controlled by `level` (default 95 %).
 ``` r
 
 library(bean)
-data(origin_dat_prepared,    package = "bean")
-data(thinned_stochastic,     package = "bean")
-data(thinned_deterministic,  package = "bean")
+data(origin_dat_prepared, package = "bean")
+data(thinned_stochastic, package = "bean")
+data(thinned_deterministic, package = "bean")
 env_vars <- c("bio_1", "bio_4", "bio_12", "bio_15")
 ```
 
@@ -29,24 +29,24 @@ inferred niche.
 ``` r
 
 origin_ellipse <- fit_ellipsoid(
-  data     = origin_dat_prepared,
+  data = origin_dat_prepared,
   env_vars = env_vars,
-  method   = "covmat",
-  level    = 0.95
+  method = "covmat",
+  level = 0.95
 )
-save(origin_ellipse, file = "origin_ellipse.rda")
+
 stochastic_ellipse <- fit_ellipsoid(
-  data     = thinned_stochastic$thinned_data,
+  data = thinned_stochastic$thinned_data,
   env_vars = env_vars,
-  method   = "covmat",
-  level    = 0.95
+  method = "covmat",
+  level = 0.95
 )
 
 deterministic_ellipse <- fit_ellipsoid(
-  data     = thinned_deterministic$thinned_points,
+  data = thinned_deterministic$thinned_points,
   env_vars = env_vars,
-  method   = "covmat",
-  level    = 0.95
+  method = "covmat",
+  level = 0.95
 )
 
 origin_ellipse
@@ -82,14 +82,14 @@ deterministic_ellipse
 
 ``` r
 
-plot(origin_ellipse,        dims = c("bio_1", "bio_12"))
+plot(origin_ellipse, dims = c("bio_1", "bio_12"))
 ```
 
 ![](niche-modeling_files/figure-html/unnamed-chunk-3-1.png)
 
 ``` r
 
-plot(stochastic_ellipse,    dims = c("bio_1", "bio_12"))
+plot(stochastic_ellipse, dims = c("bio_1", "bio_12"))
 ```
 
 ![](niche-modeling_files/figure-html/unnamed-chunk-3-2.png)
@@ -125,27 +125,27 @@ env <- terra::rast(system.file("extdata", "thai_env.tif", package = "bean"))
 env_scaled <- terra::scale(env)
 
 origin_pred <- predict(
-  object                = origin_ellipse,
-  newdata               = env_scaled,
-  include_suitability   = TRUE,
+  object = origin_ellipse,
+  newdata = env_scaled,
+  include_suitability = TRUE,
   suitability_truncated = FALSE,
-  include_mahalanobis   = FALSE
+  include_mahalanobis = FALSE
 )
 
 stochastic_pred <- predict(
-  object                = stochastic_ellipse,
-  newdata               = env_scaled,
-  include_suitability   = TRUE,
+  object = stochastic_ellipse,
+  newdata = env_scaled,
+  include_suitability = TRUE,
   suitability_truncated = FALSE,
-  include_mahalanobis   = FALSE
+  include_mahalanobis = FALSE
 )
 
 deterministic_pred <- predict(
-  object                = deterministic_ellipse,
-  newdata               = env_scaled,
-  include_suitability   = TRUE,
+  object = deterministic_ellipse,
+  newdata = env_scaled,
+  include_suitability = TRUE,
   suitability_truncated = FALSE,
-  include_mahalanobis   = FALSE
+  include_mahalanobis = FALSE
 )
 ```
 
@@ -160,7 +160,7 @@ names(suit_stack) <- c("Raw (unthinned)",
                        "Stochastic thinning",
                        "Deterministic thinning")
 
-plot(suit_stack, nc = 3, mar = c(2, 2, 2.5, 4))
+terra::plot(suit_stack, nc = 3, mar = c(2, 2, 2.5, 4))
 ```
 
 ![](niche-modeling_files/figure-html/unnamed-chunk-5-1.png)
@@ -178,15 +178,15 @@ If you prefer only the chi-square interior, set
 
 ``` r
 
-origin_trunc <- predict(origin_ellipse,        env,
+origin_trunc <- predict(origin_ellipse,env_scaled,
                         include_suitability = FALSE,
                         suitability_truncated = TRUE,
                         include_mahalanobis = FALSE)
-stoch_trunc  <- predict(stochastic_ellipse,    env,
+stoch_trunc <- predict(stochastic_ellipse, env_scaled,
                         include_suitability = FALSE,
                         suitability_truncated = TRUE,
                         include_mahalanobis = FALSE)
-det_trunc    <- predict(deterministic_ellipse, env,
+det_trunc <- predict(deterministic_ellipse, env_scaled,
                         include_suitability = FALSE,
                         suitability_truncated = TRUE,
                         include_mahalanobis = FALSE)
@@ -197,7 +197,7 @@ trunc_stack <- c(origin_trunc[["suitability_trunc"]],
 names(trunc_stack) <- c("Raw (unthinned)",
                         "Stochastic thinning",
                         "Deterministic thinning")
-plot(trunc_stack, nc = 3, mar = c(2, 2, 2.5, 4))
+terra::plot(trunc_stack, nc = 3, mar = c(2, 2, 2.5, 4))
 ```
 
 ![](niche-modeling_files/figure-html/unnamed-chunk-6-1.png)
@@ -210,10 +210,10 @@ niche.
 ``` r
 
 summary_df <- data.frame(
-  model        = c("Raw", "Stochastic", "Deterministic"),
-  mean_suit    = sapply(list(origin_pred, stochastic_pred, deterministic_pred),
+  model = c("Raw", "Stochastic", "Deterministic"),
+  mean_suit = sapply(list(origin_pred, stochastic_pred, deterministic_pred),
                         function(p) mean(terra::values(p[["suitability"]]), na.rm = TRUE)),
-  median_suit  = sapply(list(origin_pred, stochastic_pred, deterministic_pred),
+  median_suit = sapply(list(origin_pred, stochastic_pred, deterministic_pred),
                         function(p) median(terra::values(p[["suitability"]]), na.rm = TRUE))
 )
 summary_df

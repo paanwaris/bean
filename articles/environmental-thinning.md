@@ -71,9 +71,9 @@ slightly finer structure, not arbitrarily finer.
 ``` r
 
 res <- find_env_resolution(
-  data     = origin_dat_prepared,
+  data = origin_dat_prepared,
   env_vars = env_vars,
-  method   = "sheather-jones"
+  method = "sheather-jones"
 )
 res
 #> --- Bean environmental grid resolution ---
@@ -127,10 +127,10 @@ state.
 ``` r
 
 thinned_stochastic <- thin_env_nd(
-  data            = origin_dat_prepared,
-  env_vars        = env_vars,
+  data = origin_dat_prepared,
+  env_vars = env_vars,
   grid_resolution = res$suggested_resolution,
-  seed            = 1
+  seed = 1
 )
 thinned_stochastic
 #> --- Bean Stochastic Thinning Results ---
@@ -150,8 +150,8 @@ of the cell — no randomness involved.
 ``` r
 
 thinned_deterministic <- thin_env_center(
-  data            = origin_dat_prepared,
-  env_vars        = env_vars,
+  data = origin_dat_prepared,
+  env_vars = env_vars,
   grid_resolution = c(0.5, 0.5, 0.5, 0.5)
 )
 thinned_deterministic
@@ -169,7 +169,7 @@ thinned_deterministic
 
 library(ggplot2)
 plot_compare <- rbind(
-  data.frame(origin_dat_prepared[, env_vars],          Status = "Original"),
+  data.frame(origin_dat_prepared[, env_vars], Status = "Original"),
   data.frame(thinned_stochastic$thinned_data[, env_vars], Status = "Stochastic"),
   data.frame(thinned_deterministic$thinned_points[, env_vars], Status = "Deterministic")
 )
@@ -200,9 +200,9 @@ centre, so its points sit on a regular lattice.
 ``` r
 
 plot_bean(
-  original_data  = origin_dat_prepared,
+  original_data = origin_dat_prepared,
   thinned_object = thinned_stochastic,
-  env_vars       = env_vars
+  env_vars = env_vars
 )
 ```
 
@@ -211,20 +211,13 @@ plot_bean(
 ``` r
 
 plot_bean(
-  original_data  = origin_dat_prepared,
+  original_data = origin_dat_prepared,
   thinned_object = thinned_deterministic,
-  env_vars       = env_vars
+  env_vars = env_vars
 )
 ```
 
 ![](environmental-thinning_files/figure-html/unnamed-chunk-9-1.png)
-
-``` r
-
-
-save(thinned_stochastic, file = "thinned_stochastic.rda")
-save(thinned_deterministic, file = "thinned_deterministic.rda")
-```
 
 The next vignette uses these two thinned datasets to fit niche
 ellipsoids and project suitability across the landscape.

@@ -21,7 +21,7 @@ occ_file <- system.file("extdata", "Rusa_unicolor.csv", package = "bean")
 env_file <- system.file("extdata", "thai_env.tif",     package = "bean")
 
 occ_data_raw <- read.csv(occ_file)
-env          <- terra::rast(env_file)
+env <- terra::rast(env_file)
 
 head(occ_data_raw)
 #>         species        y         x
@@ -79,11 +79,11 @@ ggplot(occ_data_raw, aes(x, y)) +
 ``` r
 
 prepared <- prepare_bean(
-  data        = occ_data_raw,
+  data = occ_data_raw,
   env_rasters = env,
-  longitude   = "x",
-  latitude    = "y",
-  transform   = "scale"
+  longitude = "x",
+  latitude = "y",
+  transform = "scale"
 )
 #> Scaling environmental rasters...
 #> Extracting environmental data for occurrence points...

@@ -100,7 +100,7 @@ attaches environmental values to each point. The function:</p>
 <span><span class="va">env_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"thai_env.tif"</span>,     package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">occ_data_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">occ_file</span><span class="op">)</span></span>
-<span><span class="va">env</span>          <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">env_file</span><span class="op">)</span></span>
+<span><span class="va">env</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">env_file</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">occ_data_raw</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         species        y         x</span></span>
@@ -152,11 +152,11 @@ a classic example of spatial sampling bias.</p>
 </h2>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepared</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_bean.html">prepare_bean</a></span><span class="op">(</span></span>
-<span>  data        <span class="op">=</span> <span class="va">occ_data_raw</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">occ_data_raw</span>,</span>
 <span>  env_rasters <span class="op">=</span> <span class="va">env</span>,</span>
-<span>  longitude   <span class="op">=</span> <span class="st">"x"</span>,</span>
-<span>  latitude    <span class="op">=</span> <span class="st">"y"</span>,</span>
-<span>  transform   <span class="op">=</span> <span class="st">"scale"</span></span>
+<span>  longitude <span class="op">=</span> <span class="st">"x"</span>,</span>
+<span>  latitude <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>  transform <span class="op">=</span> <span class="st">"scale"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Scaling environmental rasters...</span></span>
 <span><span class="co">#&gt; Extracting environmental data for occurrence points...</span></span>
