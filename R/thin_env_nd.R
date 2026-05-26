@@ -20,22 +20,16 @@
 #'   \item{n_thinned}{An integer representing the number of occurrence records remaining after thinning.}
 #'   \item{parameters}{A list of the key parameters used during the thinning process.}
 #' @export
+#' @importFrom stats complete.cases
 #' @examples
-#' \dontrun{
-#' # Assume 'prepared_pca' is the output from prepare_bean(..., transform = "pca")
-#' # and contains columns PC1, PC2, PC3.
-#'
-#' # Thin the data in 3D environmental space, retaining 1 point per grid cell
-#' thinned_3d <- thin_env_nd(
-#'   data = prepared_pca$prepared_data,
-#'   env_vars = c("PC1", "PC2", "PC3"),
-#'   grid_resolution = c(0.5, 0.5, 0.5), # One resolution value for each axis
-#'   seed = 123
+#' data(origin_dat_prepared, package = "bean")
+#' thinned <- thin_env_nd(
+#'   data            = origin_dat_prepared,
+#'   env_vars        = c("bio_1", "bio_12"),
+#'   grid_resolution = c(0.5, 0.5),
+#'   seed            = 123
 #' )
-#'
-#' # Print the summary
-#' print(thinned_3d)
-#' }
+#' print(thinned)
 thin_env_nd <- function(data, env_vars, grid_resolution, seed = NULL) {
 
   # --- Safe Seed Handling ---
