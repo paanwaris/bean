@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
   fig.height = 5,
   out.width = "90%"
 )
-has_terra   <- requireNamespace("terra",   quietly = TRUE)
+has_terra <- requireNamespace("terra",   quietly = TRUE)
 has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
 ```
 
@@ -38,7 +38,7 @@ occ_file <- system.file("extdata", "Rusa_unicolor.csv", package = "bean")
 env_file <- system.file("extdata", "thai_env.tif",     package = "bean")
 
 occ_data_raw <- read.csv(occ_file)
-env          <- terra::rast(env_file)
+env <- terra::rast(env_file)
 
 head(occ_data_raw)
 env
@@ -73,11 +73,11 @@ ggplot(occ_data_raw, aes(x, y)) +
 
 ```{r, eval = has_terra}
 prepared <- prepare_bean(
-  data        = occ_data_raw,
+  data = occ_data_raw,
   env_rasters = env,
-  longitude   = "x",
-  latitude    = "y",
-  transform   = "scale"
+  longitude = "x",
+  latitude = "y",
+  transform = "scale"
 )
 head(prepared)
 summary(prepared[, -(1:3)])
