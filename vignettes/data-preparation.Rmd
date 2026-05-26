@@ -19,16 +19,18 @@ has_terra   <- requireNamespace("terra",   quietly = TRUE)
 has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
 ```
 
-`prepare_bean()` cleans raw occurrence records and extracts environmental
-values for each point:
+`prepare_bean()` cleans raw occurrence records and attaches environmental
+values to each point. The function:
 
 1. drops records with missing coordinates;
-2. (optionally) standardises the raster layers (`"scale"`) or projects them
-   onto principal components (`"pca"`);
-3. extracts environmental values for each occurrence;
+2. optionally standardises (`"scale"`) or PCA-rotates (`"pca"`) the
+   environmental rasters before extraction;
+3. extracts environmental values for every occurrence;
 4. drops records that fall outside the raster extent.
 
-```{r, eval = has_terra}
+## Load raw data
+
+```{r, eval = has_terra, message = FALSE, warning = FALSE}
 library(bean)
 library(terra)
 
@@ -36,23 +38,38 @@ occ_file <- system.file("extdata", "Rusa_unicolor.csv", package = "bean")
 env_file <- system.file("extdata", "thai_env.tif",     package = "bean")
 
 occ_data_raw <- read.csv(occ_file)
-env <- terra::rast(env_file)
+env          <- terra::rast(env_file)
+
 head(occ_data_raw)
+env
 ```
 
-Inspect spatial distribution (only if `ggplot2` is available):
+## Visualise the environmental layers
 
-```{r, eval = has_terra && has_ggplot2}
+```{r, eval = has_terra, fig.width = 9, fig.height = 7}
+plot(env, mar = c(1.5, 1.5, 2, 4))
+```
+
+## Visualise the raw occurrence points
+
+The raw points are clearly clustered along roads and around cities — a
+classic example of spatial sampling bias.
+
+```{r, eval = has_terra && has_ggplot2, fig.width = 7, fig.height = 6}
 library(ggplot2)
 env_df <- as.data.frame(env[[1]], xy = TRUE)
+
 ggplot(occ_data_raw, aes(x, y)) +
-  geom_raster(data = env_df, aes(x, y), fill = "grey80") +
-  geom_point(alpha = 0.5, colour = "darkred") +
+  geom_raster(data = env_df, aes(x, y, fill = .data[[names(env)[1]]])) +
+  geom_point(alpha = 0.6, colour = "darkred", size = 1.4) +
+  scale_fill_gradient(low = "grey95", high = "grey55", guide = "none") +
   coord_fixed() +
+  labs(title = "Raw occurrence points",
+       subtitle = sprintf("n = %d records", nrow(occ_data_raw))) +
   theme_classic()
 ```
 
-Run the preparation step:
+## Run `prepare_bean()`
 
 ```{r, eval = has_terra}
 prepared <- prepare_bean(
@@ -63,12 +80,38 @@ prepared <- prepare_bean(
   transform   = "scale"
 )
 head(prepared)
+summary(prepared[, -(1:3)])
 ```
 
-For users without `terra`, the package ships a prepared copy of the same
-data:
+## Visualise the prepared points
+
+After cleaning, the records that survived are mapped here in blue. Points
+that were dropped (missing coordinates or outside the raster extent) are
+shown in light grey for comparison.
+
+```{r, eval = has_terra && has_ggplot2, fig.width = 7, fig.height = 6}
+ggplot() +
+  geom_raster(data = env_df, aes(x, y, fill = .data[[names(env)[1]]])) +
+  geom_point(data = occ_data_raw, aes(x, y),
+             colour = "grey60", size = 1.4, alpha = 0.5) +
+  geom_point(data = prepared, aes(x, y),
+             colour = "#118ab2", size = 1.4, alpha = 0.8) +
+  scale_fill_gradient(low = "grey95", high = "grey55", guide = "none") +
+  coord_fixed() +
+  labs(title = "Prepared occurrence points (blue) vs. raw (grey)",
+       subtitle = sprintf("retained %d of %d records",
+                          nrow(prepared), nrow(occ_data_raw))) +
+  theme_classic()
+```
+
+## The shipped, pre-computed dataset
+
+For users without `terra`, the package also ships the result of running the
+same pipeline on the bundled rasters:
 
 ```{r}
 data(origin_dat_prepared, package = "bean")
 head(origin_dat_prepared)
 ```
+
+This is the object used in the next two vignettes.
