@@ -87,14 +87,70 @@
 <div class="section level2">
 <h2 id="choosing-an-objective-grid-resolution">Choosing an objective grid resolution<a class="anchor" aria-label="anchor" href="#choosing-an-objective-grid-resolution"></a>
 </h2>
-<p><code><a href="../reference/find_env_resolution.html">find_env_resolution()</a></code> selects a <strong>kernel-density
-bandwidth</strong> for each environmental variable. The bandwidth is the
-scale at which the empirical density of observations becomes smooth, and
-is a statistically defensible choice for the edge length of an
-environmental grid cell. The default selector is the Sheather–Jones
-plug-in estimator (Sheather &amp; Jones, 1991); Silverman’s rule
-(<code>"silverman"</code>) and Scott’s rule (<code>"scott"</code>) are
-also available.</p>
+<div class="section level3">
+<h3 id="the-intuition">The intuition<a class="anchor" aria-label="anchor" href="#the-intuition"></a>
+</h3>
+<p>A grid cell is the unit of “redundancy” in environmental space. If
+two occurrences sit in the same cell, the package treats them as
+carrying the same environmental information and keeps only one. Pick the
+cell too small, and almost every point survives — thinning does nothing.
+Pick it too large, and you wipe out genuine ecological variation. We
+need a data-driven choice that sits between those two extremes.</p>
+</div>
+<div class="section level3">
+<h3 id="why-a-kernel-density-bandwidth">Why a kernel-density bandwidth?<a class="anchor" aria-label="anchor" href="#why-a-kernel-density-bandwidth"></a>
+</h3>
+<p>A kernel density estimator (KDE) replaces every observation with a
+small “bump” of width <em>h</em> (the <strong>bandwidth</strong>) and
+adds the bumps together to estimate the probability density of the
+variable. The bandwidth is the scale at which the estimator stops
+resolving individual points and starts producing a smooth curve.
+Operationally:</p>
+<ul>
+<li>features finer than <em>h</em> are treated as sampling noise,</li>
+<li>features coarser than <em>h</em> are treated as real density
+structure.</li>
+</ul>
+<p>That is exactly the dividing line a thinning grid should respect, so
+<code><a href="../reference/find_env_resolution.html">find_env_resolution()</a></code> uses <em>h</em> (computed
+independently per variable) as the suggested edge length of each
+cell.</p>
+</div>
+<div class="section level3">
+<h3 id="which-selector">Which selector?<a class="anchor" aria-label="anchor" href="#which-selector"></a>
+</h3>
+<p>Three selectors with established statistical properties are available
+via the <code>method</code> argument:</p>
+<ul>
+<li><p><strong>Sheather–Jones plug-in</strong>
+(<code>"sheather-jones"</code>, the default) — solves an equation for
+the bandwidth that minimises the asymptotic mean integrated squared
+error of the density estimate. It uses the data itself (rather than a
+Gaussian assumption) to estimate the curvature of the unknown density,
+and is the modern standard recommendation (Sheather &amp; Jones, 1991;
+Jones, Marron &amp; Sheather, 1996).</p></li>
+<li><p><strong>Silverman’s rule of thumb</strong>
+(<code>"silverman"</code>) — the closed form
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mn>0.9</mn><mspace width="0.167em"></mspace><mrow><mi mathvariant="normal">min</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mo>,</mo><mspace width="0.167em"></mspace><mi>I</mi><mi>Q</mi><mi>R</mi><mi>/</mi><mn>1.34</mn><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><msup><mi>n</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>5</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">h = 0.9 \, \min\!\left(\hat\sigma,\, IQR/1.34\right) \, n^{-1/5}.</annotation></semantics></math>
+Cheap, stable, and a good fallback. Uses the IQR-based scale to resist
+mild outliers, but assumes the underlying density is approximately
+Gaussian. Tends to over-smooth multimodal data (Silverman,
+1986).</p></li>
+<li><p><strong>Scott’s rule</strong> (<code>"scott"</code>) — the closed
+form
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mn>1.06</mn><mspace width="0.167em"></mspace><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mspace width="0.167em"></mspace><msup><mi>n</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>5</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">h = 1.06 \, \hat\sigma \, n^{-1/5}.</annotation></semantics></math>
+Optimal when the density is exactly Gaussian; otherwise less defensible
+than the other two (Scott, 1992).</p></li>
+</ul>
+<p>All three rules shrink at the canonical rate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>n</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>5</mn></mrow></msup><annotation encoding="application/x-tex">n^{-1/5}</annotation></semantics></math>:
+more data buys you a finer resolution, but only slowly. This is the
+right behaviour for SDM data — doubling your sample size should let you
+see slightly finer structure, not arbitrarily finer.</p>
+</div>
+<div class="section level3">
+<h3 id="computing-the-resolution">Computing the resolution<a class="anchor" aria-label="anchor" href="#computing-the-resolution"></a>
+</h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_env_resolution.html">find_env_resolution</a></span><span class="op">(</span></span>
 <span>  data     <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
@@ -110,11 +166,33 @@ also available.</p>
 <span><span class="co">#&gt;     bio_4 0.85162273</span></span>
 <span><span class="co">#&gt;    bio_12 2.25907105</span></span>
 <span><span class="co">#&gt;    bio_15 0.07070831</span></span></code></pre></div>
-<p>Visualise the per-variable kernel density and the chosen
-bandwidth:</p>
+</div>
+<div class="section level3">
+<h3 id="visualising-the-bandwidth">Visualising the bandwidth<a class="anchor" aria-label="anchor" href="#visualising-the-bandwidth"></a>
+</h3>
+<p>Each panel below shows the per-variable kernel density. The red bar
+at the bottom of each panel has length equal to the chosen bandwidth —
+the cell width that will be used for thinning.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></code></pre></div>
 <p><img src="environmental-thinning_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="90%"></p>
+</div>
+<div class="section level3">
+<h3 id="sensitivity-to-the-selector">Sensitivity to the selector<a class="anchor" aria-label="anchor" href="#sensitivity-to-the-selector"></a>
+</h3>
+<p>It’s worth checking that the three rules give comparable answers; if
+they don’t, the data is far from Gaussian and you may want to inspect
+the densities yourself.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sheather-jones"</span>, <span class="st">"silverman"</span>, <span class="st">"scott"</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="../reference/find_env_resolution.html">find_env_resolution</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span>, <span class="va">env_vars</span>, method <span class="op">=</span> <span class="va">m</span><span class="op">)</span><span class="op">$</span><span class="va">suggested_resolution</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        sheather-jones silverman     scott</span></span>
+<span><span class="co">#&gt; bio_1      0.08274934 0.2648006 0.3118763</span></span>
+<span><span class="co">#&gt; bio_4      0.85162273 2.5175294 2.9650902</span></span>
+<span><span class="co">#&gt; bio_12     2.25907105 7.0522388 8.3059701</span></span>
+<span><span class="co">#&gt; bio_15     0.07070831 0.2577496 0.3035717</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="stochastic-thinning">Stochastic thinning<a class="anchor" aria-label="anchor" href="#stochastic-thinning"></a>
@@ -122,7 +200,7 @@ bandwidth:</p>
 <p><code><a href="../reference/thin_env_nd.html">thin_env_nd()</a></code> randomly retains exactly one occurrence
 per occupied grid cell. A <code>seed</code> makes the selection
 reproducible without disturbing the global random state.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">thinned_stochastic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/thin_env_nd.html">thin_env_nd</a></span><span class="op">(</span></span>
 <span>  data            <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
 <span>  env_vars        <span class="op">=</span> <span class="va">env_vars</span>,</span>
@@ -141,9 +219,9 @@ reproducible without disturbing the global random state.</p>
 <h2 id="deterministic-thinning">Deterministic thinning<a class="anchor" aria-label="anchor" href="#deterministic-thinning"></a>
 </h2>
 <p><code><a href="../reference/thin_env_center.html">thin_env_center()</a></code> replaces each occupied cell with a
-single point at the geometric centre of the cell. There is no
-randomness, so the result is exactly reproducible.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+single point at the geometric centre of the cell — no randomness
+involved.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">thinned_deterministic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/thin_env_center.html">thin_env_center</a></span><span class="op">(</span></span>
 <span>  data            <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
 <span>  env_vars        <span class="op">=</span> <span class="va">env_vars</span>,</span>
@@ -158,17 +236,53 @@ randomness, so the result is exactly reproducible.</p>
 <span><span class="co">#&gt; --------------------------------------</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="comparing-original-and-thinned-data">Comparing original and thinned data<a class="anchor" aria-label="anchor" href="#comparing-original-and-thinned-data"></a>
+<h2 id="comparing-the-two-thinned-datasets">Comparing the two thinned datasets<a class="anchor" aria-label="anchor" href="#comparing-the-two-thinned-datasets"></a>
 </h2>
-<p><code><a href="../reference/plot_bean.html">plot_bean()</a></code> overlays the thinned points on the original
-cloud in a scatterplot matrix.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="va">plot_compare</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span><span class="op">[</span>, <span class="va">env_vars</span><span class="op">]</span>,          Status <span class="op">=</span> <span class="st">"Original"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">thinned_stochastic</span><span class="op">$</span><span class="va">thinned_data</span><span class="op">[</span>, <span class="va">env_vars</span><span class="op">]</span>, Status <span class="op">=</span> <span class="st">"Stochastic"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">thinned_deterministic</span><span class="op">$</span><span class="va">thinned_points</span><span class="op">[</span>, <span class="va">env_vars</span><span class="op">]</span>, Status <span class="op">=</span> <span class="st">"Deterministic"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">plot_compare</span><span class="op">$</span><span class="va">Status</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">plot_compare</span><span class="op">$</span><span class="va">Status</span>,</span>
+<span>                              levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Original"</span>, <span class="st">"Stochastic"</span>, <span class="st">"Deterministic"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">plot_compare</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">bio_1</span>, <span class="va">bio_12</span>, colour <span class="op">=</span> <span class="va">Status</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.6</span>, size <span class="op">=</span> <span class="fl">1.2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">Status</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_colour_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Original <span class="op">=</span> <span class="st">"#ef476f"</span>,</span>
+<span>                                 Stochastic <span class="op">=</span> <span class="st">"#118ab2"</span>,</span>
+<span>                                 Deterministic <span class="op">=</span> <span class="st">"#06d6a0"</span><span class="op">)</span>,</span>
+<span>                      guide <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Occurrences in environmental space"</span>,</span>
+<span>       x <span class="op">=</span> <span class="st">"bio_1 (scaled)"</span>, y <span class="op">=</span> <span class="st">"bio_12 (scaled)"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="environmental-thinning_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="90%"></p>
+<p>The stochastic plot preserves <em>actual</em> observations (one per
+cell), so its points reflect the empirical distribution within each
+cell. The deterministic plot replaces each cell’s observations with the
+cell’s centre, so its points sit on a regular lattice.</p>
+</div>
+<div class="section level2">
+<h2 id="pairs-view-with-plot_bean">Pairs view with <code>plot_bean()</code><a class="anchor" aria-label="anchor" href="#pairs-view-with-plot_bean"></a>
+</h2>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_bean.html">plot_bean</a></span><span class="op">(</span></span>
 <span>  original_data  <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
 <span>  thinned_object <span class="op">=</span> <span class="va">thinned_stochastic</span>,</span>
 <span>  env_vars       <span class="op">=</span> <span class="va">env_vars</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="environmental-thinning_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="90%"></p>
+<p><img src="environmental-thinning_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="90%"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_bean.html">plot_bean</a></span><span class="op">(</span></span>
+<span>  original_data  <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<span>  thinned_object <span class="op">=</span> <span class="va">thinned_deterministic</span>,</span>
+<span>  env_vars       <span class="op">=</span> <span class="va">env_vars</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="environmental-thinning_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="90%"></p>
+<p>The next vignette uses these two thinned datasets to fit niche
+ellipsoids and project suitability across the landscape.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
