@@ -3,21 +3,15 @@
 \docType{data}
 \name{origin_ellipse}
 \alias{origin_ellipse}
-\title{Fitted origin ellipsoid}
+\title{Fitted niche ellipsoid for Rusa unicolor}
 \format{
-An object of class \code{bean_ellipsoid} containing:
-\describe{
-  \item{centroid}{The multidimensional mean of the environmental variables}
-  \item{covariance_matrix}{The covariance matrix of the variables}
-  \item{volume}{The hypervolume of the fitted ellipsoid}
-  \item{parameters}{Model parameters including the confidence level (e.g., 0.95)}
-}
+A \code{bean_ellipsoid} object (see \code{\link{fit_ellipsoid}}).
 }
 \usage{
 origin_ellipse
 }
 \description{
-A multidimensional ellipsoid fitted to the unthinned, prepared occurrence data
+A \code{bean_ellipsoid} fitted to \code{\link{origin_dat_prepared}}
 representing the baseline environmental niche of the species.
 }
-\keyword{internal}
+\keyword{datasets}
