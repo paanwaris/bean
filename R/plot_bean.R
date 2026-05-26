@@ -15,22 +15,15 @@
 #' @importFrom grDevices adjustcolor
 #' @importFrom graphics par plot polygon text box axis abline points title legend
 #' @examples
-#' \dontrun{
-#' # Assume 'prepared_data' is ready.
-#'
-#' # --- Example: Plotting Density-Based Thinning ---
-#' thinned_obj <- thin_env_nd(
-#'   data = prepared_data,
-#'   env_vars = c("PC1", "PC2", "PC3"),
-#'   grid_resolution = c(0.5, 0.5, 0.5)
+#' data(origin_dat_prepared, package = "bean")
+#' env_vars <- c("bio_1", "bio_12")
+#' thinned <- thin_env_nd(
+#'   data            = origin_dat_prepared,
+#'   env_vars        = env_vars,
+#'   grid_resolution = c(0.5, 0.5),
+#'   seed            = 1
 #' )
-#'
-#' plot_bean(
-#'   original_data = prepared_data,
-#'   thinned_object = thinned_obj,
-#'   env_vars = c("PC1", "PC2", "PC3")
-#' )
-#' }
+#' \donttest{plot_bean(origin_dat_prepared, thinned, env_vars = env_vars)}
 plot_bean <- function(original_data, thinned_object, env_vars) {
 
   # --- 1. Identify Thinning Type and Prepare Data ---
