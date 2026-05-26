@@ -2,9 +2,11 @@
 
 ### All vignettes
 
-- [Data
+- [bean: an
+  overview](https://paanwaris.github.io/bean/articles/bean-overview.md):
+- [1. Data
   preparation](https://paanwaris.github.io/bean/articles/data-preparation.md):
-- [Environmental
+- [2. Environmental
   thinning](https://paanwaris.github.io/bean/articles/environmental-thinning.md):
-- [Niche
+- [3. Niche
   modeling](https://paanwaris.github.io/bean/articles/niche-modeling.md):

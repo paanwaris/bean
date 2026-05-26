@@ -5,17 +5,17 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Data preparation • bean</title>
+<title>1. Data preparation • bean</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Data preparation">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="1. Data preparation">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bean</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,9 +39,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-book"></span> Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/data-preparation.html">1. Data Prep</a></li>
+<li><a class="dropdown-item" href="../articles/bean-overview.html">Overview</a></li>
+    <li><a class="dropdown-item" href="../articles/data-preparation.html">1. Data Preparation</a></li>
     <li><a class="dropdown-item" href="../articles/environmental-thinning.html">2. Environmental Thinning</a></li>
-    <li><a class="dropdown-item" href="../articles/niche-modeling.html">3. Niche Delineation &amp; Mapping</a></li>
+    <li><a class="dropdown-item" href="../articles/niche-modeling.html">3. Niche Modeling</a></li>
   </ul>
 </li>
       </ul>
@@ -70,7 +71,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Data preparation</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>1. Data preparation</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/paanwaris/bean/blob/master/vignettes/data-preparation.Rmd" class="external-link"><code>vignettes/data-preparation.Rmd</code></a></small>
@@ -79,25 +80,25 @@
 
     
     
-<p>Load the package</p>
+<p><code><a href="../reference/prepare_bean.html">prepare_bean()</a></code> cleans raw occurrence records and
+extracts environmental values for each point:</p>
+<ol style="list-style-type: decimal">
+<li>drops records with missing coordinates;</li>
+<li>(optionally) standardises the raster layers (<code>"scale"</code>)
+or projects them onto principal components (<code>"pca"</code>);</li>
+<li>extracts environmental values for each occurrence;</li>
+<li>drops records that fall outside the raster extent.</li>
+</ol>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/paanwaris/bean" class="external-link">bean</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dmurdoch/rgl" class="external-link">rgl</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></code></pre></div>
-<div class="section level2">
-<h2 id="step-1-import-data">Step 1: Import Data<a class="anchor" aria-label="anchor" href="#step-1-import-data"></a>
-</h2>
-<p>The first step is to load your raw species occurrence data and
-environmental raster layers. It’s always a good practice to visualize
-the spatial distribution of your points and inspect the environmental
-layers.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load the raw occurrence data from the package</span></span>
-<span><span class="va">occ_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"Rusa_unicolor.csv"</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
-<span><span class="va">occ_data_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">occ_file</span><span class="op">)</span></span>
+<span><span class="co">#&gt; terra 1.9.27</span></span>
 <span></span>
-<span><span class="co"># Display the first few rows to understand its structure</span></span>
+<span><span class="va">occ_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"Rusa_unicolor.csv"</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
+<span><span class="va">env_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"thai_env.tif"</span>,     package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">occ_data_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">occ_file</span><span class="op">)</span></span>
+<span><span class="va">env</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">env_file</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">occ_data_raw</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         species        y         x</span></span>
 <span><span class="co">#&gt; 1 Rusa unicolor 15.37239  99.11555</span></span>
@@ -106,53 +107,49 @@ layers.</p>
 <span><span class="co">#&gt; 4 Rusa unicolor 15.65606  99.31600</span></span>
 <span><span class="co">#&gt; 5 Rusa unicolor 14.39543 101.41694</span></span>
 <span><span class="co">#&gt; 6 Rusa unicolor 12.72500 100.88947</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load the environmental raster layers</span></span>
-<span><span class="va">thai_env_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"thai_env.tif"</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
-<span><span class="va">env</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">thai_env_file</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Plot the environmental layers to check their extent and values</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">env</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="data-preparation_files/figure-html/setup-2-1.png" class="r-plt" alt="" width="95%"></p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Visualize the spatial distribution of the occurrence points</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">occ_data_raw</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">env</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, xy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"gray80"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span>, color <span class="op">=</span> <span class="st">"darkred"</span><span class="op">)</span> <span class="op">+</span></span>
+<p>Inspect spatial distribution (only if <code>ggplot2</code> is
+available):</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="va">env_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">env</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, xy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">occ_data_raw</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">env_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"grey80"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span>, colour <span class="op">=</span> <span class="st">"darkred"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Sambar Deer Occurrence Points"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="data-preparation_files/figure-html/setup-3-1.png" class="r-plt" alt="" width="95%"></p>
-</div>
-<div class="section level2">
-<h2 id="step-2-prepare-data-for-environmental-thinning">Step 2: Prepare Data for Environmental Thinning<a class="anchor" aria-label="anchor" href="#step-2-prepare-data-for-environmental-thinning"></a>
-</h2>
-<p>Before any analysis, the raw data must be cleaned and standardized.
-The <code><a href="../reference/prepare_bean.html">prepare_bean()</a></code> function streamlines this process
-by:</p>
-<ol style="list-style-type: decimal">
-<li><p>Removing records with missing coordinates.</p></li>
-<li><p>Extracting environmental data for each point from the raster
-layers.</p></li>
-<li><p>Removing records that fall outside the raster extent.</p></li>
-</ol>
-<p>This ensures all subsequent functions work with a clean, complete,
-and scaled dataset.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Run the preparation function to clean and scale the data</span></span>
-<span><span class="va">origin_dat_prepared</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_bean.html">prepare_bean</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">occ_data_raw</span>,</span>
+<p><img src="data-preparation_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="90%"></p>
+<p>Run the preparation step:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">prepared</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_bean.html">prepare_bean</a></span><span class="op">(</span></span>
+<span>  data        <span class="op">=</span> <span class="va">occ_data_raw</span>,</span>
 <span>  env_rasters <span class="op">=</span> <span class="va">env</span>,</span>
-<span>  longitude <span class="op">=</span> <span class="st">"x"</span>,</span>
-<span>  latitude <span class="op">=</span> <span class="st">"y"</span>,</span>
-<span>  transform <span class="op">=</span> <span class="st">"none"</span></span>
+<span>  longitude   <span class="op">=</span> <span class="st">"x"</span>,</span>
+<span>  latitude    <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>  transform   <span class="op">=</span> <span class="st">"scale"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Skipping raster transformation.</span></span>
+<span><span class="co">#&gt; Scaling environmental rasters...</span></span>
 <span><span class="co">#&gt; Extracting environmental data for occurrence points...</span></span>
 <span><span class="co">#&gt; 5 records removed because they fell outside the raster extent or had NA environmental values.</span></span>
 <span><span class="co">#&gt; Data preparation complete. Returning 1024 clean records.</span></span>
-<span></span>
-<span><span class="co"># View the structure and summary of the clean, scaled data</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">prepared</span><span class="op">)</span></span>
+<span><span class="co">#&gt;         species        y         x      bio_1       bio_12     bio_15</span></span>
+<span><span class="co">#&gt; 1 Rusa unicolor 15.37239  99.11555 -1.6909295  0.003511156 -0.2454693</span></span>
+<span><span class="co">#&gt; 2 Rusa unicolor 15.41415  99.28763 -0.8711075 -0.267821213 -0.3053829</span></span>
+<span><span class="co">#&gt; 3 Rusa unicolor 14.46838 101.22005 -1.3879976 -0.534812263 -0.3835742</span></span>
+<span><span class="co">#&gt; 4 Rusa unicolor 15.65606  99.31600 -0.6288324 -0.224408034 -0.2390396</span></span>
+<span><span class="co">#&gt; 5 Rusa unicolor 14.39543 101.41694 -2.0311866 -0.604273349 -0.5074636</span></span>
+<span><span class="co">#&gt; 6 Rusa unicolor 12.72500 100.88947  1.0537073 -0.311234392 -0.6623129</span></span>
+<span><span class="co">#&gt;        bio_4</span></span>
+<span><span class="co">#&gt; 1 -0.2573387</span></span>
+<span><span class="co">#&gt; 2 -0.1768698</span></span>
+<span><span class="co">#&gt; 3 -0.2876102</span></span>
+<span><span class="co">#&gt; 4 -0.0834852</span></span>
+<span><span class="co">#&gt; 5 -0.1398570</span></span>
+<span><span class="co">#&gt; 6 -1.0746857</span></span></code></pre></div>
+<p>For users without <code>terra</code>, the package ships a prepared
+copy of the same data:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         species        y         x    bio_1 bio_12   bio_15    bio_4</span></span>
 <span><span class="co">#&gt; 1 Rusa unicolor 15.37239  99.11555 23.66463   1414 78.85445 175.0943</span></span>
@@ -160,34 +157,8 @@ and scaled dataset.</p>
 <span><span class="co">#&gt; 3 Rusa unicolor 14.46838 101.22005 24.11074   1166 77.36796 173.1696</span></span>
 <span><span class="co">#&gt; 4 Rusa unicolor 15.65606  99.31600 25.22871   1309 78.92366 186.1482</span></span>
 <span><span class="co">#&gt; 5 Rusa unicolor 14.39543 101.41694 23.16356   1134 76.03447 182.5639</span></span>
-<span><span class="co">#&gt; 6 Rusa unicolor 12.72500 100.88947 27.70646   1269 74.36774 123.1260</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       species           y                x             bio_1      </span></span>
-<span><span class="co">#&gt;  Length   :1024   Min.   : 7.508   Min.   : 98.6   Min.   :22.07  </span></span>
-<span><span class="co">#&gt;  N.unique :   1   1st Qu.:14.414   1st Qu.:101.2   1st Qu.:23.16  </span></span>
-<span><span class="co">#&gt;  N.blank  :   0   Median :14.450   Median :101.3   Median :24.11  </span></span>
-<span><span class="co">#&gt;  Min.nchar:  13   Mean   :14.468   Mean   :101.2   Mean   :24.47  </span></span>
-<span><span class="co">#&gt;  Max.nchar:  13   3rd Qu.:14.539   3rd Qu.:101.4   3rd Qu.:25.08  </span></span>
-<span><span class="co">#&gt;                   Max.   :18.826   Max.   :103.5   Max.   :28.31  </span></span>
-<span><span class="co">#&gt;      bio_12         bio_15          bio_4       </span></span>
-<span><span class="co">#&gt;  Min.   : 806   Min.   :53.19   Min.   : 69.86  </span></span>
-<span><span class="co">#&gt;  1st Qu.:1134   1st Qu.:76.03   1st Qu.:173.17  </span></span>
-<span><span class="co">#&gt;  Median :1159   Median :77.37   Median :182.56  </span></span>
-<span><span class="co">#&gt;  Mean   :1191   Mean   :76.98   Mean   :179.68  </span></span>
-<span><span class="co">#&gt;  3rd Qu.:1176   3rd Qu.:77.57   3rd Qu.:188.16  </span></span>
-<span><span class="co">#&gt;  Max.   :2803   Max.   :91.24   Max.   :268.08</span></span>
-<span></span>
-<span><span class="co"># Visualize the spatial distribution of the cleaned occurrence points</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">env</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, xy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"gray80"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span>, color <span class="op">=</span> <span class="st">"darkred"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Sambar Deer Occurrence Points (Cleaned)"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="data-preparation_files/figure-html/prepare-data-1.png" class="r-plt" alt="" width="95%"></p>
-</div>
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
-    </nav></aside>
+<span><span class="co">#&gt; 6 Rusa unicolor 12.72500 100.88947 27.70646   1269 74.36774 123.1260</span></span></code></pre></div>
+  </main>
 </div>
 
 

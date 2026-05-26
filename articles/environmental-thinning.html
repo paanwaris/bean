@@ -5,17 +5,17 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Environmental thinning • bean</title>
+<title>2. Environmental thinning • bean</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Environmental thinning">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="2. Environmental thinning">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bean</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,9 +39,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-book"></span> Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/data-preparation.html">1. Data Prep</a></li>
+<li><a class="dropdown-item" href="../articles/bean-overview.html">Overview</a></li>
+    <li><a class="dropdown-item" href="../articles/data-preparation.html">1. Data Preparation</a></li>
     <li><a class="dropdown-item" href="../articles/environmental-thinning.html">2. Environmental Thinning</a></li>
-    <li><a class="dropdown-item" href="../articles/niche-modeling.html">3. Niche Delineation &amp; Mapping</a></li>
+    <li><a class="dropdown-item" href="../articles/niche-modeling.html">3. Niche Modeling</a></li>
   </ul>
 </li>
       </ul>
@@ -70,7 +71,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Environmental thinning</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>2. Environmental thinning</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/paanwaris/bean/blob/master/vignettes/environmental-thinning.Rmd" class="external-link"><code>vignettes/environmental-thinning.Rmd</code></a></small>
@@ -79,167 +80,95 @@
 
     
     
-<p>Load the package</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/paanwaris/bean" class="external-link">bean</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dmurdoch/rgl" class="external-link">rgl</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
+<span><span class="va">env_vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>, <span class="st">"bio_4"</span>, <span class="st">"bio_12"</span>, <span class="st">"bio_15"</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="step-3-objective-grid-resolution-using-nearest-neighbors">Step 3: Objective Grid Resolution using Nearest Neighbors<a class="anchor" aria-label="anchor" href="#step-3-objective-grid-resolution-using-nearest-neighbors"></a>
+<h2 id="choosing-an-objective-grid-resolution">Choosing an objective grid resolution<a class="anchor" aria-label="anchor" href="#choosing-an-objective-grid-resolution"></a>
 </h2>
-<p>The most critical parameter in environmental gridding is the
-<code>grid_resolution</code>. Instead of guessing this value, we can
-derive it objectively from the data by analyzing the density of points
-in environmental space.</p>
-<p>The <code><a href="../reference/find_env_resolution.html">find_env_resolution()</a></code> function uses a geometric
-“elbow” method based on nearest-neighbor distances. This identifies the
-exact distance where dense artificial clustering transitions into
-natural data spacing, eliminating the need for arbitrary quantiles.</p>
+<p><code><a href="../reference/find_env_resolution.html">find_env_resolution()</a></code> selects a <strong>kernel-density
+bandwidth</strong> for each environmental variable. The bandwidth is the
+scale at which the empirical density of observations becomes smooth, and
+is a statistically defensible choice for the edge length of an
+environmental grid cell. The default selector is the Sheather–Jones
+plug-in estimator (Sheather &amp; Jones, 1991); Silverman’s rule
+(<code>"silverman"</code>) and Scott’s rule (<code>"scott"</code>) are
+also available.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
-<span><span class="co"># Find the objective resolution using the elbow method</span></span>
-<span><span class="va">resolution_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_env_resolution.html">find_env_resolution</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
-<span>  env_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>, <span class="st">"bio_4"</span>, <span class="st">"bio_12"</span>, <span class="st">"bio_15"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_env_resolution.html">find_env_resolution</a></span><span class="op">(</span></span>
+<span>  data     <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<span>  env_vars <span class="op">=</span> <span class="va">env_vars</span>,</span>
+<span>  method   <span class="op">=</span> <span class="st">"sheather-jones"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Calculating nearest neighbor environmental distances and detecting elbows...</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">resolution_results</span><span class="op">)</span></span></code></pre></div>
-<p><img src="environmental-thinning_files/figure-html/find-resolution-1.png" class="r-plt" alt="" width="95%"></p>
+<span><span class="va">res</span></span>
+<span><span class="co">#&gt; --- Bean environmental grid resolution ---</span></span>
+<span><span class="co">#&gt; Bandwidth selector: sheather-jones</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  variable resolution</span></span>
+<span><span class="co">#&gt;     bio_1 0.08274934</span></span>
+<span><span class="co">#&gt;     bio_4 0.85162273</span></span>
+<span><span class="co">#&gt;    bio_12 2.25907105</span></span>
+<span><span class="co">#&gt;    bio_15 0.07070831</span></span></code></pre></div>
+<p>Visualise the per-variable kernel density and the chosen
+bandwidth:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Let's use this objective resolution in the next step</span></span>
-<span><span class="va">grid_res</span> <span class="op">&lt;-</span> <span class="va">resolution_results</span><span class="op">$</span><span class="va">suggested_resolution</span></span>
-<span><span class="va">grid_res</span></span>
-<span><span class="co">#&gt;       bio_1       bio_4      bio_12      bio_15 </span></span>
-<span><span class="co">#&gt; 0.002405167 0.098876953 1.000000000 0.034934998</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></code></pre></div>
+<p><img src="environmental-thinning_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="90%"></p>
 </div>
 <div class="section level2">
-<h2 id="step-4-apply-thinning">Step 4: Apply Thinning<a class="anchor" aria-label="anchor" href="#step-4-apply-thinning"></a>
+<h2 id="stochastic-thinning">Stochastic thinning<a class="anchor" aria-label="anchor" href="#stochastic-thinning"></a>
 </h2>
-<p>Now that we have an objective, data-driven
-<code>grid_resolution</code>, we can apply the thinning. We offer two
-methods: stochastic and deterministic.</p>
-<div class="section level3">
-<h3 id="method-a-stochastic-thinning-with-thin_env_nd">Method A: Stochastic Thinning with <code>thin_env_nd</code><a class="anchor" aria-label="anchor" href="#method-a-stochastic-thinning-with-thin_env_nd"></a>
-</h3>
-<p>This method randomly samples exactly one point from each occupied
-grid cell, enforcing strict presence-only logic within the environmental
-hypercube.</p>
+<p><code><a href="../reference/thin_env_nd.html">thin_env_nd()</a></code> randomly retains exactly one occurrence
+per occupied grid cell. A <code>seed</code> makes the selection
+reproducible without disturbing the global random state.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Apply the stochastic thinning (using a seed for reproducibility)</span></span>
-<span><span class="va">thinned_stochastic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/thin_env_nd.html">thin_env_nd</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
-<span>  env_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>,<span class="st">"bio_4"</span>, <span class="st">"bio_12"</span>, <span class="st">"bio_15"</span><span class="op">)</span>,</span>
-<span>  grid_resolution <span class="op">=</span> <span class="va">grid_res</span></span>
+<code class="sourceCode R"><span><span class="va">thinned_stochastic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/thin_env_nd.html">thin_env_nd</a></span><span class="op">(</span></span>
+<span>  data            <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<span>  env_vars        <span class="op">=</span> <span class="va">env_vars</span>,</span>
+<span>  grid_resolution <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">suggested_resolution</span>,</span>
+<span>  seed            <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Print the summary of the thinning results</span></span>
 <span><span class="va">thinned_stochastic</span></span>
 <span><span class="co">#&gt; --- Bean Stochastic Thinning Results ---</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Thinned 1024 original points to 78 points.</span></span>
 <span><span class="co">#&gt; This represents a retention of 7.6% of the data.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --------------------------------------</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">thinned_stochastic</span><span class="op">$</span><span class="va">thinned_data</span><span class="op">)</span></span>
-<span><span class="co">#&gt;           species        y         x    bio_1 bio_12   bio_15    bio_4</span></span>
-<span><span class="co">#&gt; 945 Rusa unicolor 14.45169 101.29557 24.11074   1166 77.36796 173.1696</span></span>
-<span><span class="co">#&gt; 807 Rusa unicolor 16.45394 101.72157 24.19963   1010 80.99183 225.2455</span></span>
-<span><span class="co">#&gt; 968 Rusa unicolor 16.25104 101.57840 24.35942   1031 80.01744 209.8779</span></span>
-<span><span class="co">#&gt; 919 Rusa unicolor 16.29003 101.49113 24.40832   1048 80.30025 207.4802</span></span>
-<span><span class="co">#&gt; 812 Rusa unicolor 15.67431  99.28283 24.51126   1315 78.66610 186.7147</span></span>
-<span><span class="co">#&gt; 484 Rusa unicolor 12.79893  99.45413 24.52396   1115 73.28954 110.6435</span></span></code></pre></div>
+<span><span class="co">#&gt; --------------------------------------</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="method-b-deterministic-thinning-with-thin_env_center">Method B: Deterministic Thinning with
-<code>thin_env_center</code><a class="anchor" aria-label="anchor" href="#method-b-deterministic-thinning-with-thin_env_center"></a>
-</h3>
-<p>This method provides a simpler, non-random alternative. It returns a
-single new point at the exact center of every occupied grid cell,
-regardless of how many original points fell within it.</p>
+<div class="section level2">
+<h2 id="deterministic-thinning">Deterministic thinning<a class="anchor" aria-label="anchor" href="#deterministic-thinning"></a>
+</h2>
+<p><code><a href="../reference/thin_env_center.html">thin_env_center()</a></code> replaces each occupied cell with a
+single point at the geometric centre of the cell. There is no
+randomness, so the result is exactly reproducible.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Apply the deterministic thinning</span></span>
-<span><span class="va">thinned_deterministic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/thin_env_center.html">thin_env_center</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
-<span>  env_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>,<span class="st">"bio_4"</span>, <span class="st">"bio_12"</span>, <span class="st">"bio_15"</span><span class="op">)</span>,</span>
-<span>  grid_resolution <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>,<span class="fl">0.5</span>,<span class="fl">0.5</span>,<span class="fl">0.5</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">thinned_deterministic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/thin_env_center.html">thin_env_center</a></span><span class="op">(</span></span>
+<span>  data            <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<span>  env_vars        <span class="op">=</span> <span class="va">env_vars</span>,</span>
+<span>  grid_resolution <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">suggested_resolution</span></span>
 <span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Print the summary of the thinning results</span></span>
 <span><span class="va">thinned_deterministic</span></span>
 <span><span class="co">#&gt; --- Bean Deterministic Thinning Results ---</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Thinned 1024 original points to 78 unique grid cell centers.</span></span>
 <span><span class="co">#&gt; This represents a retention of 7.6% of the data.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --------------------------------------</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">thinned_deterministic</span><span class="op">$</span><span class="va">thinned_points</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   bio_1  bio_4  bio_12 bio_15</span></span>
-<span><span class="co">#&gt; 1 23.75 175.25 1414.25  78.75</span></span>
-<span><span class="co">#&gt; 2 24.75 180.25 1289.25  78.25</span></span>
-<span><span class="co">#&gt; 3 24.25 173.25 1166.25  77.25</span></span>
-<span><span class="co">#&gt; 4 25.25 186.25 1309.25  78.75</span></span>
-<span><span class="co">#&gt; 5 23.25 182.75 1134.25  76.25</span></span>
-<span><span class="co">#&gt; 6 27.75 123.25 1269.25  74.25</span></span></code></pre></div>
-</div>
+<span><span class="co">#&gt; --------------------------------------</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="step-5-visualize-the-thinning-results">Step 5: Visualize the Thinning Results<a class="anchor" aria-label="anchor" href="#step-5-visualize-the-thinning-results"></a>
+<h2 id="comparing-original-and-thinned-data">Comparing original and thinned data<a class="anchor" aria-label="anchor" href="#comparing-original-and-thinned-data"></a>
 </h2>
-<p>The <code><a href="../reference/plot_bean.html">plot_bean()</a></code> function provides a powerful way to
-visualize the effect of thinning by overlaying the thinned points on the
-original data within the environmental grid.</p>
+<p><code><a href="../reference/plot_bean.html">plot_bean()</a></code> overlays the thinned points on the original
+cloud in a scatterplot matrix.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">occ_data_raw</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">thinned_stochastic</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">thinned_deterministic</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Visualize the stochastic thinning results</span></span>
-<span><span class="fu"><a href="../reference/plot_bean.html">plot_bean</a></span><span class="op">(</span></span>
-<span>  original_data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_bean.html">plot_bean</a></span><span class="op">(</span></span>
+<span>  original_data  <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
 <span>  thinned_object <span class="op">=</span> <span class="va">thinned_stochastic</span>,</span>
-<span>  env_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>,<span class="st">"bio_4"</span>, <span class="st">"bio_12"</span>, <span class="st">"bio_15"</span><span class="op">)</span></span>
+<span>  env_vars       <span class="op">=</span> <span class="va">env_vars</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="environmental-thinning_files/figure-html/plot-thinning-results-1.png" class="r-plt" alt="" width="95%"></p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># Visualize the deterministic thinning results</span></span>
-<span><span class="fu"><a href="../reference/plot_bean.html">plot_bean</a></span><span class="op">(</span></span>
-<span>  original_data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
-<span>  thinned_object <span class="op">=</span> <span class="va">thinned_deterministic</span>,</span>
-<span>  env_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>,<span class="st">"bio_4"</span>, <span class="st">"bio_12"</span>, <span class="st">"bio_15"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><img src="environmental-thinning_files/figure-html/plot-thinning-results-2.png" class="r-plt" alt="" width="95%"></p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Visualize the spatial distribution of the occurrence and thinned points</span></span>
-<span></span>
-<span><span class="co"># Load the environmental raster layers</span></span>
-<span><span class="va">thai_env_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"thai_env.tif"</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
-<span><span class="va">env</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">thai_env_file</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Combine the data and add a label for the partition</span></span>
-<span><span class="va">plot_data</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span></span>
-<span>  <span class="va">occ_data_raw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Data_Type <span class="op">=</span> <span class="st">"Original (Raw)"</span><span class="op">)</span>,</span>
-<span>  <span class="va">thinned_stochastic</span><span class="op">$</span><span class="va">thinned_data</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Data_Type <span class="op">=</span> <span class="st">"Thinned (Stochastic)"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Lock the order so "Original" is always on the left partition</span></span>
-<span><span class="va">plot_data</span><span class="op">$</span><span class="va">Data_Type</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">plot_data</span><span class="op">$</span><span class="va">Data_Type</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Original (Raw)"</span>, <span class="st">"Thinned (Stochastic)"</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Plot with a partition (facet_wrap)</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">plot_data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">env</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, xy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"gray80"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span>, color <span class="op">=</span> <span class="st">"darkred"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">Data_Type</span><span class="op">)</span> <span class="op">+</span> <span class="co"># &lt;--- This creates the partition line!</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Spatial Point Distribution"</span>,</span>
-<span>       x <span class="op">=</span> <span class="st">"Longitude"</span>, y <span class="op">=</span> <span class="st">"Latitude"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>strip.background <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_rect</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"grey90"</span><span class="op">)</span>,</span>
-<span>        strip.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="environmental-thinning_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="95%"></p>
+<p><img src="environmental-thinning_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="90%"></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

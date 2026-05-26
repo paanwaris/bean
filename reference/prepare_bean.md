@@ -12,7 +12,13 @@ deviation of 1.
 ## Usage
 
 ``` r
-prepare_bean(data, env_rasters, longitude, latitude, transform = "scale")
+prepare_bean(
+  data,
+  env_rasters,
+  longitude,
+  latitude,
+  transform = c("scale", "pca", "none")
+)
 ```
 
 ## Arguments
@@ -105,28 +111,39 @@ niches in multivariate environmental scenarios. Ecography, 39(8),
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-library(terra)
-
-# 1. Load sample data
-bio1_file <- system.file("extdata", "BIO1.tif", package = "bean")
-bio12_file <- system.file("extdata", "BIO12.tif", package = "bean")
-env_rasters <- terra::rast(c(bio1_file, bio12_file))
-
-occ_file <- system.file("extdata", "Peromyscus_maniculatus_original.csv", package = "bean")
-data <- read.csv(occ_file)
-
-# 2. Run the preparation function
-prepared_data <- prepare_bean(
-  data = data,
-  env_rasters = env_rasters,
-  longitude = "x",
-  latitude = "y",
-  scale = TRUE
-)
-
-# 3. View the clean, scaled data
-head(prepared_data)
-summary(prepared_data)
-} # }
+# \donttest{
+env_file <- system.file("extdata", "thai_env.tif", package = "bean")
+occ_file <- system.file("extdata", "Rusa_unicolor.csv", package = "bean")
+if (nzchar(env_file) && nzchar(occ_file) &&
+    requireNamespace("terra", quietly = TRUE)) {
+  env <- terra::rast(env_file)
+  occ <- read.csv(occ_file)
+  prepared <- prepare_bean(
+    data        = occ,
+    env_rasters = env,
+    longitude   = "x",
+    latitude    = "y",
+    transform   = "scale"
+  )
+  head(prepared)
+}
+#> Scaling environmental rasters...
+#> Extracting environmental data for occurrence points...
+#> 5 records removed because they fell outside the raster extent or had NA environmental values.
+#> Data preparation complete. Returning 1024 clean records.
+#>         species        y         x      bio_1       bio_12     bio_15
+#> 1 Rusa unicolor 15.37239  99.11555 -1.6909295  0.003511156 -0.2454693
+#> 2 Rusa unicolor 15.41415  99.28763 -0.8711075 -0.267821213 -0.3053829
+#> 3 Rusa unicolor 14.46838 101.22005 -1.3879976 -0.534812263 -0.3835742
+#> 4 Rusa unicolor 15.65606  99.31600 -0.6288324 -0.224408034 -0.2390396
+#> 5 Rusa unicolor 14.39543 101.41694 -2.0311866 -0.604273349 -0.5074636
+#> 6 Rusa unicolor 12.72500 100.88947  1.0537073 -0.311234392 -0.6623129
+#>        bio_4
+#> 1 -0.2573387
+#> 2 -0.1768698
+#> 3 -0.2876102
+#> 4 -0.0834852
+#> 5 -0.1398570
+#> 6 -1.0746857
+# }
 ```

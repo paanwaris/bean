@@ -1,8 +1,8 @@
-# Fitted origin ellipsoid
+# Fitted niche ellipsoid for Rusa unicolor
 
-A multidimensional ellipsoid fitted to the unthinned, prepared
-occurrence data representing the baseline environmental niche of the
-species.
+A `bean_ellipsoid` fitted to
+[`origin_dat_prepared`](https://paanwaris.github.io/bean/reference/origin_dat_prepared.md)
+representing the baseline environmental niche of the species.
 
 ## Usage
 
@@ -12,20 +12,5 @@ origin_ellipse
 
 ## Format
 
-An object of class `bean_ellipsoid` containing:
-
-- centroid:
-
-  The multidimensional mean of the environmental variables
-
-- covariance_matrix:
-
-  The covariance matrix of the variables
-
-- volume:
-
-  The hypervolume of the fitted ellipsoid
-
-- parameters:
-
-  Model parameters including the confidence level (e.g., 0.95)
+A `bean_ellipsoid` object (see
+[`fit_ellipsoid`](https://paanwaris.github.io/bean/reference/fit_ellipsoid.md)).
