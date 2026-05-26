@@ -94,9 +94,11 @@ Mahalanobis layers behave analogously, so we omit them here).
 library(terra)
 env <- terra::rast(system.file("extdata", "thai_env.tif", package = "bean"))
 
+env_scaled <- terra::scale(env)
+
 origin_pred <- predict(
   object                = origin_ellipse,
-  newdata               = env,
+  newdata               = env_scaled,
   include_suitability   = TRUE,
   suitability_truncated = FALSE,
   include_mahalanobis   = FALSE
@@ -104,7 +106,7 @@ origin_pred <- predict(
 
 stochastic_pred <- predict(
   object                = stochastic_ellipse,
-  newdata               = env,
+  newdata               = env_scaled,
   include_suitability   = TRUE,
   suitability_truncated = FALSE,
   include_mahalanobis   = FALSE
@@ -112,7 +114,7 @@ stochastic_pred <- predict(
 
 deterministic_pred <- predict(
   object                = deterministic_ellipse,
-  newdata               = env,
+  newdata               = env_scaled,
   include_suitability   = TRUE,
   suitability_truncated = FALSE,
   include_mahalanobis   = FALSE
