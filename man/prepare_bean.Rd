@@ -4,7 +4,13 @@
 \alias{prepare_bean}
 \title{Prepare data for environmental thinning}
 \usage{
-prepare_bean(data, env_rasters, longitude, latitude, transform = "scale")
+prepare_bean(
+  data,
+  env_rasters,
+  longitude,
+  latitude,
+  transform = c("scale", "pca", "none")
+)
 }
 \arguments{
 \item{data}{A data.frame of species occurrences records, including columns
@@ -65,29 +71,22 @@ multicollinearity.
   already scaled or if you have a specific reason to use the raw values.
 }
 \examples{
-\dontrun{
-library(terra)
-
-# 1. Load sample data
-bio1_file <- system.file("extdata", "BIO1.tif", package = "bean")
-bio12_file <- system.file("extdata", "BIO12.tif", package = "bean")
-env_rasters <- terra::rast(c(bio1_file, bio12_file))
-
-occ_file <- system.file("extdata", "Peromyscus_maniculatus_original.csv", package = "bean")
-data <- read.csv(occ_file)
-
-# 2. Run the preparation function
-prepared_data <- prepare_bean(
-  data = data,
-  env_rasters = env_rasters,
-  longitude = "x",
-  latitude = "y",
-  scale = TRUE
-)
-
-# 3. View the clean, scaled data
-head(prepared_data)
-summary(prepared_data)
+\donttest{
+env_file <- system.file("extdata", "thai_env.tif", package = "bean")
+occ_file <- system.file("extdata", "Rusa_unicolor.csv", package = "bean")
+if (nzchar(env_file) && nzchar(occ_file) &&
+    requireNamespace("terra", quietly = TRUE)) {
+  env <- terra::rast(env_file)
+  occ <- read.csv(occ_file)
+  prepared <- prepare_bean(
+    data        = occ,
+    env_rasters = env,
+    longitude   = "x",
+    latitude    = "y",
+    transform   = "scale"
+  )
+  head(prepared)
+}
 }
 }
 \references{
