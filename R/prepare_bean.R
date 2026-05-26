@@ -65,41 +65,39 @@
 #' @importFrom terra extract rast
 #' @importFrom stats complete.cases
 #' @examples
-#' \dontrun{
-#' library(terra)
-#'
-#' # 1. Load sample data
-#' bio1_file <- system.file("extdata", "BIO1.tif", package = "bean")
-#' bio12_file <- system.file("extdata", "BIO12.tif", package = "bean")
-#' env_rasters <- terra::rast(c(bio1_file, bio12_file))
-#'
-#' occ_file <- system.file("extdata", "Peromyscus_maniculatus_original.csv", package = "bean")
-#' data <- read.csv(occ_file)
-#'
-#' # 2. Run the preparation function
-#' prepared_data <- prepare_bean(
-#'   data = data,
-#'   env_rasters = env_rasters,
-#'   longitude = "x",
-#'   latitude = "y",
-#'   scale = TRUE
-#' )
-#'
-#' # 3. View the clean, scaled data
-#' head(prepared_data)
-#' summary(prepared_data)
+#' \donttest{
+#' env_file <- system.file("extdata", "thai_env.tif", package = "bean")
+#' occ_file <- system.file("extdata", "Rusa_unicolor.csv", package = "bean")
+#' if (nzchar(env_file) && nzchar(occ_file) &&
+#'     requireNamespace("terra", quietly = TRUE)) {
+#'   env <- terra::rast(env_file)
+#'   occ <- read.csv(occ_file)
+#'   prepared <- prepare_bean(
+#'     data        = occ,
+#'     env_rasters = env,
+#'     longitude   = "x",
+#'     latitude    = "y",
+#'     transform   = "scale"
+#'   )
+#'   head(prepared)
 #' }
-prepare_bean <- function(data, env_rasters, longitude, latitude, transform = "scale") {
+#' }
+prepare_bean <- function(data, env_rasters, longitude, latitude,
+                         transform = c("scale", "pca", "none")) {
+  transform <- match.arg(transform)
+
   # --- 1. Validate inputs and standardize raster format ---
   if (inherits(env_rasters, "RasterStack")) {
     env_rasters <- terra::rast(env_rasters)
   } else if (!inherits(env_rasters, "SpatRaster")) {
-    stop("`env_rasters` must be a SpatRaster from 'terra' or a RasterStack from 'raster'.")
+    stop("`env_rasters` must be a SpatRaster from 'terra' or a RasterStack from 'raster'.",
+         call. = FALSE)
   }
 
   coord_vars <- c(longitude, latitude)
   if (!all(coord_vars %in% names(data))) {
-    stop("Longitude and/or latitude columns not found in `data`.")
+    stop("Longitude and/or latitude columns not found in `data`.",
+         call. = FALSE)
   }
 
   # --- 2. Remove initial NA coordinates ---
@@ -132,11 +130,9 @@ prepare_bean <- function(data, env_rasters, longitude, latitude, transform = "sc
     env_rasters_to_extract <- terra::predict(env_rasters, pca_model)
     names(env_rasters_to_extract) <- paste0("PC", 1:terra::nlyr(env_rasters_to_extract))
 
-  } else if (transform == "none") {
+  } else {
     message("Skipping raster transformation.")
     env_rasters_to_extract <- env_rasters
-  } else {
-    stop("Invalid `transform` argument. Choose 'scale', 'pca', or 'none'.")
   }
 
   # --- 4. Extract environmental data ---
