@@ -55,3 +55,11 @@ reference:
     contents:
       - fit_ellipsoid
       - predict.bean_ellipsoid
+  - title: Datasets
+    desc: Example data shipped with the package.
+    contents:
+      - occ_data_raw
+      - origin_dat_prepared
+      - thinned_stochastic
+      - thinned_deterministic
+      - origin_ellipse
