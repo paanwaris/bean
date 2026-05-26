@@ -1,30 +1,3 @@
-utils::globalVariables(c('env_cell_id',
-                         'n',
-                         'thinned_count',
-                         'difference',
-                         '.data',
-                         'Status',
-                         'y',
-                         'auc',
-                         'density',
-                         'cap',
-                         'distances',
-                         'resolution',
-                         'sd',
-                         'median',
-                         'center_x',
-                         'center_y',
-                         'env_cell_id',
-                         'scale',
-                         'unscaled_x',
-                         'unscaled_y',
-                         'combination',
-                         'mean_auc',
-                         'method',
-                         'transform',
-                         'group',
-                         'rel',
-                         'setNames',
-                         'stats'
-
-))
+# No global variables are currently required.
+# Kept as a placeholder so that future NSE usage can be declared here.
+utils::globalVariables(character(0))
