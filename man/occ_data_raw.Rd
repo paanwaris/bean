@@ -5,22 +5,22 @@
 \alias{occ_data_raw}
 \title{Raw Rusa unicolor occurrence data}
 \format{
-A data frame with occurrence coordinates:
+A \code{data.frame} with one row per occurrence and the columns:
 \describe{
-  \item{species}{The species name}
-  \item{x}{Longitude coordinates in decimal degrees}
-  \item{y}{Latitude coordinates in decimal degrees}
+  \item{species}{Species name.}
+  \item{x}{Longitude (decimal degrees).}
+  \item{y}{Latitude (decimal degrees).}
 }
 }
 \source{
-Example dataset provided with the bean package.
+Example dataset shipped with the \pkg{bean} package.
 }
 \usage{
 occ_data_raw
 }
 \description{
-A dataset containing the raw, unthinned occurrence records for Rusa unicolor
-(Sambar deer) in Thailand. This dataset is used to demonstrate the spatial
-clustering and environmental bias present in typical SDM datasets.
+Raw, unthinned occurrence records for Rusa unicolor (Sambar deer) in
+Thailand. Used to demonstrate the spatial clustering and environmental
+bias typical of SDM datasets.
 }
-\keyword{internal}
+\keyword{datasets}
