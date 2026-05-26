@@ -31,24 +31,12 @@ occupied cells in a 2D environmental grid and returning a single new point
 at the exact center of each of those cells. This is a deterministic method.
 }
 \examples{
-\dontrun{
-# 1. Create environmental data
-set.seed(81)
 env_data <- data.frame(
-BIO1 = c(0.1, 0.2, 1.1, 1.2, 1.3),
-BIO12 = c(0.1, 0.2, 2.1, 2.2, 2.3)
+  BIO1  = c(0.1, 0.2, 1.1, 1.2, 1.3),
+  BIO12 = c(0.1, 0.2, 2.1, 2.2, 2.3)
 )
-
-# 2. Thin the data to grid cell centers
-thinned_center_obj <- thin_env_center(
-  data = env_data,
-  env_vars = c("BIO1", "BIO12"),
-  grid_resolution = c(0.1, 0.2)
-)
-
-# 3. Print the summary
-print(thinned_center_obj)
-}
+thin_env_center(env_data, env_vars = c("BIO1", "BIO12"),
+                grid_resolution = c(0.1, 0.2))
 }
 \seealso{
 \code{\link{thin_env_nd}}, \code{\link{find_env_resolution}}
