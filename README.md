@@ -91,10 +91,12 @@ dataset.
 
 ### 2. Objective Grid Resolution
 
-Instead of arbitrary thinning, `find_env_resolution()` uses a geometric
-**“elbow” method** based on nearest-neighbor distances in E-space. This
-identifies the exact distance where dense artificial clustering
-transitions into natural data spacing.
+Instead of arbitrary thinning, `find_env_resolution()` selects a
+**kernel-density bandwidth** for each environmental variable
+(Sheather–Jones plug-in by default, with Silverman and Scott rules also
+available). The bandwidth is a statistically defensible choice for the
+edge length of an environmental grid cell: it is the scale at which the
+empirical density of observations becomes smooth.
 
 > See the [Finding the environmental
 > resolution](https://paanwaris.github.io/bean/articles/environmental-thinning.html)
