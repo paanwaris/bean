@@ -25,11 +25,13 @@ navbar:
     - icon: fas fa-book
       text: "Articles"
       menu:
-        - text: "1. Data Prep"
+        - text: "Overview"
+          href: articles/bean-overview.html
+        - text: "1. Data Preparation"
           href: articles/data-preparation.html
         - text: "2. Environmental Thinning"
           href: articles/environmental-thinning.html
-        - text: "3. Niche Delineation & Mapping"
+        - text: "3. Niche Modeling"
           href: articles/niche-modeling.html
 
 components:
@@ -52,4 +54,4 @@ reference:
     desc: Functions for fundamental niche delineation and predicting suitability.
     contents:
       - fit_ellipsoid
-      - predict.ellipsoid_bean
+      - predict.bean_ellipsoid
