@@ -87,13 +87,13 @@ summary(prepared[, -(1:3)])
 
 After cleaning, the records that survived are mapped here in blue. Points
 that were dropped (missing coordinates or outside the raster extent) are
-shown in light grey for comparison.
+shown in red for comparison.
 
 ```{r, eval = has_terra && has_ggplot2, fig.width = 7, fig.height = 6}
 ggplot() +
   geom_raster(data = env_df, aes(x, y, fill = .data[[names(env)[1]]])) +
   geom_point(data = occ_data_raw, aes(x, y),
-             colour = "grey60", size = 1.4, alpha = 0.5) +
+             colour = "red", size = 1.4, alpha = 0.5) +
   geom_point(data = prepared, aes(x, y),
              colour = "#118ab2", size = 1.4, alpha = 0.8) +
   scale_fill_gradient(low = "grey95", high = "grey55", guide = "none") +
