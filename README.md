@@ -154,4 +154,14 @@ vignette("niche-modeling")
 #> Warning: vignette 'niche-modeling' not found
 ```
 
-The End ❤️
+<br>
+
+## Note on AI usage
+
+To maintain high standards of code quality and documentation, we have
+used AI LLM tools in this package. We used these tools for grammatical
+polishing and exploring technical implementation strategies for
+specialized functions. We manually checked and tested all code and
+documentation refined with these tools.
+
+<br>
