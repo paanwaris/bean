@@ -97,7 +97,7 @@ Suitability projection back to geographic space is provided by the companion pac
 
 For full demonstrations of the protocol, check the package vignettes:
 
-```{r}
+```{r, eval=FALSE}
 # Data Preparation & Visualization
 vignette("data-preparation")
 
