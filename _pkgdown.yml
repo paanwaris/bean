@@ -50,11 +50,10 @@ reference:
       - thin_env_nd
       - thin_env_center
       - plot_bean
-  - title: Modeling & Visualization
-    desc: Functions for fundamental niche delineation and predicting suitability.
+  - title: Niche delineation
+    desc: Functions for fitting an environmental-niche ellipsoid.
     contents:
       - fit_ellipsoid
-      - predict.bean_ellipsoid
   - title: Datasets
     desc: Example data shipped with the package.
     contents:
