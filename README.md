@@ -53,9 +53,6 @@ environmental space:
 - **Niche Delineation**: Fits ellipsoids to thinned data to define the
   fundamental niche.
 
-- **Projection**: Maps the corrected niche back into geographic space
-  for less biased predictions.
-
 ## Installing the Package
 
 The development version of `bean` can be installed from GitHub:
@@ -125,16 +122,15 @@ fitting a bivariate or multivariate ellipse around the thinned points.
 > delineation](https://paanwaris.github.io/bean/articles/niche-modeling.html)
 > vignette.
 
-### 5. Prediction and Mapping
-
-Using the learned niche, `predict()` projects the results back to
-geographic space. This step emphasizes the ellipsoid-based approach is
-used to calculate suitability scores from the delineated niche
-boundaries.
-
-> See the [Prediction and
-> mapping](https://paanwaris.github.io/bean/articles/niche-modeling.html)
-> vignette.
+Suitability projection back to geographic space is provided by the
+companion package **nicheR**, which supplies a `predict()` method.
+`bean_ellipsoid` objects carry the S3 class `"nicheR_ellipsoid"` as a
+second class string, so once nicheR is attached its `predict()` method
+dispatches on them automatically — no conversion step required. Until
+nicheR is on CRAN, the ellipsoid's `centroid`, `cov_matrix`, and
+pre-computed `Sigma_inv` fields can be used directly with
+`stats::mahalanobis()` to compute pixel-level distances on a raster
+stack.
 
 ## Checking the Vignettes
 
@@ -155,6 +151,30 @@ vignette("niche-modeling")
 ```
 
 <br>
+
+## Acknowledgement and citation
+
+The ellipsoid-based niche framework that `bean` builds on was developed
+in the **nicheR** package; without nicheR, this package would not
+exist. The `bean_ellipsoid` class returned by `fit_ellipsoid()` is
+designed to be directly usable by nicheR's `predict()` method. If you
+use `bean` in published work, please cite **nicheR** as well:
+
+> Castaneda-Guzman, M., Hughes, C., Paansri, P., & Cobos, M. E. (2026).
+> *nicheR: Ellipsoid-Based Virtual Niches and Visualization.* R
+> package version 0.1.0. <https://github.com/castanedaM/nicheR>
+
+BibTeX entry:
+
+``` bibtex
+@Manual{nicheR,
+  title  = {nicheR: Ellipsoid-Based Virtual Niches and Visualization},
+  author = {Mariana Castaneda-Guzman and Connor Hughes and Paanwaris Paansri and Marlon E. Cobos},
+  year   = {2026},
+  note   = {R package version 0.1.0},
+  url    = {https://github.com/castanedaM/nicheR},
+}
+```
 
 ## Note on AI usage
 
