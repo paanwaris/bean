@@ -157,10 +157,25 @@ method dispatches on them automatically — no conversion step is
 required. If you use the prediction step in published work, please cite
 nicheR (see the References section at the bottom of this vignette).
 
+### Installing and loading nicheR
+
+Install the `nicheR` from GitHub:
+
 ``` r
 
-# Once nicheR is available on CRAN:
+# Installing and loading packages
+if (!require("devtools")) install.packages("devtools")
+
+# To install the package use
+devtools::install_github("castanedaM/nicheR")
+
 library(nicheR)
+```
+
+### Predicting suitability
+
+``` r
+
 library(terra)
 
 env <- terra::rast(system.file("extdata", "thai_env.tif", package = "bean"))
@@ -174,24 +189,6 @@ suit <- predict(
   include_mahalanobis   = FALSE
 )
 terra::plot(suit)
-```
-
-Until **nicheR** is on CRAN, the same calculation can be done directly
-from the fields stored in the ellipsoid:
-
-``` r
-
-library(terra)
-env <- terra::rast(system.file("extdata", "thai_env.tif", package = "bean"))
-env <- env[[origin_ellipse$var_names]]   # match variable order
-
-D2 <- terra::app(env, function(v) {
-  if (anyNA(v)) return(NA_real_)
-  d <- v - origin_ellipse$centroid
-  as.numeric(t(d) %*% origin_ellipse$Sigma_inv %*% d)
-})
-suitability <- exp(-0.5 * D2)
-terra::plot(suitability)
 ```
 
 ## References

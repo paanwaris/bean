@@ -170,10 +170,26 @@
 <div class="section level2">
 <h2 id="acknowledgments">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>
 </h2>
-<p>The <code>bean</code> package was adapted from the excellent work done in the <strong>nicheR</strong> package. <code>bean</code> was built as an extension to complement nicheR’s foundational approach to ellipsoid modeling. We are incredibly grateful to the nicheR developers for their robust framework, which allows <code>bean_ellipsoid</code> objects to utilize their <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> methods. If you use the spatial projection features in <code>bean</code>, please be sure to install and cite <strong>nicheR</strong>:</p>
+<p>The <code>bean</code> package was adapted from the excellent work done in the <strong>nicheR</strong> package. We are incredibly grateful to the nicheR developers for their robust framework, which allows <code>bean_ellipsoid</code> objects to utilize their <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> methods. If you use the spatial projection features in <code>bean</code>, please be sure to install and cite <strong>nicheR</strong>.</p>
+<div class="section level3">
+<h3 id="installing-nicher">Installing nicheR<a class="anchor" aria-label="anchor" href="#installing-nicher"></a>
+</h3>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Installing and loading packages</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://devtools.r-lib.org/" class="external-link">"devtools"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># To install the package use</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"castanedaM/nicheR"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">nicheR</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
+</h3>
 <blockquote>
 <p>Castaneda-Guzman, M., Hughes, C., Paansri, P., &amp; Cobos, M. E. (2026). <em>nicheR: Ellipsoid-Based Virtual Niches and Visualization.</em> R package version 0.1.0. <a href="https://github.com/castanedaM/nicheR" class="external-link uri">https://github.com/castanedaM/nicheR</a></p>
 </blockquote>
+</div>
 </div>
 <div class="section level2">
 <h2 id="note-on-ai-usage">Note on AI usage<a class="anchor" aria-label="anchor" href="#note-on-ai-usage"></a>

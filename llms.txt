@@ -148,13 +148,26 @@ vignette("niche-modeling")
 ## Acknowledgments
 
 The `bean` package was adapted from the excellent work done in the
-**nicheR** package. `bean` was built as an extension to complement
-nicheR’s foundational approach to ellipsoid modeling. We are incredibly
-grateful to the nicheR developers for their robust framework, which
-allows `bean_ellipsoid` objects to utilize their
-[`predict()`](https://rdrr.io/r/stats/predict.html) methods. If you use
-the spatial projection features in `bean`, please be sure to install and
-cite **nicheR**:
+**nicheR** package. We are incredibly grateful to the nicheR developers
+for their robust framework, which allows `bean_ellipsoid` objects to
+utilize their [`predict()`](https://rdrr.io/r/stats/predict.html)
+methods. If you use the spatial projection features in `bean`, please be
+sure to install and cite **nicheR**.
+
+### Installing nicheR
+
+``` r
+
+# Installing and loading packages
+if (!require("devtools")) install.packages("devtools")
+
+# To install the package use
+devtools::install_github("castanedaM/nicheR")
+
+library(nicheR)
+```
+
+### Citation
 
 > Castaneda-Guzman, M., Hughes, C., Paansri, P., & Cobos, M. E. (2026).
 > *nicheR: Ellipsoid-Based Virtual Niches and Visualization.* R package
