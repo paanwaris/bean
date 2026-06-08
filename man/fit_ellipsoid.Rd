@@ -19,8 +19,8 @@ fit_ellipsoid(data, env_vars, method = "covmat", level = 0.95)
 ellipsoid. Default \code{0.95}.}
 }
 \value{
-An object of class \code{c("bean_ellipsoid", "nicheR_ellipsoid")} (a
-  list) with:
+An object of class \code{c("bean_ellipsoid", "nicheR_ellipsoid")}
+  (a list) with:
   \describe{
     \item{\code{centroid}}{Named vector of variable means / centre.}
     \item{\code{covariance_matrix}, \code{cov_matrix}}{The covariance
@@ -32,14 +32,15 @@ An object of class \code{c("bean_ellipsoid", "nicheR_ellipsoid")} (a
           every call.}
     \item{\code{dimensions}}{Integer, the number of environmental
           variables.}
-    \item{\code{var_names}}{Character vector of variable names.}
+    \item{\code{var_names}}{Character vector of the variable names used to
+          fit the ellipsoid.}
     \item{\code{cl}}{Confidence level (same value as
-          \code{parameters$level}); the name expected by \pkg{nicheR}.}
+          \code{parameters$level}); name expected by \pkg{nicheR}.}
     \item{\code{chi2_cutoff}}{The chi-square threshold,
           \code{stats::qchisq(level, df = dimensions)}.}
     \item{\code{niche_ellipse}}{A \code{data.frame} of polygon vertices for
-          the 2-D ellipse; \code{NULL} when more than two variables are
-          supplied (the 3-D mesh is built lazily by \code{plot}).}
+          the 2-D ellipse. \code{NULL} when more than two variables are
+          supplied (the 3-D mesh is generated lazily on plot).}
     \item{\code{all_points_used}}{Complete-case input data.}
     \item{\code{points_in_ellipse}}{Subset inside the ellipsoid.}
     \item{\code{points_outside_ellipse}}{Subset outside the ellipsoid.}
@@ -51,9 +52,9 @@ An object of class \code{c("bean_ellipsoid", "nicheR_ellipsoid")} (a
   The object carries two S3 classes: \code{"bean_ellipsoid"} (used by
   \code{print()} and \code{plot()} in this package) and
   \code{"nicheR_ellipsoid"} (used by \code{nicheR::predict()} once that
-  package is available on CRAN). The appropriate method is dispatched
-  depending on which package is attached; \pkg{nicheR} does not need to
-  be installed for \pkg{bean}'s own methods to work.
+  package is available on CRAN). Both methods work on the same object;
+  the appropriate one is dispatched depending on which package is
+  attached.
 }
 \description{
 Fits an ellipsoid that encompasses a chosen proportion of the
