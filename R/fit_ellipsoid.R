@@ -65,12 +65,15 @@
 #' distance equals \code{qchisq(level, df = n_dim)}.
 #'
 #' @references
+#' If you intend to project a \code{bean_ellipsoid} into geographic space,
+#' please install the \pkg{nicheR} package and use its \code{predict()}
+#' method; the dual S3 class on the returned object allows
+#' \code{nicheR::predict()} to dispatch on it directly. If you use the
+#' prediction step in published work, please cite \pkg{nicheR}:
+#'
 #' Castaneda-Guzman, M., Hughes, C., Paansri, P. & Cobos, M. E. (2026).
 #' \emph{nicheR: Ellipsoid-Based Virtual Niches and Visualization.}
 #' R package version 0.1.0. \url{https://github.com/castanedaM/nicheR}.
-#' The ellipsoid framework that this function exposes was originally
-#' developed in \pkg{nicheR}; the dual S3 class on the returned object
-#' allows \code{nicheR::predict()} to dispatch directly on it.
 #'
 #' Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown point.
 #' In \emph{Mathematical Statistics and Applications, Vol. B}, 283–297.
