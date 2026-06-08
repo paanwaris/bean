@@ -16,10 +16,25 @@
 #' @param level A single number in \code{(0, 1)}: the confidence level of the
 #'   ellipsoid. Default \code{0.95}.
 #'
-#' @return An object of class \code{bean_ellipsoid} (a list) with:
+#' @return An object of class \code{c("bean_ellipsoid", "nicheR_ellipsoid")}
+#'   (a list) with:
 #'   \describe{
 #'     \item{\code{centroid}}{Named vector of variable means / centre.}
-#'     \item{\code{covariance_matrix}}{The covariance matrix used.}
+#'     \item{\code{covariance_matrix}, \code{cov_matrix}}{The covariance
+#'           matrix used. Both names point to the same object; the former is
+#'           kept for backward compatibility, the latter is the name expected
+#'           by the \pkg{nicheR} package.}
+#'     \item{\code{Sigma_inv}}{The inverse of \code{cov_matrix}, pre-computed
+#'           so that \code{nicheR::predict()} does not have to invert it on
+#'           every call.}
+#'     \item{\code{dimensions}}{Integer, the number of environmental
+#'           variables.}
+#'     \item{\code{var_names}}{Character vector of the variable names used to
+#'           fit the ellipsoid.}
+#'     \item{\code{cl}}{Confidence level (same value as
+#'           \code{parameters$level}); name expected by \pkg{nicheR}.}
+#'     \item{\code{chi2_cutoff}}{The chi-square threshold,
+#'           \code{stats::qchisq(level, df = dimensions)}.}
 #'     \item{\code{niche_ellipse}}{A \code{data.frame} of polygon vertices for
 #'           the 2-D ellipse. \code{NULL} when more than two variables are
 #'           supplied (the 3-D mesh is generated lazily on plot).}
@@ -30,6 +45,13 @@
 #'           classified as inside.}
 #'     \item{\code{parameters}}{List with \code{level} and \code{method}.}
 #'   }
+#'
+#'   The object carries two S3 classes: \code{"bean_ellipsoid"} (used by
+#'   \code{print()} and \code{plot()} in this package) and
+#'   \code{"nicheR_ellipsoid"} (used by \code{nicheR::predict()} once that
+#'   package is available on CRAN). Both methods work on the same object;
+#'   the appropriate one is dispatched depending on which package is
+#'   attached.
 #'
 #' @details
 #' \strong{Methods.} \code{"covmat"} uses the sample mean and sample covariance
@@ -43,6 +65,13 @@
 #' distance equals \code{qchisq(level, df = n_dim)}.
 #'
 #' @references
+#' Castaneda-Guzman, M., Hughes, C., Paansri, P. & Cobos, M. E. (2026).
+#' \emph{nicheR: Ellipsoid-Based Virtual Niches and Visualization.}
+#' R package version 0.1.0. \url{https://github.com/castanedaM/nicheR}.
+#' The ellipsoid framework that this function exposes was originally
+#' developed in \pkg{nicheR}; the dual S3 class on the returned object
+#' allows \code{nicheR::predict()} to dispatch directly on it.
+#'
 #' Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown point.
 #' In \emph{Mathematical Statistics and Applications, Vol. B}, 283–297.
 #'
@@ -122,7 +151,30 @@ fit_ellipsoid <- function(data, env_vars, method = "covmat", level = 0.95) {
 
   outside_indices <- setdiff(seq_len(nrow(clean_data)), inside_indices)
 
+  # Ensure dimnames so downstream functions (including nicheR::predict)
+  # can match by variable name.
+  if (is.null(names(centroid))) names(centroid) <- env_vars
+  dimnames(cov_mat) <- list(env_vars, env_vars)
+
+  # Pre-compute the inverse covariance matrix for nicheR::predict().
+  # Fall back to a Moore-Penrose pseudo-inverse via SVD if the matrix is
+  # numerically singular (e.g. perfectly collinear environmental variables).
+  Sigma_inv <- tryCatch(
+    solve(cov_mat),
+    error = function(e) {
+      sv <- svd(cov_mat)
+      tol <- max(dim(cov_mat)) * .Machine$double.eps * max(sv$d)
+      d_inv <- ifelse(sv$d > tol, 1 / sv$d, 0)
+      pinv <- sv$v %*% diag(d_inv, length(d_inv)) %*% t(sv$u)
+      dimnames(pinv) <- dimnames(cov_mat)
+      warning("Covariance matrix is singular; using Moore-Penrose pseudo-inverse.",
+              call. = FALSE)
+      pinv
+    }
+  )
+
   results <- list(
+    # ---- Fields used by bean's own methods --------------------------------
     centroid               = centroid,
     covariance_matrix      = cov_mat,
     niche_ellipse          = ellipse_obj,
@@ -132,9 +184,22 @@ fit_ellipsoid <- function(data, env_vars, method = "covmat", level = 0.95) {
     points_outside_ellipse = as.data.frame(clean_data[outside_indices, ,
                                                       drop = FALSE]),
     inside_indices         = inside_indices,
-    parameters             = list(level = level, method = method)
+    parameters             = list(level = level, method = method),
+    # ---- Fields expected by nicheR::predict.nicheR_ellipsoid -------------
+    dimensions             = n_dim,
+    cov_matrix             = cov_mat,
+    Sigma_inv              = Sigma_inv,
+    cl                     = level,
+    chi2_cutoff            = stats::qchisq(level, df = n_dim),
+    var_names              = env_vars
   )
-  class(results) <- "bean_ellipsoid"
+
+  # Dual class: bean methods dispatch on "bean_ellipsoid" (first), nicheR's
+  # predict() dispatches on "nicheR_ellipsoid" (second). nicheR does not have
+  # to be installed for the object to be created or for bean's own methods to
+  # work; it is only consulted by R when the user calls predict() with nicheR
+  # loaded.
+  class(results) <- c("bean_ellipsoid", "nicheR_ellipsoid")
   results
 }
 
