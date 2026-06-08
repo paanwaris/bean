@@ -98,11 +98,14 @@ head(origin_ellipse$points_in_ellipse)
 
 ## Projecting suitability with nicheR
 
-`bean_ellipsoid` objects carry a second S3 class, `"nicheR_ellipsoid"`,
-which means that the moment the companion package
-[**nicheR**](https://github.com/) is loaded its
-`predict.nicheR_ellipsoid()` method dispatches on them automatically.
-No conversion is required:
+If you intend to project a `bean_ellipsoid` into geographic space,
+please install the **nicheR** package and use its `predict()` method.
+`bean_ellipsoid` objects carry `"nicheR_ellipsoid"` as a second S3
+class, so once nicheR is attached its `predict.nicheR_ellipsoid()`
+method dispatches on them automatically — no conversion step is
+required. If you use the prediction step in published work, please
+cite nicheR (see the References section at the bottom of this
+vignette).
 
 ```{r, eval = FALSE}
 # Once nicheR is available on CRAN:
