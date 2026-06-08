@@ -2,7 +2,6 @@
 
 S3method(plot,bean_ellipsoid)
 S3method(plot,bean_env_resolution)
-S3method(predict,bean_ellipsoid)
 S3method(print,bean_ellipsoid)
 S3method(print,bean_env_resolution)
 S3method(print,bean_thinned)
