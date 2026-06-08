@@ -25,10 +25,10 @@
 * Vignette "3. Niche modeling" no longer ships a predict / suitability
   section; it shows the nicheR integration instead, with a plain-`terra`
   fallback for users who do not yet have nicheR installed.
-* README, vignette and `fit_ellipsoid()` references now cite
-  Castaneda-Guzman et al. (2026), *nicheR: Ellipsoid-Based Virtual
-  Niches and Visualization*, the package whose ellipsoid framework
-  `bean` builds on.
+* README, vignette and `fit_ellipsoid()` references now direct users
+  who want to project a `bean_ellipsoid` into geographic space to
+  install **nicheR** and cite Castaneda-Guzman et al. (2026), *nicheR:
+  Ellipsoid-Based Virtual Niches and Visualization*.
 
 # bean 0.2.0
 
