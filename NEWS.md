@@ -1,3 +1,35 @@
+# bean 0.2.1
+
+## Breaking changes
+
+* Removed `predict.bean_ellipsoid()`. The canonical implementation now
+  lives in the companion package **nicheR**.
+
+## New features
+
+* `bean_ellipsoid` objects returned by `fit_ellipsoid()` now carry a second
+  S3 class, `"nicheR_ellipsoid"`, and include the fields nicheR's
+  `predict.nicheR_ellipsoid()` method expects:
+  `dimensions`, `cov_matrix`, `Sigma_inv`, `cl`, `var_names`, and
+  `chi2_cutoff`. As a result, once **nicheR** is loaded its `predict()`
+  method dispatches directly on objects produced by `bean::fit_ellipsoid()`
+  without any explicit conversion.
+* The existing `centroid`, `covariance_matrix`, `points_in_ellipse`, etc.
+  fields are preserved for backward compatibility.
+* `fit_ellipsoid()` now pre-computes the inverse covariance matrix
+  (`Sigma_inv`) using `solve()`, with a Moore-Penrose pseudo-inverse
+  fallback (via SVD) and a warning if the covariance matrix is singular.
+
+## Documentation
+
+* Vignette "3. Niche modeling" no longer ships a predict / suitability
+  section; it shows the nicheR integration instead, with a plain-`terra`
+  fallback for users who do not yet have nicheR installed.
+* README, vignette and `fit_ellipsoid()` references now cite
+  Castaneda-Guzman et al. (2026), *nicheR: Ellipsoid-Based Virtual
+  Niches and Visualization*, the package whose ellipsoid framework
+  `bean` builds on.
+
 # bean 0.2.0
 
 ## Major changes
