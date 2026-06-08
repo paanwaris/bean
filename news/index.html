@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bean</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,14 +45,34 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.2.0" id="bean-020">bean 0.2.0<a class="anchor" aria-label="anchor" href="#bean-020"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.2.1" id="bean-021">bean 0.2.1<a class="anchor" aria-label="anchor" href="#bean-021"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-2-1">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-2-1"></a></h3>
+<ul><li>Removed <code>predict.bean_ellipsoid()</code>. The canonical implementation now lives in the companion package <strong>nicheR</strong>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-2-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-1"></a></h3>
+<ul><li>
+<code>bean_ellipsoid</code> objects returned by <code><a href="../reference/fit_ellipsoid.html">fit_ellipsoid()</a></code> now carry a second S3 class, <code>"nicheR_ellipsoid"</code>, and include the fields nicheR’s <code>predict.nicheR_ellipsoid()</code> method expects: <code>dimensions</code>, <code>cov_matrix</code>, <code>Sigma_inv</code>, <code>cl</code>, <code>var_names</code>, and <code>chi2_cutoff</code>. As a result, once <strong>nicheR</strong> is loaded its <code><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict()</a></code> method dispatches directly on objects produced by <code><a href="../reference/fit_ellipsoid.html">bean::fit_ellipsoid()</a></code> without any explicit conversion.</li>
+<li>The existing <code>centroid</code>, <code>covariance_matrix</code>, <code>points_in_ellipse</code>, etc. fields are preserved for backward compatibility.</li>
+<li>
+<code><a href="../reference/fit_ellipsoid.html">fit_ellipsoid()</a></code> now pre-computes the inverse covariance matrix (<code>Sigma_inv</code>) using <code><a href="https://rdrr.io/r/base/solve.html" class="external-link">solve()</a></code>, with a Moore-Penrose pseudo-inverse fallback (via SVD) and a warning if the covariance matrix is singular.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-2-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-2-1"></a></h3>
+<ul><li>Vignette “3. Niche modeling” no longer ships a predict / suitability section; it shows the nicheR integration instead, with a plain-<code>terra</code> fallback for users who do not yet have nicheR installed.</li>
+<li>README, vignette and <code><a href="../reference/fit_ellipsoid.html">fit_ellipsoid()</a></code> references now direct users who want to project a <code>bean_ellipsoid</code> into geographic space to install <strong>nicheR</strong> and cite Castaneda-Guzman et al. (2026), <em>nicheR: Ellipsoid-Based Virtual Niches and Visualization</em>.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="bean-020">bean 0.2.0<a class="anchor" aria-label="anchor" href="#bean-020"></a></h2><p class="text-muted">CRAN release: 2026-05-30</p>
 <div class="section level3">
 <h3 id="major-changes-0-2-0">Major changes<a class="anchor" aria-label="anchor" href="#major-changes-0-2-0"></a></h3>
 <ul><li>
 <code><a href="../reference/find_env_resolution.html">find_env_resolution()</a></code> no longer uses a geometric “elbow” rule on nearest- neighbour distances. It now selects a kernel-density bandwidth for each environmental variable using the Sheather-Jones plug-in estimator (default), with Silverman and Scott rules also available via the new <code>method</code> argument. The bandwidth is a statistically defensible choice for the edge length of an environmental grid cell, and the new implementation is faster and more robust to ties.</li>
 <li>
 <code>rgl</code> is now a <em>Suggests</em> dependency rather than an <em>Imports</em>. 3-D plots still work when <code>rgl</code> is installed; otherwise <code><a href="../reference/plot.bean_ellipsoid.html">plot.bean_ellipsoid()</a></code> falls back to a 2-D view of the first two requested dimensions.</li>
-<li>The S3 method <code><a href="../reference/predict.bean_ellipsoid.html">predict.bean_ellipsoid()</a></code> is now documented under its canonical name (previously the help page was generated as <code>predict.ellipsoid_bean</code>).</li>
+<li>The S3 method <code>predict.bean_ellipsoid()</code> is now documented under its canonical name (previously the help page was generated as <code>predict.ellipsoid_bean</code>).</li>
 <li>Vignettes have been reorganised:
 <ul><li>
 <code>bean-overview</code> — quickstart introduction.</li>
@@ -68,7 +88,7 @@
 <h3 id="cran-readiness-0-2-0">CRAN readiness<a class="anchor" aria-label="anchor" href="#cran-readiness-0-2-0"></a></h3>
 <ul><li>
 <code>DESCRIPTION</code>: trimmed <code>Imports</code> to <code>MASS</code>, <code>stats</code>, <code>terra</code>; moved <code>rgl</code>, <code>ggplot2</code> and <code>dplyr</code> to <code>Suggests</code> (with <code>dplyr</code> removed entirely from the package — it was only used in one vignette).</li>
-<li>Added a <code>tests/testthat/</code> test suite covering <code><a href="../reference/find_env_resolution.html">find_env_resolution()</a></code>, <code><a href="../reference/thin_env_nd.html">thin_env_nd()</a></code>, <code><a href="../reference/thin_env_center.html">thin_env_center()</a></code>, <code><a href="../reference/fit_ellipsoid.html">fit_ellipsoid()</a></code> and <code><a href="../reference/predict.bean_ellipsoid.html">predict.bean_ellipsoid()</a></code>.</li>
+<li>Added a <code>tests/testthat/</code> test suite covering <code><a href="../reference/find_env_resolution.html">find_env_resolution()</a></code>, <code><a href="../reference/thin_env_nd.html">thin_env_nd()</a></code>, <code><a href="../reference/thin_env_center.html">thin_env_center()</a></code>, <code><a href="../reference/fit_ellipsoid.html">fit_ellipsoid()</a></code> and <code>predict.bean_ellipsoid()</code>.</li>
 <li>Datasets are now documented as user-visible (not <code>\keyword{internal}</code>).</li>
 <li>Replaced <code>\dontrun{}</code> examples that depended on missing files with <code>\donttest{}</code> examples that use the shipped sample data.</li>
 <li>

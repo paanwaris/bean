@@ -19,7 +19,7 @@ distance.'><meta property="og:image" content="https://paanwaris.github.io/bean/l
 
     <a class="navbar-brand me-2" href="../index.html">bean</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,11 +97,36 @@ ellipsoid. Default <code>0.95</code>.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>bean_ellipsoid</code> (a list) with:</p><dl><dt><code>centroid</code></dt>
+    <p>An object of class <code>c("bean_ellipsoid", "nicheR_ellipsoid")</code>
+  (a list) with:</p><dl><dt><code>centroid</code></dt>
 <dd><p>Named vector of variable means / centre.</p></dd>
 
-    <dt><code>covariance_matrix</code></dt>
-<dd><p>The covariance matrix used.</p></dd>
+    <dt><code>covariance_matrix</code>, <code>cov_matrix</code></dt>
+<dd><p>The covariance
+          matrix used. Both names point to the same object; the former is
+          kept for backward compatibility, the latter is the name expected
+          by the <span class="pkg">nicheR</span> package.</p></dd>
+
+    <dt><code>Sigma_inv</code></dt>
+<dd><p>The inverse of <code>cov_matrix</code>, pre-computed
+          so that <code>nicheR::predict()</code> does not have to invert it on
+          every call.</p></dd>
+
+    <dt><code>dimensions</code></dt>
+<dd><p>Integer, the number of environmental
+          variables.</p></dd>
+
+    <dt><code>var_names</code></dt>
+<dd><p>Character vector of the variable names used to
+          fit the ellipsoid.</p></dd>
+
+    <dt><code>cl</code></dt>
+<dd><p>Confidence level (same value as
+          <code>parameters$level</code>); name expected by <span class="pkg">nicheR</span>.</p></dd>
+
+    <dt><code>chi2_cutoff</code></dt>
+<dd><p>The chi-square threshold,
+          <code>stats::qchisq(level, df = dimensions)</code>.</p></dd>
 
     <dt><code>niche_ellipse</code></dt>
 <dd><p>A <code>data.frame</code> of polygon vertices for
@@ -125,7 +150,13 @@ ellipsoid. Default <code>0.95</code>.</p></dd>
 <dd><p>List with <code>level</code> and <code>method</code>.</p></dd>
 
 
-</dl></div>
+</dl><p>The object carries two S3 classes: <code>"bean_ellipsoid"</code> (used by
+  <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> in this package) and
+  <code>"nicheR_ellipsoid"</code> (used by <code>nicheR::predict()</code> once that
+  package is available on CRAN). Both methods work on the same object;
+  the appropriate one is dispatched depending on which package is
+  attached.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Methods.</strong> <code>"covmat"</code> uses the sample mean and sample covariance
@@ -139,7 +170,15 @@ distance equals <code>qchisq(level, df = n_dim)</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown point.
+    <p>If you intend to project a <code>bean_ellipsoid</code> into geographic space,
+please install the <span class="pkg">nicheR</span> package and use its <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>
+method; the dual S3 class on the returned object allows
+<code>nicheR::predict()</code> to dispatch on it directly. If you use the
+prediction step in published work, please cite <span class="pkg">nicheR</span>:</p>
+<p>Castaneda-Guzman, M., Hughes, C., Paansri, P. &amp; Cobos, M. E. (2026).
+<em>nicheR: Ellipsoid-Based Virtual Niches and Visualization.</em>
+R package version 0.1.0. <a href="https://github.com/castanedaM/nicheR" class="external-link">https://github.com/castanedaM/nicheR</a>.</p>
+<p>Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown point.
 In <em>Mathematical Statistics and Applications, Vol. B</em>, 283–297.</p>
 <p>Van Aelst, S. &amp; Rousseeuw, P. (2009). Minimum volume ellipsoid.
 <em>Wiley Interdisciplinary Reviews: Computational Statistics</em>, 1(1),

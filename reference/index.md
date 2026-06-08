@@ -21,14 +21,12 @@ space (E-space).
 - [`plot_bean()`](https://paanwaris.github.io/bean/reference/plot_bean.md)
   : Visualize n-dimensional environmental thinning results
 
-## Modeling & Visualization
+## Niche delineation
 
-Functions for fundamental niche delineation and predicting suitability.
+Functions for fitting an environmental-niche ellipsoid.
 
 - [`fit_ellipsoid()`](https://paanwaris.github.io/bean/reference/fit_ellipsoid.md)
   : Fit an environmental niche ellipsoid
-- [`predict(`*`<bean_ellipsoid>`*`)`](https://paanwaris.github.io/bean/reference/predict.bean_ellipsoid.md)
-  : Predict suitability and Mahalanobis distance from a bean ellipsoid
 
 ## Datasets
 

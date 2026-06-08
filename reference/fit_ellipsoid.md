@@ -38,15 +38,40 @@ fit_ellipsoid(data, env_vars, method = "covmat", level = 0.95)
 
 ## Value
 
-An object of class `bean_ellipsoid` (a list) with:
+An object of class `c("bean_ellipsoid", "nicheR_ellipsoid")` (a list)
+with:
 
 - `centroid`:
 
   Named vector of variable means / centre.
 
-- `covariance_matrix`:
+- `covariance_matrix`, `cov_matrix`:
 
-  The covariance matrix used.
+  The covariance matrix used. Both names point to the same object; the
+  former is kept for backward compatibility, the latter is the name
+  expected by the nicheR package.
+
+- `Sigma_inv`:
+
+  The inverse of `cov_matrix`, pre-computed so that `nicheR::predict()`
+  does not have to invert it on every call.
+
+- `dimensions`:
+
+  Integer, the number of environmental variables.
+
+- `var_names`:
+
+  Character vector of the variable names used to fit the ellipsoid.
+
+- `cl`:
+
+  Confidence level (same value as `parameters$level`); name expected by
+  nicheR.
+
+- `chi2_cutoff`:
+
+  The chi-square threshold, `stats::qchisq(level, df = dimensions)`.
 
 - `niche_ellipse`:
 
@@ -74,6 +99,13 @@ An object of class `bean_ellipsoid` (a list) with:
 
   List with `level` and `method`.
 
+The object carries two S3 classes: `"bean_ellipsoid"` (used by
+[`print()`](https://rdrr.io/r/base/print.html) and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) in this
+package) and `"nicheR_ellipsoid"` (used by `nicheR::predict()` once that
+package is available on CRAN). Both methods work on the same object; the
+appropriate one is dispatched depending on which package is attached.
+
 ## Details
 
 **Methods.** `"covmat"` uses the sample mean and sample covariance
@@ -87,6 +119,17 @@ boundary of the ellipsoid is the set of points whose squared Mahalanobis
 distance equals `qchisq(level, df = n_dim)`.
 
 ## References
+
+If you intend to project a `bean_ellipsoid` into geographic space,
+please install the nicheR package and use its
+[`predict()`](https://rdrr.io/r/stats/predict.html) method; the dual S3
+class on the returned object allows `nicheR::predict()` to dispatch on
+it directly. If you use the prediction step in published work, please
+cite nicheR:
+
+Castaneda-Guzman, M., Hughes, C., Paansri, P. & Cobos, M. E. (2026).
+*nicheR: Ellipsoid-Based Virtual Niches and Visualization.* R package
+version 0.1.0. <https://github.com/castanedaM/nicheR>.
 
 Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown
 point. In *Mathematical Statistics and Applications, Vol. B*, 283–297.

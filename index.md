@@ -40,9 +40,6 @@ environmental space:
 - **Niche Delineation**: Fits ellipsoids to thinned data to define the
   fundamental niche.
 
-- **Projection**: Maps the corrected niche back into geographic space
-  for less biased predictions.
-
 ## Installing the Package
 
 The development version of `bean` can be installed from GitHub:
@@ -118,17 +115,17 @@ multivariate ellipse around the thinned points.
 > delineation](https://paanwaris.github.io/bean/articles/niche-modeling.html)
 > vignette.
 
-### 5. Prediction and Mapping
-
-Using the learned niche,
-[`predict()`](https://rdrr.io/r/stats/predict.html) projects the results
-back to geographic space. This step emphasizes the ellipsoid-based
-approach is used to calculate suitability scores from the delineated
-niche boundaries.
-
-> See the [Prediction and
-> mapping](https://paanwaris.github.io/bean/articles/niche-modeling.html)
-> vignette.
+Suitability projection back to geographic space is provided by the
+companion package **nicheR**, which supplies a
+[`predict()`](https://rdrr.io/r/stats/predict.html) method.
+`bean_ellipsoid` objects carry the S3 class `"nicheR_ellipsoid"` as a
+second class string, so once nicheR is attached its
+[`predict()`](https://rdrr.io/r/stats/predict.html) method dispatches on
+them automatically — no conversion step required. Until nicheR is on
+CRAN, the ellipsoid’s `centroid`, `cov_matrix`, and pre-computed
+`Sigma_inv` fields can be used directly with
+[`stats::mahalanobis()`](https://rdrr.io/r/stats/mahalanobis.html) to
+compute pixel-level distances on a raster stack.
 
 ## Checking the Vignettes
 
@@ -138,18 +135,30 @@ For full demonstrations of the protocol, check the package vignettes:
 
 # Data Preparation & Visualization
 vignette("data-preparation")
-#> Warning: vignette 'data-preparation' not found
 
 # Objective Thinning in Environmental Space
 vignette("environmental-thinning")
-#> Warning: vignette 'environmental-thinning' not found
 
 # Niche Delineation & Suitability Mapping
 vignette("niche-modeling")
-#> Warning: vignette 'niche-modeling' not found
 ```
 
   
+
+## Acknowledgments
+
+The `bean` package was adapted from the excellent work done in the
+**nicheR** package. `bean` was built as an extension to complement
+nicheR’s foundational approach to ellipsoid modeling. We are incredibly
+grateful to the nicheR developers for their robust framework, which
+allows `bean_ellipsoid` objects to utilize their
+[`predict()`](https://rdrr.io/r/stats/predict.html) methods. If you use
+the spatial projection features in `bean`, please be sure to install and
+cite **nicheR**:
+
+> Castaneda-Guzman, M., Hughes, C., Paansri, P., & Cobos, M. E. (2026).
+> *nicheR: Ellipsoid-Based Virtual Niches and Visualization.* R package
+> version 0.1.0. <https://github.com/castanedaM/nicheR>
 
 ## Note on AI usage
 

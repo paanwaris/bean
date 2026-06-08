@@ -14,13 +14,13 @@ Source:
 [`DESCRIPTION`](https://github.com/paanwaris/bean/blob/master/DESCRIPTION)
 
 Paansri P, Escobar L (2026). *bean: Data Thinning of Species Occurrences
-in Environmental Space*. R package version 0.2.0,
+in Environmental Space*. R package version 0.2.1,
 <https://github.com/paanwaris/bean>.
 
     @Manual{,
       title = {bean: Data Thinning of Species Occurrences in Environmental Space},
       author = {Paanwaris Paansri and Luis E. Escobar},
       year = {2026},
-      note = {R package version 0.2.0},
+      note = {R package version 0.2.1},
       url = {https://github.com/paanwaris/bean},
     }

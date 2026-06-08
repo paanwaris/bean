@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">bean</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,7 +94,6 @@
 <li><p><strong>Environmental Gridding</strong>: Divides the environmental hypercube into “pods”.</p></li>
 <li><p><strong>Objective Thinning</strong>: Reduces clusters to a specified density per pod.</p></li>
 <li><p><strong>Niche Delineation</strong>: Fits ellipsoids to thinned data to define the fundamental niche.</p></li>
-<li><p><strong>Projection</strong>: Maps the corrected niche back into geographic space for less biased predictions.</p></li>
 </ul>
 </div>
 <div class="section level2">
@@ -150,14 +149,7 @@
 <blockquote>
 <p>See the <a href="https://paanwaris.github.io/bean/articles/niche-modeling.html">Niche delineation</a> vignette.</p>
 </blockquote>
-</div>
-<div class="section level3">
-<h3 id="id_5-prediction-and-mapping">5. Prediction and Mapping<a class="anchor" aria-label="anchor" href="#id_5-prediction-and-mapping"></a>
-</h3>
-<p>Using the learned niche, <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> projects the results back to geographic space. This step emphasizes the ellipsoid-based approach is used to calculate suitability scores from the delineated niche boundaries.</p>
-<blockquote>
-<p>See the <a href="https://paanwaris.github.io/bean/articles/niche-modeling.html">Prediction and mapping</a> vignette.</p>
-</blockquote>
+<p>Suitability projection back to geographic space is provided by the companion package <strong>nicheR</strong>, which supplies a <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method. <code>bean_ellipsoid</code> objects carry the S3 class <code>"nicheR_ellipsoid"</code> as a second class string, so once nicheR is attached its <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> method dispatches on them automatically — no conversion step required. Until nicheR is on CRAN, the ellipsoid’s <code>centroid</code>, <code>cov_matrix</code>, and pre-computed <code>Sigma_inv</code> fields can be used directly with <code><a href="https://rdrr.io/r/stats/mahalanobis.html" class="external-link">stats::mahalanobis()</a></code> to compute pixel-level distances on a raster stack.</p>
 </div>
 </div>
 <div class="section level2">
@@ -167,16 +159,21 @@
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Data Preparation &amp; Visualization</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"data-preparation"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: vignette 'data-preparation' not found</span></span>
 <span></span>
 <span><span class="co"># Objective Thinning in Environmental Space</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"environmental-thinning"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: vignette 'environmental-thinning' not found</span></span>
 <span></span>
 <span><span class="co"># Niche Delineation &amp; Suitability Mapping</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"niche-modeling"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: vignette 'niche-modeling' not found</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"niche-modeling"</span><span class="op">)</span></span></code></pre></div>
 <p><br></p>
+</div>
+<div class="section level2">
+<h2 id="acknowledgments">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>
+</h2>
+<p>The <code>bean</code> package was adapted from the excellent work done in the <strong>nicheR</strong> package. <code>bean</code> was built as an extension to complement nicheR’s foundational approach to ellipsoid modeling. We are incredibly grateful to the nicheR developers for their robust framework, which allows <code>bean_ellipsoid</code> objects to utilize their <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> methods. If you use the spatial projection features in <code>bean</code>, please be sure to install and cite <strong>nicheR</strong>:</p>
+<blockquote>
+<p>Castaneda-Guzman, M., Hughes, C., Paansri, P., &amp; Cobos, M. E. (2026). <em>nicheR: Ellipsoid-Based Virtual Niches and Visualization.</em> R package version 0.1.0. <a href="https://github.com/castanedaM/nicheR" class="external-link uri">https://github.com/castanedaM/nicheR</a></p>
+</blockquote>
 </div>
 <div class="section level2">
 <h2 id="note-on-ai-usage">Note on AI usage<a class="anchor" aria-label="anchor" href="#note-on-ai-usage"></a>
@@ -188,6 +185,7 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
+<li><a href="https://cloud.r-project.org/package=bean" class="external-link">View on CRAN</a></li>
 <li><a href="https://github.com/paanwaris/bean/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/paanwaris/bean/issues" class="external-link">Report a bug</a></li>
 </ul>
