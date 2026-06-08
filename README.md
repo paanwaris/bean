@@ -149,16 +149,15 @@ vignette("niche-modeling")
 
 <br>
 
-## Predicting with `bean_ellipsoid` objects
+## Acknowledgments
 
-If you intend to project a `bean_ellipsoid` into geographic space,
-please install the **nicheR** package and use its `predict()` method.
-Because `bean_ellipsoid` objects carry `"nicheR_ellipsoid"` as a second
-S3 class, `predict()` dispatches on them automatically once nicheR is
-attached — no conversion step is required.
-
-If you use the prediction step in published work, please cite
-**nicheR**:
+The `bean` package was adapted from the excellent work done in the
+**nicheR** package. `bean` was built as an extension to complement
+nicheR's foundational approach to ellipsoid modeling. We are incredibly
+grateful to the nicheR developers for their robust framework, which
+allows `bean_ellipsoid` objects to utilize their `predict()` methods.
+If you use the spatial projection features in `bean`, please be sure to
+install and cite **nicheR**:
 
 > Castaneda-Guzman, M., Hughes, C., Paansri, P., & Cobos, M. E. (2026).
 > *nicheR: Ellipsoid-Based Virtual Niches and Visualization.* R package
