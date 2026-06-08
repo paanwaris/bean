@@ -43,7 +43,8 @@ test_that("fit_ellipsoid exposes nicheR-compatible fields", {
   expect_identical(fit$cov_matrix, fit$covariance_matrix)
 
   # Sigma_inv really is the inverse of cov_matrix.
-  expect_equal(fit$Sigma_inv %*% fit$cov_matrix,
+  # (unname() drops the row/col names that cov_matrix carries.)
+  expect_equal(unname(fit$Sigma_inv %*% fit$cov_matrix),
                diag(3),
                tolerance = 1e-8)
 
