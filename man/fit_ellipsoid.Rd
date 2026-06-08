@@ -19,13 +19,27 @@ fit_ellipsoid(data, env_vars, method = "covmat", level = 0.95)
 ellipsoid. Default \code{0.95}.}
 }
 \value{
-An object of class \code{bean_ellipsoid} (a list) with:
+An object of class \code{c("bean_ellipsoid", "nicheR_ellipsoid")} (a
+  list) with:
   \describe{
     \item{\code{centroid}}{Named vector of variable means / centre.}
-    \item{\code{covariance_matrix}}{The covariance matrix used.}
+    \item{\code{covariance_matrix}, \code{cov_matrix}}{The covariance
+          matrix used. Both names point to the same object; the former is
+          kept for backward compatibility, the latter is the name expected
+          by the \pkg{nicheR} package.}
+    \item{\code{Sigma_inv}}{The inverse of \code{cov_matrix}, pre-computed
+          so that \code{nicheR::predict()} does not have to invert it on
+          every call.}
+    \item{\code{dimensions}}{Integer, the number of environmental
+          variables.}
+    \item{\code{var_names}}{Character vector of variable names.}
+    \item{\code{cl}}{Confidence level (same value as
+          \code{parameters$level}); the name expected by \pkg{nicheR}.}
+    \item{\code{chi2_cutoff}}{The chi-square threshold,
+          \code{stats::qchisq(level, df = dimensions)}.}
     \item{\code{niche_ellipse}}{A \code{data.frame} of polygon vertices for
-          the 2-D ellipse. \code{NULL} when more than two variables are
-          supplied (the 3-D mesh is generated lazily on plot).}
+          the 2-D ellipse; \code{NULL} when more than two variables are
+          supplied (the 3-D mesh is built lazily by \code{plot}).}
     \item{\code{all_points_used}}{Complete-case input data.}
     \item{\code{points_in_ellipse}}{Subset inside the ellipsoid.}
     \item{\code{points_outside_ellipse}}{Subset outside the ellipsoid.}
@@ -33,6 +47,13 @@ An object of class \code{bean_ellipsoid} (a list) with:
           classified as inside.}
     \item{\code{parameters}}{List with \code{level} and \code{method}.}
   }
+
+  The object carries two S3 classes: \code{"bean_ellipsoid"} (used by
+  \code{print()} and \code{plot()} in this package) and
+  \code{"nicheR_ellipsoid"} (used by \code{nicheR::predict()} once that
+  package is available on CRAN). The appropriate method is dispatched
+  depending on which package is attached; \pkg{nicheR} does not need to
+  be installed for \pkg{bean}'s own methods to work.
 }
 \description{
 Fits an ellipsoid that encompasses a chosen proportion of the
@@ -67,6 +88,13 @@ print(fit)
 
 }
 \references{
+Castaneda-Guzman, M., Hughes, C., Paansri, P. & Cobos, M. E. (2026).
+\emph{nicheR: Ellipsoid-Based Virtual Niches and Visualization.}
+R package version 0.1.0. \url{https://github.com/castanedaM/nicheR}.
+The ellipsoid framework that this function exposes was originally
+developed in \pkg{nicheR}; the dual S3 class on the returned object
+allows \code{nicheR::predict()} to dispatch directly on it.
+
 Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown point.
 In \emph{Mathematical Statistics and Applications, Vol. B}, 283–297.
 
