@@ -127,7 +127,7 @@ companion package **nicheR**, which supplies a `predict()` method.
 `bean_ellipsoid` objects carry the S3 class `"nicheR_ellipsoid"` as a
 second class string, so once nicheR is attached its `predict()` method
 dispatches on them automatically — no conversion step required. Until
-nicheR is on CRAN, the ellipsoid's `centroid`, `cov_matrix`, and
+nicheR is on CRAN, the ellipsoid’s `centroid`, `cov_matrix`, and
 pre-computed `Sigma_inv` fields can be used directly with
 `stats::mahalanobis()` to compute pixel-level distances on a raster
 stack.
@@ -139,15 +139,12 @@ For full demonstrations of the protocol, check the package vignettes:
 ``` r
 # Data Preparation & Visualization
 vignette("data-preparation")
-#> Warning: vignette 'data-preparation' not found
 
 # Objective Thinning in Environmental Space
 vignette("environmental-thinning")
-#> Warning: vignette 'environmental-thinning' not found
 
 # Niche Delineation & Suitability Mapping
 vignette("niche-modeling")
-#> Warning: vignette 'niche-modeling' not found
 ```
 
 <br>
@@ -164,8 +161,8 @@ If you use the prediction step in published work, please cite
 **nicheR**:
 
 > Castaneda-Guzman, M., Hughes, C., Paansri, P., & Cobos, M. E. (2026).
-> *nicheR: Ellipsoid-Based Virtual Niches and Visualization.* R
-> package version 0.1.0. <https://github.com/castanedaM/nicheR>
+> *nicheR: Ellipsoid-Based Virtual Niches and Visualization.* R package
+> version 0.1.0. <https://github.com/castanedaM/nicheR>
 
 BibTeX entry:
 
