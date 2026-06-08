@@ -116,7 +116,7 @@ The `bean` package was adapted from the excellent work done in the **nicheR** pa
 
 ### Installing nicheR
 
-```{r, eval = FALSE}
+```{r, eval=FALSE}
 # Installing and loading packages
 if (!require("devtools")) install.packages("devtools")
 
