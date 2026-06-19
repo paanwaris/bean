@@ -19,9 +19,11 @@ Paanwaris Paansri and Luis E. Escobar
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml) [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml)
 
 <!-- badges: end -->
+
+[![CRAN status](https://www.r-pkg.org/badges/version/bean)](https://CRAN.R-project.org/package=bean) [![downloads](https://cranlogs.r-pkg.org/badges/grand-total/bean)](https://cranlogs.r-pkg.org:443/badges/grand-total/bean) [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Ecological Motivation
 
@@ -35,11 +37,11 @@ The name `bean` reflects the core principle of the method: ensuring that each "p
 
 **bean** operates by shifting the focus from geographic space to environmental space:
 
--   **Environmental Gridding**: Divides the environmental hypercube into "pods".
+- **Environmental Gridding**: Divides the environmental hypercube into "pods".
 
--   **Objective Thinning**: Reduces clusters to a specified density per pod.
+- **Objective Thinning**: Reduces clusters to a specified density per pod.
 
--   **Niche Delineation**: Fits ellipsoids to thinned data to define the fundamental niche.
+- **Niche Delineation**: Fits ellipsoids to thinned data to define the fundamental niche.
 
 ## Installing the Package
 
@@ -79,9 +81,9 @@ Instead of arbitrary thinning, `find_env_resolution()` selects a **kernel-densit
 
 `bean` offers two core thinning methods:
 
--   Stochastic (`thin_env_nd`): Randomly samples one "bean" from each occupied "pod".
+- Stochastic (`thin_env_nd`): Randomly samples one "bean" from each occupied "pod".
 
--   Deterministic (`thin_env_center`): Generates a new point at the exact center of every occupied grid cell.
+- Deterministic (`thin_env_center`): Generates a new point at the exact center of every occupied grid cell.
 
 > See the [Apply thinning](https://paanwaris.github.io/bean/articles/environmental-thinning.html) vignette.
 
@@ -116,13 +118,10 @@ The `bean` package was adapted from the excellent work done in the **nicheR** pa
 
 ### Installing nicheR
 
+`nicheR` is available on CRAN:
+
 ```{r, eval=FALSE}
-# Installing and loading packages
-if (!require("devtools")) install.packages("devtools")
-
-# To install the package use
-devtools::install_github("castanedaM/nicheR")
-
+install.packages("nicheR")
 library(nicheR)
 ```
 
@@ -132,10 +131,6 @@ library(nicheR)
 
 ## Note on AI usage
 
-To maintain high standards of code quality and documentation, we have
-used AI LLM tools in this package. We used these tools for grammatical
-polishing and exploring technical implementation strategies for
-specialized functions. We manually checked and tested all code and
-documentation refined with these tools.
+To maintain high standards of code quality and documentation, we have used AI LLM tools in this package. We used these tools for grammatical polishing and exploring technical implementation strategies for specialized functions. We manually checked and tested all code and documentation refined with these tools.
 
 <br>
