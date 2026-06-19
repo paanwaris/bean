@@ -51,10 +51,9 @@ An object of class \code{c("bean_ellipsoid", "nicheR_ellipsoid")}
 
   The object carries two S3 classes: \code{"bean_ellipsoid"} (used by
   \code{print()} and \code{plot()} in this package) and
-  \code{"nicheR_ellipsoid"} (used by \code{nicheR::predict()} once that
-  package is available on CRAN). Both methods work on the same object;
-  the appropriate one is dispatched depending on which package is
-  attached.
+  \code{"nicheR_ellipsoid"} (used by \code{nicheR::predict()}, available
+  from CRAN). Both methods work on the same object; the appropriate one
+  is dispatched depending on which package is attached.
 }
 \description{
 Fits an ellipsoid that encompasses a chosen proportion of the
