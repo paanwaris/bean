@@ -1,7 +1,7 @@
 Package: bean
 Type: Package
 Title: Data Thinning of Species Occurrences in Environmental Space
-Version: 0.2.1
+Version: 0.2.2
 Authors@R: c(
     person("Paanwaris", "Paansri",
            role = c("cre", "aut"),
@@ -41,7 +41,8 @@ Suggests:
     rmarkdown,
     testthat (>= 3.0.0),
     ggplot2,
-    rgl
+    rgl,
+    nicheR
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0
