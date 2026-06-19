@@ -14,9 +14,9 @@ Mahalanobis distance, controlled by `level` (default 95 %).
 ``` r
 
 library(bean)
-data(origin_dat_prepared,    package = "bean")
-data(thinned_stochastic,     package = "bean")
-data(thinned_deterministic,  package = "bean")
+data(origin_dat_prepared, package = "bean")
+data(thinned_stochastic, package = "bean")
+data(thinned_deterministic, package = "bean")
 env_vars <- c("bio_1", "bio_4", "bio_12", "bio_15")
 ```
 
@@ -29,24 +29,24 @@ inferred niche.
 ``` r
 
 origin_ellipse <- fit_ellipsoid(
-  data     = origin_dat_prepared,
+  data = origin_dat_prepared,
   env_vars = env_vars,
-  method   = "covmat",
-  level    = 0.95
+  method = "covmat",
+  level = 0.95
 )
 
 stochastic_ellipse <- fit_ellipsoid(
-  data     = thinned_stochastic$thinned_data,
+  data = thinned_stochastic$thinned_data,
   env_vars = env_vars,
-  method   = "covmat",
-  level    = 0.95
+  method = "covmat",
+  level = 0.95
 )
 
 deterministic_ellipse <- fit_ellipsoid(
-  data     = thinned_deterministic$thinned_points,
+  data = thinned_deterministic$thinned_points,
   env_vars = env_vars,
-  method   = "covmat",
-  level    = 0.95
+  method = "covmat",
+  level = 0.95
 )
 
 origin_ellipse
@@ -82,14 +82,14 @@ deterministic_ellipse
 
 ``` r
 
-plot(origin_ellipse,        dims = c("bio_1", "bio_12"))
+plot(origin_ellipse, dims = c("bio_1", "bio_12"))
 ```
 
 ![](niche-modeling_files/figure-html/unnamed-chunk-3-1.png)
 
 ``` r
 
-plot(stochastic_ellipse,    dims = c("bio_1", "bio_12"))
+plot(stochastic_ellipse, dims = c("bio_1", "bio_12"))
 ```
 
 ![](niche-modeling_files/figure-html/unnamed-chunk-3-2.png)
@@ -170,8 +170,20 @@ library(nicheR)
 ### Predicting suitability
 
 When both **nicheR** and **terra** are available, the chunk below runs
-the prediction and plots the suitability layer. When either is missing,
-the chunk is skipped automatically.
+the prediction for all three ellipsoids and plots the suitability layers
+side by side. When either package is missing, the chunk is skipped
+automatically.
+
+The ellipsoids were fitted on the scaled environmental variables in
+`origin_dat_prepared` (the output of
+`prepare_bean(transform = "scale")`). The raster must be scaled the same
+way before being passed to
+[`predict()`](https://rspatial.github.io/terra/reference/predict.html),
+otherwise the Mahalanobis distances would be computed in a different
+coordinate system from the one in which the ellipsoid was defined. We
+use
+[`terra::scale()`](https://rspatial.github.io/terra/reference/scale.html)
+to apply standardisation layer by layer.
 
 ``` r
 
@@ -179,23 +191,69 @@ library(nicheR)
 library(terra)
 #> terra 1.9.27
 
-env <- terra::rast(system.file("extdata", "thai_env.tif", package = "bean"))
+# Load the raster and scale each layer to mean 0, SD 1 — matching how
+# the ellipsoids were trained.
+env <- terra::rast(system.file("extdata", "thai_env.tif",
+                               package = "bean"))
+env_scaled <- terra::scale(env)
 
-# 'origin_ellipse' is the bean_ellipsoid we fitted above.
-suit <- predict(
+# Project each ellipsoid back into geographic space.
+origin_suit <- predict(
   origin_ellipse,
-  newdata               = env,
-  include_suitability   = TRUE,
-  suitability_truncated = TRUE,
-  include_mahalanobis   = FALSE
+  newdata             = env_scaled,
+  include_suitability = TRUE,
+  include_mahalanobis = FALSE
 )
 #> Starting: suitability prediction using newdata of class: SpatRaster...
 #> Step: Using 4 predictor variables: bio_1, bio_4, bio_12, bio_15
-#> Done: Prediction completed successfully. Returned raster layers: suitability, suitability_trunc
-terra::plot(suit)
+#> Done: Prediction completed successfully. Returned raster layers: suitability
+
+stochastic_suit <- predict(
+  stochastic_ellipse,
+  newdata             = env_scaled,
+  include_suitability = TRUE,
+  include_mahalanobis = FALSE
+)
+#> Starting: suitability prediction using newdata of class: SpatRaster...
+#> Step: Using 4 predictor variables: bio_1, bio_4, bio_12, bio_15
+#> Done: Prediction completed successfully. Returned raster layers: suitability
+
+deterministic_suit <- predict(
+  deterministic_ellipse,
+  newdata             = env_scaled,
+  include_suitability = TRUE,
+  include_mahalanobis = FALSE
+)
+#> Starting: suitability prediction using newdata of class: SpatRaster...
+#> Step: Using 4 predictor variables: bio_1, bio_4, bio_12, bio_15
+#> Done: Prediction completed successfully. Returned raster layers: suitability
+
+# Three-panel comparison: Original / Stochastic / Deterministic.
+# A shared colour scale (range = [0, 1]) makes the panels directly
+# comparable; the same legend applies to all three.
+op <- par(mfrow = c(1, 3), mar = c(2.5, 2.5, 3, 4))
+terra::plot(origin_suit[["suitability"]],
+            main  = "Original (unthinned)",
+            range = c(0, 1))
+terra::plot(stochastic_suit[["suitability"]],
+            main  = "Stochastic thinning",
+            range = c(0, 1))
+terra::plot(deterministic_suit[["suitability"]],
+            main  = "Deterministic thinning",
+            range = c(0, 1))
 ```
 
 ![](niche-modeling_files/figure-html/unnamed-chunk-6-1.png)
+
+``` r
+
+par(op)
+```
+
+Because the raw data is biased toward heavily sampled environments, the
+unthinned model typically over-predicts those conditions. Both thinned
+models produce a narrower, less inflated suitability surface — the
+expected effect of bias correction.
 
 ## References
 

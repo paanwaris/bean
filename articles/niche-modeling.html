@@ -95,9 +95,9 @@ squared Mahalanobis distance, controlled by <code>level</code> (default
 95 %).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/paanwaris/bean" class="external-link">bean</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span>,    package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">thinned_stochastic</span>,     package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">thinned_deterministic</span>,  package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">origin_dat_prepared</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">thinned_stochastic</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">thinned_deterministic</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span></span>
 <span><span class="va">env_vars</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>, <span class="st">"bio_4"</span>, <span class="st">"bio_12"</span>, <span class="st">"bio_15"</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="fit-three-ellipsoids">Fit three ellipsoids<a class="anchor" aria-label="anchor" href="#fit-three-ellipsoids"></a>
@@ -107,24 +107,24 @@ thinned datasets, so we can compare what bias correction does to the
 inferred niche.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">origin_ellipse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_ellipsoid.html">fit_ellipsoid</a></span><span class="op">(</span></span>
-<span>  data     <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">origin_dat_prepared</span>,</span>
 <span>  env_vars <span class="op">=</span> <span class="va">env_vars</span>,</span>
-<span>  method   <span class="op">=</span> <span class="st">"covmat"</span>,</span>
-<span>  level    <span class="op">=</span> <span class="fl">0.95</span></span>
+<span>  method <span class="op">=</span> <span class="st">"covmat"</span>,</span>
+<span>  level <span class="op">=</span> <span class="fl">0.95</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">stochastic_ellipse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_ellipsoid.html">fit_ellipsoid</a></span><span class="op">(</span></span>
-<span>  data     <span class="op">=</span> <span class="va">thinned_stochastic</span><span class="op">$</span><span class="va">thinned_data</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">thinned_stochastic</span><span class="op">$</span><span class="va">thinned_data</span>,</span>
 <span>  env_vars <span class="op">=</span> <span class="va">env_vars</span>,</span>
-<span>  method   <span class="op">=</span> <span class="st">"covmat"</span>,</span>
-<span>  level    <span class="op">=</span> <span class="fl">0.95</span></span>
+<span>  method <span class="op">=</span> <span class="st">"covmat"</span>,</span>
+<span>  level <span class="op">=</span> <span class="fl">0.95</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">deterministic_ellipse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_ellipsoid.html">fit_ellipsoid</a></span><span class="op">(</span></span>
-<span>  data     <span class="op">=</span> <span class="va">thinned_deterministic</span><span class="op">$</span><span class="va">thinned_points</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">thinned_deterministic</span><span class="op">$</span><span class="va">thinned_points</span>,</span>
 <span>  env_vars <span class="op">=</span> <span class="va">env_vars</span>,</span>
-<span>  method   <span class="op">=</span> <span class="st">"covmat"</span>,</span>
-<span>  level    <span class="op">=</span> <span class="fl">0.95</span></span>
+<span>  method <span class="op">=</span> <span class="st">"covmat"</span>,</span>
+<span>  level <span class="op">=</span> <span class="fl">0.95</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">origin_ellipse</span></span>
@@ -159,10 +159,10 @@ inferred niche.</p>
 <h2 id="visualise-the-ellipsoids-2-d-slices">Visualise the ellipsoids (2-D slices)<a class="anchor" aria-label="anchor" href="#visualise-the-ellipsoids-2-d-slices"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">origin_ellipse</span>,        dims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>, <span class="st">"bio_12"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">origin_ellipse</span>, dims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>, <span class="st">"bio_12"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="niche-modeling_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="90%"></p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">stochastic_ellipse</span>,    dims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>, <span class="st">"bio_12"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">stochastic_ellipse</span>, dims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>, <span class="st">"bio_12"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="niche-modeling_files/figure-html/unnamed-chunk-3-2.png" class="r-plt" alt="" width="90%"></p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">deterministic_ellipse</span>, dims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bio_1"</span>, <span class="st">"bio_12"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -234,28 +234,79 @@ nicheR (see the References section at the bottom of this vignette).</p>
 <h3 id="predicting-suitability">Predicting suitability<a class="anchor" aria-label="anchor" href="#predicting-suitability"></a>
 </h3>
 <p>When both <strong>nicheR</strong> and <strong>terra</strong> are
-available, the chunk below runs the prediction and plots the suitability
-layer. When either is missing, the chunk is skipped automatically.</p>
+available, the chunk below runs the prediction for all three ellipsoids
+and plots the suitability layers side by side. When either package is
+missing, the chunk is skipped automatically.</p>
+<p>The ellipsoids were fitted on the scaled environmental variables in
+<code>origin_dat_prepared</code> (the output of
+<code>prepare_bean(transform = "scale")</code>). The raster must be
+scaled the same way before being passed to <code><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict()</a></code>,
+otherwise the Mahalanobis distances would be computed in a different
+coordinate system from the one in which the ellipsoid was defined. We
+use <code><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">terra::scale()</a></code> to apply standardisation layer by
+layer.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/castanedaM/nicheR" class="external-link">nicheR</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; terra 1.9.27</span></span>
 <span></span>
-<span><span class="va">env</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"thai_env.tif"</span>, package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Load the raster and scale each layer to mean 0, SD 1 — matching how</span></span>
+<span><span class="co"># the ellipsoids were trained.</span></span>
+<span><span class="va">env</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"thai_env.tif"</span>,</span>
+<span>                               package <span class="op">=</span> <span class="st">"bean"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">env_scaled</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">env</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 'origin_ellipse' is the bean_ellipsoid we fitted above.</span></span>
-<span><span class="va">suit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict</a></span><span class="op">(</span></span>
+<span><span class="co"># Project each ellipsoid back into geographic space.</span></span>
+<span><span class="va">origin_suit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict</a></span><span class="op">(</span></span>
 <span>  <span class="va">origin_ellipse</span>,</span>
-<span>  newdata               <span class="op">=</span> <span class="va">env</span>,</span>
-<span>  include_suitability   <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  suitability_truncated <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  include_mahalanobis   <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  newdata             <span class="op">=</span> <span class="va">env_scaled</span>,</span>
+<span>  include_suitability <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  include_mahalanobis <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Starting: suitability prediction using newdata of class: SpatRaster...</span></span>
 <span><span class="co">#&gt; Step: Using 4 predictor variables: bio_1, bio_4, bio_12, bio_15</span></span>
-<span><span class="co">#&gt; Done: Prediction completed successfully. Returned raster layers: suitability, suitability_trunc</span></span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">suit</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; Done: Prediction completed successfully. Returned raster layers: suitability</span></span>
+<span></span>
+<span><span class="va">stochastic_suit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict</a></span><span class="op">(</span></span>
+<span>  <span class="va">stochastic_ellipse</span>,</span>
+<span>  newdata             <span class="op">=</span> <span class="va">env_scaled</span>,</span>
+<span>  include_suitability <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  include_mahalanobis <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Starting: suitability prediction using newdata of class: SpatRaster...</span></span>
+<span><span class="co">#&gt; Step: Using 4 predictor variables: bio_1, bio_4, bio_12, bio_15</span></span>
+<span><span class="co">#&gt; Done: Prediction completed successfully. Returned raster layers: suitability</span></span>
+<span></span>
+<span><span class="va">deterministic_suit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict</a></span><span class="op">(</span></span>
+<span>  <span class="va">deterministic_ellipse</span>,</span>
+<span>  newdata             <span class="op">=</span> <span class="va">env_scaled</span>,</span>
+<span>  include_suitability <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  include_mahalanobis <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Starting: suitability prediction using newdata of class: SpatRaster...</span></span>
+<span><span class="co">#&gt; Step: Using 4 predictor variables: bio_1, bio_4, bio_12, bio_15</span></span>
+<span><span class="co">#&gt; Done: Prediction completed successfully. Returned raster layers: suitability</span></span>
+<span></span>
+<span><span class="co"># Three-panel comparison: Original / Stochastic / Deterministic.</span></span>
+<span><span class="co"># A shared colour scale (range = [0, 1]) makes the panels directly</span></span>
+<span><span class="co"># comparable; the same legend applies to all three.</span></span>
+<span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.5</span>, <span class="fl">2.5</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">origin_suit</span><span class="op">[[</span><span class="st">"suitability"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>            main  <span class="op">=</span> <span class="st">"Original (unthinned)"</span>,</span>
+<span>            range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">stochastic_suit</span><span class="op">[[</span><span class="st">"suitability"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>            main  <span class="op">=</span> <span class="st">"Stochastic thinning"</span>,</span>
+<span>            range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">deterministic_suit</span><span class="op">[[</span><span class="st">"suitability"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>            main  <span class="op">=</span> <span class="st">"Deterministic thinning"</span>,</span>
+<span>            range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="niche-modeling_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="90%"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
+<p>Because the raw data is biased toward heavily sampled environments,
+the unthinned model typically over-predicts those conditions. Both
+thinned models produce a narrower, less inflated suitability surface —
+the expected effect of bias correction.</p>
 </div>
 </div>
 <div class="section level2">
