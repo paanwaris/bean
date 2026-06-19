@@ -8,12 +8,15 @@ Paanwaris Paansri and Luis E. Escobar
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/paanwaris/bean/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
+[![CRAN
+status](https://www.r-pkg.org/badges/version/bean)](https://CRAN.R-project.org/package=bean)
+[![downloads](https://cranlogs.r-pkg.org/badges/grand-total/bean)](https://cranlogs.r-pkg.org:443/badges/grand-total/bean)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-<!-- badges: end -->
 
 ## Ecological Motivation
 
@@ -159,13 +162,10 @@ features in `bean`, please be sure to install and cite **nicheR**.
 
 ### Installing nicheR
 
+`nicheR` is available on CRAN:
+
 ``` r
-# Installing and loading packages
-if (!require("devtools")) install.packages("devtools")
-
-# To install the package use
-devtools::install_github("castanedaM/nicheR")
-
+install.packages("nicheR")
 library(nicheR)
 ```
 
