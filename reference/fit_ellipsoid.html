@@ -19,7 +19,7 @@ distance.'><meta property="og:image" content="https://paanwaris.github.io/bean/l
 
     <a class="navbar-brand me-2" href="../index.html">bean</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -109,7 +109,7 @@ ellipsoid. Default <code>0.95</code>.</p></dd>
 
     <dt><code>Sigma_inv</code></dt>
 <dd><p>The inverse of <code>cov_matrix</code>, pre-computed
-          so that <code>nicheR::predict()</code> does not have to invert it on
+          so that <code><a href="https://castanedam.github.io/nicheR/reference/predict.html" class="external-link">nicheR::predict()</a></code> does not have to invert it on
           every call.</p></dd>
 
     <dt><code>dimensions</code></dt>
@@ -152,10 +152,9 @@ ellipsoid. Default <code>0.95</code>.</p></dd>
 
 </dl><p>The object carries two S3 classes: <code>"bean_ellipsoid"</code> (used by
   <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> in this package) and
-  <code>"nicheR_ellipsoid"</code> (used by <code>nicheR::predict()</code> once that
-  package is available on CRAN). Both methods work on the same object;
-  the appropriate one is dispatched depending on which package is
-  attached.</p>
+  <code>"nicheR_ellipsoid"</code> (used by <code><a href="https://castanedam.github.io/nicheR/reference/predict.html" class="external-link">nicheR::predict()</a></code>, available
+  from CRAN). Both methods work on the same object; the appropriate one
+  is dispatched depending on which package is attached.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -173,7 +172,7 @@ distance equals <code>qchisq(level, df = n_dim)</code>.</p>
     <p>If you intend to project a <code>bean_ellipsoid</code> into geographic space,
 please install the <span class="pkg">nicheR</span> package and use its <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>
 method; the dual S3 class on the returned object allows
-<code>nicheR::predict()</code> to dispatch on it directly. If you use the
+<code><a href="https://castanedam.github.io/nicheR/reference/predict.html" class="external-link">nicheR::predict()</a></code> to dispatch on it directly. If you use the
 prediction step in published work, please cite <span class="pkg">nicheR</span>:</p>
 <p>Castaneda-Guzman, M., Hughes, C., Paansri, P. &amp; Cobos, M. E. (2026).
 <em>nicheR: Ellipsoid-Based Virtual Niches and Visualization.</em>

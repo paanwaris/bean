@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">bean</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,7 +45,18 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.2.1" id="bean-021">bean 0.2.1<a class="anchor" aria-label="anchor" href="#bean-021"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.2.2" id="bean-022">bean 0.2.2<a class="anchor" aria-label="anchor" href="#bean-022"></a></h2>
+<div class="section level3">
+<h3 id="changes-0-2-2">Changes<a class="anchor" aria-label="anchor" href="#changes-0-2-2"></a></h3>
+<ul><li>The companion package <strong>nicheR</strong> is now available on CRAN. The README, the niche-modeling vignette, and the <code><a href="../reference/fit_ellipsoid.html">fit_ellipsoid()</a></code> help page now direct users to <code>install.packages("nicheR")</code> rather than the previous GitHub instructions.</li>
+<li>
+<code>nicheR</code> is declared in <code>Suggests</code>. The package itself never calls nicheR — the integration is purely S3 dispatch on the <code>"nicheR_ellipsoid"</code> class — so it does not belong in <code>Imports</code>.</li>
+<li>The niche-modeling vignette’s <code><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict()</a></code> example now executes when nicheR and terra are both installed (<code>eval = has_nicheR &amp;&amp; has_terra</code>) instead of being permanently disabled with <code>eval = FALSE</code>.</li>
+<li>Citation for nicheR is unchanged.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.1" id="bean-021">bean 0.2.1<a class="anchor" aria-label="anchor" href="#bean-021"></a></h2><p class="text-muted">CRAN release: 2026-06-08</p>
 <div class="section level3">
 <h3 id="breaking-changes-0-2-1">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-2-1"></a></h3>
 <ul><li>Removed <code>predict.bean_ellipsoid()</code>. The canonical implementation now lives in the companion package <strong>nicheR</strong>.</li>

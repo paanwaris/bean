@@ -1,6 +1,27 @@
 # Changelog
 
+## bean 0.2.2
+
+### Changes
+
+- The companion package **nicheR** is now available on CRAN. The README,
+  the niche-modeling vignette, and the
+  [`fit_ellipsoid()`](https://paanwaris.github.io/bean/reference/fit_ellipsoid.md)
+  help page now direct users to `install.packages("nicheR")` rather than
+  the previous GitHub instructions.
+- `nicheR` is declared in `Suggests`. The package itself never calls
+  nicheR — the integration is purely S3 dispatch on the
+  `"nicheR_ellipsoid"` class — so it does not belong in `Imports`.
+- The niche-modeling vignette’s
+  [`predict()`](https://rspatial.github.io/terra/reference/predict.html)
+  example now executes when nicheR and terra are both installed
+  (`eval = has_nicheR && has_terra`) instead of being permanently
+  disabled with `eval = FALSE`.
+- Citation for nicheR is unchanged.
+
 ## bean 0.2.1
+
+CRAN release: 2026-06-08
 
 ### Breaking changes
 

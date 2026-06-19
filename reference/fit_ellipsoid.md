@@ -53,7 +53,8 @@ with:
 
 - `Sigma_inv`:
 
-  The inverse of `cov_matrix`, pre-computed so that `nicheR::predict()`
+  The inverse of `cov_matrix`, pre-computed so that
+  [`nicheR::predict()`](https://castanedam.github.io/nicheR/reference/predict.html)
   does not have to invert it on every call.
 
 - `dimensions`:
@@ -102,8 +103,9 @@ with:
 The object carries two S3 classes: `"bean_ellipsoid"` (used by
 [`print()`](https://rdrr.io/r/base/print.html) and
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) in this
-package) and `"nicheR_ellipsoid"` (used by `nicheR::predict()` once that
-package is available on CRAN). Both methods work on the same object; the
+package) and `"nicheR_ellipsoid"` (used by
+[`nicheR::predict()`](https://castanedam.github.io/nicheR/reference/predict.html),
+available from CRAN). Both methods work on the same object; the
 appropriate one is dispatched depending on which package is attached.
 
 ## Details
@@ -123,9 +125,10 @@ distance equals `qchisq(level, df = n_dim)`.
 If you intend to project a `bean_ellipsoid` into geographic space,
 please install the nicheR package and use its
 [`predict()`](https://rdrr.io/r/stats/predict.html) method; the dual S3
-class on the returned object allows `nicheR::predict()` to dispatch on
-it directly. If you use the prediction step in published work, please
-cite nicheR:
+class on the returned object allows
+[`nicheR::predict()`](https://castanedam.github.io/nicheR/reference/predict.html)
+to dispatch on it directly. If you use the prediction step in published
+work, please cite nicheR:
 
 Castaneda-Guzman, M., Hughes, C., Paansri, P. & Cobos, M. E. (2026).
 *nicheR: Ellipsoid-Based Virtual Niches and Visualization.* R package

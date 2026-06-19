@@ -159,24 +159,25 @@ nicheR (see the References section at the bottom of this vignette).
 
 ### Installing and loading nicheR
 
-Install the `nicheR` from GitHub:
+`nicheR` is available on CRAN:
 
 ``` r
 
-# Installing and loading packages
-if (!require("devtools")) install.packages("devtools")
-
-# To install the package use
-devtools::install_github("castanedaM/nicheR")
-
+install.packages("nicheR")
 library(nicheR)
 ```
 
 ### Predicting suitability
 
+When both **nicheR** and **terra** are available, the chunk below runs
+the prediction and plots the suitability layer. When either is missing,
+the chunk is skipped automatically.
+
 ``` r
 
+library(nicheR)
 library(terra)
+#> terra 1.9.27
 
 env <- terra::rast(system.file("extdata", "thai_env.tif", package = "bean"))
 
@@ -188,8 +189,13 @@ suit <- predict(
   suitability_truncated = TRUE,
   include_mahalanobis   = FALSE
 )
+#> Starting: suitability prediction using newdata of class: SpatRaster...
+#> Step: Using 4 predictor variables: bio_1, bio_4, bio_12, bio_15
+#> Done: Prediction completed successfully. Returned raster layers: suitability, suitability_trunc
 terra::plot(suit)
 ```
+
+![](niche-modeling_files/figure-html/unnamed-chunk-6-1.png)
 
 ## References
 
