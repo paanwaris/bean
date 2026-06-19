@@ -1,3 +1,51 @@
+## Resubmission (bean 0.2.2)
+
+This is a resubmission of `bean`. In this version (0.2.2) I have:
+
+* Switched all references to the companion package nicheR from the
+  previous GitHub install instructions to the now-public CRAN release.
+  README, the niche-modeling vignette, and the `fit_ellipsoid()` help
+  page now use `install.packages("nicheR")`.
+* Added `nicheR` to `Suggests` (it is used by the vignette example; the
+  package itself never calls nicheR, so `Imports` would be incorrect).
+* Restored the `predict()` example in the niche-modeling vignette so it
+  actually executes when nicheR and terra are installed, instead of
+  being permanently disabled with `eval = FALSE`.
+
+### Test environments
+
+* local Windows 11, R 4.5.2 (release)
+* win-builder (R-devel)
+* win-builder (R-release)
+* GitHub Actions: windows-latest, macOS-latest, ubuntu-latest, R devel
+  and R release
+
+I have checked the submission using `R CMD check --as-cran` and a current
+version of R-devel, as mandated by the CRAN Repository Policy, using the
+win-builder service at <https://win-builder.r-project.org>.
+
+### R CMD check results
+
+0 errors | 0 warnings | 0 notes
+
+### Notes for the reviewer
+
+* `rgl` and `nicheR` are Suggests dependencies, used only by optional
+  examples / vignettes. When either is unavailable the relevant code
+  paths are skipped gracefully.
+* Objects returned by `fit_ellipsoid()` carry the S3 class
+  `"nicheR_ellipsoid"` as a second class string so that nicheR's
+  `predict()` method dispatches on them directly. `bean` does not call
+  any nicheR function itself.
+* All examples that require network access or large external data are
+  wrapped in `\donttest{}`; nothing writes outside `tempdir()`.
+
+### Downstream dependencies
+
+There are currently no downstream dependencies on CRAN.
+
+---
+
 ## Resubmission (bean 0.2.1)
 
 This is a resubmission of `bean`. In this version (0.2.1) I have:
